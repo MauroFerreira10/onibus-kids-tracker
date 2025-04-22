@@ -11,6 +11,12 @@ import { toast } from 'sonner';
 
 const MAPBOX_TOKEN = '';
 
+// Coordenadas do Lubango, Angola
+const LUBANGO_CENTER = {
+  lng: 13.4925, 
+  lat: -14.9167
+};
+
 interface MapViewProps {
   buses?: BusData[];
   selectedBusId?: string;
@@ -62,7 +68,6 @@ const MapView: React.FC<MapViewProps> = ({
       
       mapboxgl.accessToken = mapboxToken;
       
-      // Verifica se o container tem dimensões válidas
       if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
         console.error("Erro: Container do mapa com dimensões zero");
         toast.error("Erro: Container do mapa com dimensões zero");
@@ -75,8 +80,8 @@ const MapView: React.FC<MapViewProps> = ({
       const newMap = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v11',
-        center: [-46.6333, -23.5505], // São Paulo
-        zoom: 12,
+        center: [LUBANGO_CENTER.lng, LUBANGO_CENTER.lat],
+        zoom: 13,
         failIfMajorPerformanceCaveat: false,
         attributionControl: false
       });

@@ -1,4 +1,3 @@
-
 import { BusData, RouteData, StopData, UserData } from '@/types';
 
 // Função para gerar dados simulados de ônibus
@@ -79,58 +78,31 @@ export function generateMockStops(): StopData[] {
   const stops: StopData[] = [
     {
       id: 'stop-001',
-      name: 'Escola Municipal',
-      address: 'Rua da Escola, 123',
-      latitude: -23.5505,
-      longitude: -46.6333,
+      name: 'Faculdade ISPI',
+      address: 'Faculdade ISPI, Lubango',
+      latitude: -14.9167,
+      longitude: 13.4925,
       scheduledTime: '07:30',
       estimatedTime: '07:30'
     },
     {
       id: 'stop-002',
-      name: 'Avenida Paulista',
-      address: 'Av. Paulista, 1000',
-      latitude: -23.5615,
-      longitude: -46.6563,
+      name: 'Reitoria da Mandume',
+      address: 'Reitoria da Mandume, Lubango',
+      latitude: -14.9200,
+      longitude: 13.4960,
       scheduledTime: '07:45',
       estimatedTime: '07:50'
     },
     {
       id: 'stop-003',
-      name: 'Praça da Sé',
-      address: 'Praça da Sé, s/n',
-      latitude: -23.5500,
-      longitude: -46.6333,
+      name: 'Bairro do Tchioco',
+      address: 'Bairro do Tchioco, Lubango',
+      latitude: -14.9300,
+      longitude: 13.4890,
       scheduledTime: '08:00',
       estimatedTime: '08:15'
-    },
-    {
-      id: 'stop-004',
-      name: 'Estação da Luz',
-      address: 'Praça da Luz, s/n',
-      latitude: -23.5347,
-      longitude: -46.6346,
-      scheduledTime: '08:15',
-      estimatedTime: '08:30'
-    },
-    {
-      id: 'stop-005',
-      name: 'Av. Brigadeiro Faria Lima',
-      address: 'Av. Faria Lima, 2000',
-      latitude: -23.5746,
-      longitude: -46.6923,
-      scheduledTime: '08:30',
-      estimatedTime: '08:35'
-    },
-    {
-      id: 'stop-006',
-      name: 'Pinheiros',
-      address: 'Largo da Batata, s/n',
-      latitude: -23.5660,
-      longitude: -46.7022,
-      scheduledTime: '08:45',
-      estimatedTime: '08:55'
-    },
+    }
   ];
   
   return stops;
@@ -143,38 +115,38 @@ export function generateMockRoutes(): RouteData[] {
   const routes: RouteData[] = [
     {
       id: 'route-001',
-      name: 'Rota A',
-      description: 'Escola Municipal → Avenida Paulista',
+      name: 'ISPI - Mandume',
+      description: 'Faculdade ISPI → Reitoria da Mandume',
       stops: [stops[0], stops[1]],
       buses: ['bus-001'],
       schedule: {
         weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
         startTime: '07:00',
-        endTime: '08:30'
+        endTime: '18:00'
       }
     },
     {
       id: 'route-002',
-      name: 'Rota B',
-      description: 'Praça da Sé → Estação da Luz',
-      stops: [stops[2], stops[3]],
+      name: 'ISPI - Tchioco',
+      description: 'Faculdade ISPI → Bairro do Tchioco',
+      stops: [stops[0], stops[2]],
       buses: ['bus-002'],
       schedule: {
         weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        startTime: '07:30',
-        endTime: '09:00'
+        startTime: '07:00',
+        endTime: '18:00'
       }
     },
     {
       id: 'route-003',
-      name: 'Rota C',
-      description: 'Av. Brigadeiro Faria Lima → Pinheiros',
-      stops: [stops[4], stops[5]],
+      name: 'Tchioco - ISPI',
+      description: 'Bairro do Tchioco → Faculdade ISPI',
+      stops: [stops[2], stops[0]],
       buses: ['bus-003'],
       schedule: {
         weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        startTime: '08:00',
-        endTime: '09:30'
+        startTime: '07:00',
+        endTime: '18:00'
       }
     },
   ];
