@@ -4,9 +4,11 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BusData } from '@/types';
 import { toast } from 'sonner';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 // Você precisará substituir por uma chave válida do MapBox
-const MAPBOX_TOKEN = 'suaChaveMapboxAqui';
+const MAPBOX_TOKEN = '';
 
 interface MapViewProps {
   buses?: BusData[];
@@ -25,15 +27,26 @@ const MapView: React.FC<MapViewProps> = ({
   const [mapboxToken, setMapboxToken] = useState(
     localStorage.getItem('mapboxToken') || MAPBOX_TOKEN
   );
+  const [tokenError, setTokenError] = useState<string | null>(null);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
 
-  // Salvar o token do Mapbox no localStorage
+  // Validar e salvar o token do Mapbox no localStorage
   const saveMapboxToken = () => {
-    if (mapboxTokenInput) {
-      localStorage.setItem('mapboxToken', mapboxTokenInput);
-      setMapboxToken(mapboxTokenInput);
-      toast.success('Token do Mapbox salvo com sucesso!');
+    if (!mapboxTokenInput) {
+      setTokenError("Por favor, insira um token");
+      return;
     }
+    
+    // Verificar se é um token público (deve começar com pk.)
+    if (!mapboxTokenInput.startsWith('pk.')) {
+      setTokenError("Use um token público do Mapbox (começa com pk.)");
+      return;
+    }
+
+    localStorage.setItem('mapboxToken', mapboxTokenInput);
+    setMapboxToken(mapboxTokenInput);
+    setTokenError(null);
+    toast.success('Token do Mapbox salvo com sucesso!');
   };
 
   useEffect(() => {
@@ -72,7 +85,14 @@ const MapView: React.FC<MapViewProps> = ({
       };
     } catch (error) {
       console.error("Erro ao inicializar o mapa:", error);
-      toast.error('Erro ao carregar o mapa. Verifique seu token do Mapbox.');
+      
+      // Verificar se é o erro específico de token inválido
+      const errorString = String(error);
+      if (errorString.includes('Use a public access token (pk.*)')) {
+        setTokenError("Você precisa usar um token público (começa com pk.)");
+      } else {
+        toast.error('Erro ao carregar o mapa. Verifique seu token do Mapbox.');
+      }
     }
   }, [mapboxToken]);
 
@@ -136,7 +156,7 @@ const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {(!mapboxToken || mapboxToken === 'suaChaveMapboxAqui') ? (
+      {(!mapboxToken || tokenError) ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 p-4 rounded-lg z-10">
           <h3 className="text-lg font-semibold mb-2">Configure o token do Mapbox</h3>
           <p className="text-sm text-gray-600 mb-4 text-center">
@@ -144,20 +164,29 @@ const MapView: React.FC<MapViewProps> = ({
             <br />
             Obtenha-o em <a href="https://mapbox.com/" className="text-busapp-primary" target="_blank" rel="noopener noreferrer">mapbox.com</a>
           </p>
+          
+          {tokenError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm w-full max-w-md">
+              <strong>Erro:</strong> {tokenError}
+            </div>
+          )}
+          
           <div className="flex flex-col w-full max-w-md gap-2">
-            <input
+            <p className="text-xs text-gray-500">
+              O token público deve começar com "pk."
+            </p>
+            <Input
               type="text"
-              className="px-3 py-2 border rounded-md"
-              placeholder="Cole seu token público do Mapbox"
+              placeholder="Cole seu token público do Mapbox (pk...)"
               value={mapboxTokenInput}
               onChange={(e) => setMapboxTokenInput(e.target.value)}
             />
-            <button
+            <Button
               onClick={saveMapboxToken}
-              className="bg-busapp-primary text-white px-4 py-2 rounded-md hover:bg-busapp-accent transition-colors"
+              className="bg-busapp-primary text-white hover:bg-busapp-accent transition-colors"
             >
               Salvar token
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}
