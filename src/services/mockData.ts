@@ -1,0 +1,260 @@
+
+import { BusData, RouteData, StopData, UserData } from '@/types';
+
+// Função para gerar dados simulados de ônibus
+export function generateMockBuses(): BusData[] {
+  const buses: BusData[] = [
+    {
+      id: 'bus-001',
+      name: 'Ônibus 101',
+      route: 'Rota A',
+      latitude: -23.5505,
+      longitude: -46.6333, // São Paulo
+      speed: 25,
+      direction: 90,
+      status: 'active',
+      capacity: 45,
+      occupancy: 32,
+      currentStop: 'Escola Municipal',
+      nextStop: 'Avenida Paulista',
+      estimatedTimeToNextStop: 5,
+      lastUpdate: new Date().toISOString(),
+      onTime: true,
+      driver: {
+        name: 'João Silva',
+        phone: '11 98765-4321',
+        photo: 'https://randomuser.me/api/portraits/men/32.jpg'
+      }
+    },
+    {
+      id: 'bus-002',
+      name: 'Ônibus 202',
+      route: 'Rota B',
+      latitude: -23.5605,
+      longitude: -46.6433, // São Paulo, um pouco deslocado
+      speed: 0,
+      direction: 180,
+      status: 'active',
+      capacity: 45,
+      occupancy: 38,
+      currentStop: 'Praça da Sé',
+      nextStop: 'Estação da Luz',
+      estimatedTimeToNextStop: 12,
+      lastUpdate: new Date(Date.now() - 10 * 60000).toISOString(), // 10 minutos atrás
+      onTime: false,
+      driver: {
+        name: 'Maria Oliveira',
+        phone: '11 91234-5678',
+        photo: 'https://randomuser.me/api/portraits/women/44.jpg'
+      }
+    },
+    {
+      id: 'bus-003',
+      name: 'Ônibus 303',
+      route: 'Rota C',
+      latitude: -23.5305,
+      longitude: -46.6133, // São Paulo, mais deslocado
+      speed: 15,
+      direction: 270,
+      status: 'delayed',
+      capacity: 40,
+      occupancy: 35,
+      currentStop: 'Av. Brigadeiro Faria Lima',
+      nextStop: 'Pinheiros',
+      estimatedTimeToNextStop: 8,
+      lastUpdate: new Date(Date.now() - 5 * 60000).toISOString(), // 5 minutos atrás
+      onTime: false,
+      driver: {
+        name: 'Carlos Mendes',
+        phone: '11 95555-9999'
+      }
+    },
+  ];
+  
+  return buses;
+}
+
+// Função para gerar paradas simuladas
+export function generateMockStops(): StopData[] {
+  const stops: StopData[] = [
+    {
+      id: 'stop-001',
+      name: 'Escola Municipal',
+      address: 'Rua da Escola, 123',
+      latitude: -23.5505,
+      longitude: -46.6333,
+      scheduledTime: '07:30',
+      estimatedTime: '07:30'
+    },
+    {
+      id: 'stop-002',
+      name: 'Avenida Paulista',
+      address: 'Av. Paulista, 1000',
+      latitude: -23.5615,
+      longitude: -46.6563,
+      scheduledTime: '07:45',
+      estimatedTime: '07:50'
+    },
+    {
+      id: 'stop-003',
+      name: 'Praça da Sé',
+      address: 'Praça da Sé, s/n',
+      latitude: -23.5500,
+      longitude: -46.6333,
+      scheduledTime: '08:00',
+      estimatedTime: '08:15'
+    },
+    {
+      id: 'stop-004',
+      name: 'Estação da Luz',
+      address: 'Praça da Luz, s/n',
+      latitude: -23.5347,
+      longitude: -46.6346,
+      scheduledTime: '08:15',
+      estimatedTime: '08:30'
+    },
+    {
+      id: 'stop-005',
+      name: 'Av. Brigadeiro Faria Lima',
+      address: 'Av. Faria Lima, 2000',
+      latitude: -23.5746,
+      longitude: -46.6923,
+      scheduledTime: '08:30',
+      estimatedTime: '08:35'
+    },
+    {
+      id: 'stop-006',
+      name: 'Pinheiros',
+      address: 'Largo da Batata, s/n',
+      latitude: -23.5660,
+      longitude: -46.7022,
+      scheduledTime: '08:45',
+      estimatedTime: '08:55'
+    },
+  ];
+  
+  return stops;
+}
+
+// Função para gerar rotas simuladas
+export function generateMockRoutes(): RouteData[] {
+  const stops = generateMockStops();
+  
+  const routes: RouteData[] = [
+    {
+      id: 'route-001',
+      name: 'Rota A',
+      description: 'Escola Municipal → Avenida Paulista',
+      stops: [stops[0], stops[1]],
+      buses: ['bus-001'],
+      schedule: {
+        weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+        startTime: '07:00',
+        endTime: '08:30'
+      }
+    },
+    {
+      id: 'route-002',
+      name: 'Rota B',
+      description: 'Praça da Sé → Estação da Luz',
+      stops: [stops[2], stops[3]],
+      buses: ['bus-002'],
+      schedule: {
+        weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+        startTime: '07:30',
+        endTime: '09:00'
+      }
+    },
+    {
+      id: 'route-003',
+      name: 'Rota C',
+      description: 'Av. Brigadeiro Faria Lima → Pinheiros',
+      stops: [stops[4], stops[5]],
+      buses: ['bus-003'],
+      schedule: {
+        weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+        startTime: '08:00',
+        endTime: '09:30'
+      }
+    },
+  ];
+  
+  return routes;
+}
+
+// Função para gerar usuários simulados
+export function generateMockUsers(): UserData[] {
+  const users: UserData[] = [
+    {
+      id: 'user-001',
+      name: 'Roberto Pereira',
+      email: 'roberto@exemplo.com',
+      role: 'parent',
+      phone: '11 91111-2222',
+      children: [
+        {
+          id: 'child-001',
+          name: 'Lucas Pereira',
+          routeId: 'route-001',
+          routeName: 'Rota A',
+          stopId: 'stop-001',
+          stopName: 'Escola Municipal'
+        }
+      ]
+    },
+    {
+      id: 'user-002',
+      name: 'Ana Souza',
+      email: 'ana@exemplo.com',
+      role: 'manager',
+      phone: '11 93333-4444'
+    },
+    {
+      id: 'user-003',
+      name: 'João Silva',
+      email: 'joao@exemplo.com',
+      role: 'driver',
+      phone: '11 95555-6666',
+      associatedBusId: 'bus-001'
+    }
+  ];
+  
+  return users;
+}
+
+// Simulação de atualização das posições dos ônibus
+export function updateBusPositions(buses: BusData[]): BusData[] {
+  return buses.map(bus => {
+    // Somente atualiza ônibus ativos com velocidade > 0
+    if (bus.status === 'active' && bus.speed > 0) {
+      // Cálculo simplificado para simular movimento
+      // Na vida real, seria baseado em direção e velocidade reais
+      const latChange = (Math.random() * 0.002 - 0.001) * bus.speed / 10;
+      const lngChange = (Math.random() * 0.002 - 0.001) * bus.speed / 10;
+      
+      return {
+        ...bus,
+        latitude: bus.latitude + latChange,
+        longitude: bus.longitude + lngChange,
+        lastUpdate: new Date().toISOString()
+      };
+    }
+    return bus;
+  });
+}
+
+// Simulação de atraso para ônibus
+export function simulateDelays(buses: BusData[]): BusData[] {
+  return buses.map(bus => {
+    // 15% de chance de atraso para cada ônibus
+    if (Math.random() < 0.15) {
+      return {
+        ...bus,
+        status: 'delayed' as const,
+        onTime: false,
+        estimatedTimeToNextStop: bus.estimatedTimeToNextStop + Math.floor(Math.random() * 10) + 5
+      };
+    }
+    return bus;
+  });
+}
