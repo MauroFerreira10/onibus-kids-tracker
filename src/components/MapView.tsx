@@ -28,6 +28,7 @@ const MapView: React.FC<MapViewProps> = ({
     localStorage.getItem('mapboxToken') || MAPBOX_TOKEN
   );
   const [tokenError, setTokenError] = useState<string | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
 
   // Validar e salvar o token do Mapbox no localStorage
@@ -46,27 +47,42 @@ const MapView: React.FC<MapViewProps> = ({
     localStorage.setItem('mapboxToken', mapboxTokenInput);
     setMapboxToken(mapboxTokenInput);
     setTokenError(null);
-    toast.success('Token do Mapbox salvo com sucesso!');
+    setMapLoaded(false); // Resetar o estado para forçar o carregamento do mapa
+    toast.success('Token do Mapbox salvo com sucesso! Carregando mapa...');
   };
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
+    
+    // Limpar mapa anterior se existir
+    if (map.current) {
+      map.current.remove();
+      map.current = null;
+    }
 
     try {
+      console.log("Inicializando mapa com token:", mapboxToken.substring(0, 8) + "...");
       mapboxgl.accessToken = mapboxToken;
-      map.current = new mapboxgl.Map({
+      
+      const newMap = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v11',
         center: [-46.6333, -23.5505], // São Paulo coordinates
         zoom: 12
       });
 
-      map.current.addControl(
+      newMap.on('load', () => {
+        console.log("Mapa carregado com sucesso!");
+        setMapLoaded(true);
+        toast.success('Mapa carregado com sucesso!');
+      });
+
+      newMap.addControl(
         new mapboxgl.NavigationControl(),
         'top-right'
       );
 
-      map.current.addControl(
+      newMap.addControl(
         new mapboxgl.GeolocateControl({
           positionOptions: {
             enableHighAccuracy: true
@@ -77,9 +93,15 @@ const MapView: React.FC<MapViewProps> = ({
         'top-right'
       );
 
+      map.current = newMap;
+
       // Limpar na desmontagem
       return () => {
-        map.current?.remove();
+        console.log("Limpando mapa...");
+        if (map.current) {
+          map.current.remove();
+          map.current = null;
+        }
         // Limpar todos os markers
         Object.values(markersRef.current).forEach(marker => marker.remove());
       };
@@ -90,15 +112,21 @@ const MapView: React.FC<MapViewProps> = ({
       const errorString = String(error);
       if (errorString.includes('Use a public access token (pk.*)')) {
         setTokenError("Você precisa usar um token público (começa com pk.)");
+      } else if (errorString.includes('could not parse source')) {
+        setTokenError("Token inválido ou erro ao carregar o estilo do mapa");
       } else {
+        setTokenError(`Erro ao carregar o mapa: ${errorString}`);
         toast.error('Erro ao carregar o mapa. Verifique seu token do Mapbox.');
       }
+      setMapLoaded(false);
     }
   }, [mapboxToken]);
 
   // Atualizar marcadores quando os dados dos ônibus mudarem
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapLoaded) return;
+    
+    console.log("Atualizando marcadores, ônibus:", buses.length);
 
     // Remover marcadores antigos que não estão mais na lista
     Object.keys(markersRef.current).forEach(id => {
@@ -152,7 +180,7 @@ const MapView: React.FC<MapViewProps> = ({
         });
       }
     }
-  }, [buses, selectedBusId, onSelectBus]);
+  }, [buses, selectedBusId, onSelectBus, mapLoaded]);
 
   return (
     <div className="relative w-full h-full">
@@ -190,7 +218,11 @@ const MapView: React.FC<MapViewProps> = ({
           </div>
         </div>
       ) : null}
-      <div ref={mapContainer} className="w-full h-full rounded-lg shadow-md" />
+      <div 
+        ref={mapContainer} 
+        className="w-full h-full rounded-lg shadow-md"
+        style={{ display: mapboxToken ? 'block' : 'none' }}
+      />
     </div>
   );
 };
