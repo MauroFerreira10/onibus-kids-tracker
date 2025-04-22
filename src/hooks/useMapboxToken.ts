@@ -1,14 +1,24 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export const useMapboxToken = (initialToken: string = '') => {
   const [mapboxTokenInput, setMapboxTokenInput] = useState('');
-  const [mapboxToken, setMapboxToken] = useState(
-    localStorage.getItem('mapboxToken') || initialToken
-  );
+  const [mapboxToken, setMapboxToken] = useState<string>('');
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Carrega o token do localStorage ao iniciar
+  useEffect(() => {
+    const savedToken = localStorage.getItem('mapboxToken');
+    if (savedToken) {
+      console.log('Token carregado do localStorage:', savedToken.substring(0, 5) + '...');
+      setMapboxToken(savedToken);
+    } else if (initialToken) {
+      console.log('Usando token inicial');
+      setMapboxToken(initialToken);
+    }
+  }, [initialToken]);
 
   const saveMapboxToken = () => {
     if (!mapboxTokenInput) {
@@ -21,6 +31,7 @@ export const useMapboxToken = (initialToken: string = '') => {
       return;
     }
 
+    console.log('Salvando novo token:', mapboxTokenInput.substring(0, 5) + '...');
     setIsLoading(true);
     localStorage.setItem('mapboxToken', mapboxTokenInput);
     setMapboxToken(mapboxTokenInput);
@@ -29,6 +40,7 @@ export const useMapboxToken = (initialToken: string = '') => {
   };
 
   const resetToken = () => {
+    console.log('Removendo token');
     setMapboxToken('');
     localStorage.removeItem('mapboxToken');
     setMapboxTokenInput('');

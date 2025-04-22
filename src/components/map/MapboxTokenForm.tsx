@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from 'lucide-react';
@@ -19,6 +19,20 @@ const MapboxTokenForm: React.FC<MapboxTokenFormProps> = ({
   onTokenInputChange,
   onSaveToken,
 }) => {
+  // Focus no input quando o componente é montado
+  useEffect(() => {
+    const inputElement = document.getElementById('mapbox-token-input');
+    if (inputElement) {
+      inputElement.focus();
+    }
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSaveToken();
+    }
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 p-4 rounded-lg z-10">
       <h3 className="text-lg font-semibold mb-2">Configure o token do Mapbox</h3>
@@ -39,10 +53,12 @@ const MapboxTokenForm: React.FC<MapboxTokenFormProps> = ({
           O token público deve começar com "pk."
         </p>
         <Input
+          id="mapbox-token-input"
           type="text"
           placeholder="Cole seu token público do Mapbox (pk...)"
           value={mapboxTokenInput}
           onChange={(e) => onTokenInputChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="text-sm"
         />
         <Button

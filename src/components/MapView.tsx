@@ -47,7 +47,12 @@ const MapView: React.FC<MapViewProps> = ({
   };
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    console.log("MapView montado ou token atualizado:", mapboxToken ? "Token presente" : "Sem token");
+    
+    if (!mapContainer.current || !mapboxToken) {
+      console.log("Container não disponível ou token não definido");
+      return;
+    }
     
     clearCurrentMap();
 
@@ -57,15 +62,20 @@ const MapView: React.FC<MapViewProps> = ({
       
       mapboxgl.accessToken = mapboxToken;
       
+      // Verifica se o container tem dimensões válidas
       if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
         console.error("Erro: Container do mapa com dimensões zero");
+        toast.error("Erro: Container do mapa com dimensões zero");
+        setIsLoading(false);
         return;
       }
+      
+      console.log(`Dimensões do container: ${mapContainer.current.offsetWidth}x${mapContainer.current.offsetHeight}`);
       
       const newMap = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v11',
-        center: [-46.6333, -23.5505],
+        center: [-46.6333, -23.5505], // São Paulo
         zoom: 12,
         failIfMajorPerformanceCaveat: false,
         attributionControl: false
@@ -82,7 +92,8 @@ const MapView: React.FC<MapViewProps> = ({
       
       newMap.on('error', (e) => {
         console.error("❌ Erro no mapa:", e);
-        toast.error('Erro ao carregar o mapa');
+        toast.error('Erro ao carregar o mapa: ' + e.error?.message || 'Erro desconhecido');
+        setIsLoading(false);
       });
       
       newMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -104,13 +115,14 @@ const MapView: React.FC<MapViewProps> = ({
       
     } catch (error) {
       console.error("❌ Erro ao inicializar o mapa:", error);
-      toast.error('Erro ao inicializar o mapa');
+      toast.error('Erro ao inicializar o mapa: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      setIsLoading(false);
       clearCurrentMap();
     }
   }, [mapboxToken, setIsLoading]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full rounded-lg overflow-hidden">
       {(!mapboxToken || tokenError) && (
         <MapboxTokenForm
           tokenError={tokenError}
@@ -123,8 +135,12 @@ const MapView: React.FC<MapViewProps> = ({
 
       <div 
         ref={mapContainer} 
-        className="w-full h-full rounded-lg shadow-md"
-        style={{ display: mapboxToken && !tokenError ? 'block' : 'none' }}
+        className="w-full h-full"
+        style={{ 
+          display: mapboxToken && !tokenError ? 'block' : 'none',
+          border: '1px solid #ccc',
+          borderRadius: '0.5rem'
+        }}
       />
 
       {isLoading && mapboxToken && !tokenError && (
@@ -146,7 +162,7 @@ const MapView: React.FC<MapViewProps> = ({
         </button>
       )}
 
-      {map.current && mapLoaded && (
+      {map.current && mapLoaded && buses.length > 0 && (
         <BusMarkers
           map={map.current}
           buses={buses}

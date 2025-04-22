@@ -19,9 +19,12 @@ const BusMarkers: React.FC<BusMarkersProps> = ({
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
 
   useEffect(() => {
+    console.log(`Atualizando ${buses.length} marcadores de ônibus`);
+    
     // Remover marcadores que não estão mais na lista
     Object.keys(markersRef.current).forEach(id => {
       if (!buses.find(bus => bus.id === id)) {
+        console.log(`Removendo marcador para ônibus ${id}`);
         markersRef.current[id].remove();
         delete markersRef.current[id];
       }
@@ -47,8 +50,23 @@ const BusMarkers: React.FC<BusMarkersProps> = ({
 
       try {
         if (markersRef.current[bus.id]) {
+          // Atualizar posição do marcador existente
           markersRef.current[bus.id].setLngLat([bus.longitude, bus.latitude]);
+          
+          // Atualizar elemento do marcador se o estado de seleção mudou
+          const marker = markersRef.current[bus.id];
+          const currentEl = marker.getElement();
+          if ((isSelected && !currentEl.querySelector('.animate-pulse')) || 
+              (!isSelected && currentEl.querySelector('.animate-pulse'))) {
+            marker.remove();
+            const newMarker = new mapboxgl.Marker(el)
+              .setLngLat([bus.longitude, bus.latitude])
+              .addTo(map);
+            markersRef.current[bus.id] = newMarker;
+          }
         } else {
+          // Criar novo marcador
+          console.log(`Adicionando marcador para ônibus ${bus.id}`);
           const marker = new mapboxgl.Marker(el)
             .setLngLat([bus.longitude, bus.latitude])
             .addTo(map);
@@ -63,6 +81,7 @@ const BusMarkers: React.FC<BusMarkersProps> = ({
     if (selectedBusId) {
       const selectedBus = buses.find(bus => bus.id === selectedBusId);
       if (selectedBus) {
+        console.log(`Centralizando no ônibus ${selectedBusId}`);
         map.flyTo({
           center: [selectedBus.longitude, selectedBus.latitude],
           zoom: 15,
