@@ -122,7 +122,7 @@ const MapView: React.FC<MapViewProps> = ({
   }, [mapboxToken, setIsLoading]);
 
   return (
-    <div className="relative w-full h-full rounded-lg overflow-hidden">
+    <div className="relative w-full h-[calc(100vh-16rem)] rounded-lg overflow-hidden">
       {(!mapboxToken || tokenError) && (
         <MapboxTokenForm
           tokenError={tokenError}
@@ -175,3 +175,4 @@ const MapView: React.FC<MapViewProps> = ({
 };
 
 export default MapView;
+
