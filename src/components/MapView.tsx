@@ -51,30 +51,51 @@ const MapView: React.FC<MapViewProps> = ({
     toast.success('Token do Mapbox salvo com sucesso! Carregando mapa...');
   };
 
+  // Efeito para inicializar o mapa quando o token for definido
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
     
     // Limpar mapa anterior se existir
     if (map.current) {
+      console.log("Removendo mapa anterior");
       map.current.remove();
       map.current = null;
+      setMapLoaded(false);
     }
 
     try {
       console.log("Inicializando mapa com token:", mapboxToken.substring(0, 8) + "...");
       mapboxgl.accessToken = mapboxToken;
       
+      // Verificar se o contenedor tem tamanho
+      if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
+        console.error("Contenedor do mapa com dimensões zero:", 
+          mapContainer.current.offsetWidth, mapContainer.current.offsetHeight);
+        setTokenError("Erro: O contenedor do mapa tem dimensões zero");
+        return;
+      }
+      
+      console.log("Criando mapa em contenedor com dimensões:", 
+        mapContainer.current.offsetWidth, mapContainer.current.offsetHeight);
+      
       const newMap = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v11',
         center: [-46.6333, -23.5505], // São Paulo coordinates
-        zoom: 12
+        zoom: 12,
+        failIfMajorPerformanceCaveat: false // Tentar renderizar mesmo em condições menos ideais
       });
 
       newMap.on('load', () => {
         console.log("Mapa carregado com sucesso!");
         setMapLoaded(true);
         toast.success('Mapa carregado com sucesso!');
+      });
+
+      newMap.on('error', (e) => {
+        console.error("Erro no mapa:", e);
+        setTokenError(`Erro no mapa: ${e.error?.message || 'Erro desconhecido'}`);
+        toast.error('Erro ao carregar o mapa');
       });
 
       newMap.addControl(
@@ -104,6 +125,7 @@ const MapView: React.FC<MapViewProps> = ({
         }
         // Limpar todos os markers
         Object.values(markersRef.current).forEach(marker => marker.remove());
+        markersRef.current = {};
       };
     } catch (error) {
       console.error("Erro ao inicializar o mapa:", error);
@@ -124,7 +146,10 @@ const MapView: React.FC<MapViewProps> = ({
 
   // Atualizar marcadores quando os dados dos ônibus mudarem
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!map.current || !mapLoaded) {
+      console.log("Pulando atualização de marcadores: mapa não carregado");
+      return;
+    }
     
     console.log("Atualizando marcadores, ônibus:", buses.length);
 
@@ -162,17 +187,21 @@ const MapView: React.FC<MapViewProps> = ({
         markersRef.current[bus.id].setLngLat([bus.longitude, bus.latitude]);
       } else {
         // Criar novo marcador
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([bus.longitude, bus.latitude])
-          .addTo(map.current);
-        markersRef.current[bus.id] = marker;
+        try {
+          const marker = new mapboxgl.Marker(el)
+            .setLngLat([bus.longitude, bus.latitude])
+            .addTo(map.current!);
+          markersRef.current[bus.id] = marker;
+        } catch (error) {
+          console.error("Erro ao criar marcador:", error);
+        }
       }
     });
 
     // Se há um ônibus selecionado, centralizar o mapa nele
     if (selectedBusId) {
       const selectedBus = buses.find(bus => bus.id === selectedBusId);
-      if (selectedBus) {
+      if (selectedBus && map.current) {
         map.current.flyTo({
           center: [selectedBus.longitude, selectedBus.latitude],
           zoom: 15,
@@ -218,11 +247,28 @@ const MapView: React.FC<MapViewProps> = ({
           </div>
         </div>
       ) : null}
+
       <div 
         ref={mapContainer} 
         className="w-full h-full rounded-lg shadow-md"
-        style={{ display: mapboxToken ? 'block' : 'none' }}
+        style={{ display: mapboxToken && !tokenError ? 'block' : 'none' }}
       />
+
+      {/* Botão para redefinir token */}
+      {mapboxToken && !tokenError && (
+        <button 
+          onClick={() => {
+            setMapboxToken('');
+            localStorage.removeItem('mapboxToken');
+            setMapboxTokenInput('');
+            setMapLoaded(false);
+          }}
+          className="absolute top-2 right-2 bg-white p-2 rounded-md shadow z-10 text-sm"
+          title="Redefinir Token do Mapbox"
+        >
+          Alterar Token
+        </button>
+      )}
     </div>
   );
 };
