@@ -10,7 +10,8 @@ import NotFound from "./pages/NotFound";
 import RoutesPage from "./pages/Routes";
 import Schedule from "./pages/Schedule";
 import Profile from "./pages/Profile";
-import Login from "./pages/Login";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 const queryClient = new QueryClient();
 
@@ -25,8 +26,8 @@ const App = () => (
           <Route path="/routes" element={<RoutesPage />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/login" element={<Login />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </RouterRoutes>
       </BrowserRouter>
