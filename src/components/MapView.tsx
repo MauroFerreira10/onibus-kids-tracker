@@ -3,11 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BusData } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin, Bus } from 'lucide-react';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import MapboxTokenForm from './map/MapboxTokenForm';
 import BusMarkers from './map/BusMarkers';
 import { toast } from 'sonner';
+import { Badge } from './ui/badge';
 
 const MAPBOX_TOKEN = '';
 
@@ -31,6 +32,7 @@ const MapView: React.FC<MapViewProps> = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
   
   const {
     mapboxToken,
@@ -50,6 +52,7 @@ const MapView: React.FC<MapViewProps> = ({
       map.current = null;
     }
     setMapLoaded(false);
+    setMapReady(false);
   };
 
   useEffect(() => {
@@ -92,7 +95,12 @@ const MapView: React.FC<MapViewProps> = ({
         console.log("✅ Mapa carregado com sucesso!");
         setMapLoaded(true);
         setIsLoading(false);
-        toast.success('Mapa carregado com sucesso!');
+        
+        // Adicionar um delay para garantir que o mapa está totalmente renderizado
+        setTimeout(() => {
+          setMapReady(true);
+          toast.success('Mapa carregado com sucesso!');
+        }, 500);
       });
       
       newMap.on('error', (e) => {
@@ -127,7 +135,23 @@ const MapView: React.FC<MapViewProps> = ({
   }, [mapboxToken, setIsLoading]);
 
   return (
-    <div className="relative w-full h-[calc(100vh-16rem)] rounded-lg overflow-hidden">
+    <div className="relative w-full h-[calc(100vh-14rem)] rounded-lg overflow-hidden bg-gradient-to-b from-busapp-primary/5 to-busapp-primary/10 border border-busapp-primary/20">
+      <div className="absolute top-2 left-2 z-10 flex gap-2">
+        {mapReady && buses.length > 0 && (
+          <Badge variant="secondary" className="bg-busapp-secondary text-busapp-dark font-medium">
+            <Bus className="w-3 h-3 mr-1" />
+            {buses.length} ônibus ativos
+          </Badge>
+        )}
+        
+        {mapReady && (
+          <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
+            <MapPin className="w-3 h-3 mr-1" />
+            Lubango, Angola
+          </Badge>
+        )}
+      </div>
+
       {(!mapboxToken || tokenError) && (
         <MapboxTokenForm
           tokenError={tokenError}
@@ -140,19 +164,21 @@ const MapView: React.FC<MapViewProps> = ({
 
       <div 
         ref={mapContainer} 
-        className="w-full h-full"
+        className="w-full h-full transition-opacity duration-500"
         style={{ 
           display: mapboxToken && !tokenError ? 'block' : 'none',
+          opacity: mapReady ? 1 : 0,
           border: '1px solid #ccc',
           borderRadius: '0.5rem'
         }}
       />
 
       {isLoading && mapboxToken && !tokenError && (
-        <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-20">
-          <div className="flex flex-col items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-busapp-primary" />
-            <p className="mt-2 text-busapp-primary font-medium">Carregando o mapa...</p>
+        <div className="absolute inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
+          <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg">
+            <Loader2 className="h-12 w-12 animate-spin text-busapp-primary mb-4" />
+            <p className="text-xl font-medium text-busapp-primary">Carregando o mapa...</p>
+            <p className="text-gray-500 mt-2">Aguarde um momento</p>
           </div>
         </div>
       )}
@@ -160,7 +186,7 @@ const MapView: React.FC<MapViewProps> = ({
       {mapboxToken && !tokenError && !isLoading && (
         <button 
           onClick={resetToken}
-          className="absolute top-2 right-2 bg-white p-2 rounded-md shadow-md z-10 text-sm hover:bg-gray-100 transition-colors"
+          className="absolute top-2 right-2 bg-white/90 p-2 rounded-md shadow-md z-10 text-sm hover:bg-gray-100 transition-colors"
           title="Alterar Token do Mapbox"
         >
           Alterar Token
@@ -180,4 +206,3 @@ const MapView: React.FC<MapViewProps> = ({
 };
 
 export default MapView;
-
