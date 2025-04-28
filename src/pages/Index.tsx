@@ -7,10 +7,14 @@ import { useBusData } from '@/hooks/useBusData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bus, AlertTriangle, Clock, RefreshCw, Loader2 } from 'lucide-react';
+import { Bus, AlertTriangle, Clock, RefreshCw, Loader2, Navigation, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import NextStopCard from '@/components/dashboard/NextStopCard';
+import StatusCard from '@/components/dashboard/StatusCard';
+import TripHistoryDialog from '@/components/dashboard/TripHistoryDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const { buses, isLoading, error, refreshBuses } = useBusData();
@@ -18,6 +22,9 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('map');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { user } = useAuth();
+  
+  const selectedBus = selectedBusId ? buses.find(bus => bus.id === selectedBusId) : null;
 
   // Função para atualizar os dados do ônibus
   const handleRefresh = async () => {
@@ -50,10 +57,42 @@ const Index = () => {
     }
   };
 
+  // Atualizações automáticas
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshBuses();
+      setLastUpdate(new Date());
+    }, 60000); // Atualiza a cada minuto
+    
+    return () => clearInterval(interval);
+  }, [refreshBuses]);
+
   return (
     <Layout>
       <div className="flex flex-col gap-6">
-        {/* Estatísticas em Cards */}
+        {/* Localização atual do ônibus e horário estimado */}
+        {selectedBus && (
+          <div className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+            <div className="flex items-center">
+              <MapPin className="h-6 w-6 text-busapp-primary mr-2" />
+              <div>
+                <h2 className="font-medium text-lg">{selectedBus.currentStop}</h2>
+                <p className="text-sm text-gray-500">Localização atual do ônibus</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <Navigation className="h-5 w-5 text-busapp-secondary mr-2" />
+              <span className="text-sm font-medium">
+                {selectedBus.nextStop} 
+                <span className="ml-1 text-gray-500">
+                  ({selectedBus.estimatedTimeToNextStop} min)
+                </span>
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Cartões de informações */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="bg-gradient-to-br from-busapp-primary/80 to-busapp-primary shadow-md">
             <CardHeader className="pb-2">
@@ -116,6 +155,28 @@ const Index = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Cards de próxima parada e status da viagem */}
+        {selectedBus && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <NextStopCard bus={selectedBus} />
+            <StatusCard bus={selectedBus} />
+          </div>
+        )}
+
+        {/* Botões de ação */}
+        <div className="flex gap-3 mb-4">
+          <TripHistoryDialog busId={selectedBusId} />
+          
+          <Button 
+            variant="outline" 
+            className="flex-1 bg-white border-busapp-primary/20 text-busapp-primary hover:bg-busapp-primary/5"
+            onClick={() => toast.info("Notificações em breve disponíveis")}
+          >
+            <Bell className="mr-2 h-5 w-5" />
+            Notificações Recentes
+          </Button>
         </div>
 
         {/* Mapa e Lista de Ônibus */}

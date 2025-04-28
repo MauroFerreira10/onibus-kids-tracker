@@ -14,6 +14,8 @@ import Schedule from "./pages/Schedule";
 import Profile from "./pages/Profile";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import Notifications from "./pages/Notifications";
+import DriverDashboard from "./pages/driver/DriverDashboard";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -47,9 +49,19 @@ function App() {
                   <Schedule />
                 </ProtectedRoute>
               } />
+              <Route path="/notifications" element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              } />
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/driver" element={
+                <ProtectedRoute>
+                  <DriverDashboard />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

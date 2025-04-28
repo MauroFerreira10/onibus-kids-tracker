@@ -1,17 +1,27 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bus, Map, User, Calendar, LogOut } from 'lucide-react';
+import { Bus, Map, User, Calendar, LogOut, BellRing } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Badge } from './ui/badge';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const { signOut } = useAuth();
   
+  // Simular 3 notificações não lidas
+  const unreadNotifications = 3;
+  
   const navItems = [
     { label: 'Mapa', path: '/', icon: Map },
     { label: 'Rotas', path: '/routes', icon: Bus },
     { label: 'Horários', path: '/schedule', icon: Calendar },
+    { 
+      label: 'Notificações', 
+      path: '/notifications', 
+      icon: BellRing,
+      badge: unreadNotifications > 0 ? unreadNotifications : undefined 
+    },
     { label: 'Perfil', path: '/profile', icon: User }
   ];
 
@@ -32,8 +42,13 @@ const Navbar: React.FC = () => {
                     : 'text-gray-500 hover:text-busapp-accent'
                 }`}
               >
-                <div className={`p-2 rounded-full ${isActive ? 'bg-busapp-primary/10' : ''}`}>
+                <div className={`p-2 rounded-full ${isActive ? 'bg-busapp-primary/10' : ''} relative`}>
                   <IconComponent size={20} />
+                  {item.badge && (
+                    <Badge className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center p-0 text-[10px]">
+                      {item.badge}
+                    </Badge>
+                  )}
                 </div>
                 <span className="text-xs mt-1">{item.label}</span>
                 {isActive && (
