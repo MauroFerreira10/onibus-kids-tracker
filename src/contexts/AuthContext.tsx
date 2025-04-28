@@ -38,7 +38,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentSession?.user ?? null);
       
       if (!currentSession) {
-        navigate('/auth/login');
+        // Mudança aqui: apenas redirecionar se o usuario não estiver em uma página de autenticação
+        const path = window.location.pathname;
+        if (!path.includes('/auth/')) {
+          navigate('/auth/login');
+        }
       }
     });
 
