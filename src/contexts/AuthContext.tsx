@@ -15,18 +15,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log('Auth event:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (event === 'SIGNED_IN') {
+          console.log('User signed in, redirecting to home');
           navigate('/');
         } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out, redirecting to login');
           navigate('/auth/login');
         }
       }
@@ -34,16 +38,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('Initial session check:', currentSession ? 'logged in' : 'not logged in');
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (!currentSession) {
-        // Mudança aqui: apenas redirecionar se o usuario não estiver em uma página de autenticação
+        // Apenas redirecionar se o usuario não estiver em uma página de autenticação
         const path = window.location.pathname;
         if (!path.includes('/auth/')) {
+          console.log('No session, redirecting to login');
           navigate('/auth/login');
         }
       }
+      setIsLoading(false);
     });
 
     return () => {
@@ -52,8 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [navigate]);
 
   const signOut = async () => {
+    console.log('Signing out');
     await supabase.auth.signOut();
   };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+  }
 
   return (
     <AuthContext.Provider value={{ session, user, signOut }}>

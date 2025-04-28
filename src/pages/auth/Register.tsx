@@ -25,15 +25,17 @@ const Register = () => {
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) {
+        console.error('Registration error:', error);
         toast.error(error.message);
       } else {
-        toast.success('Registro realizado com sucesso! Verifique seu email.');
+        console.log('Registration successful:', data);
+        toast.success('Registro realizado com sucesso! Entre com suas credenciais.');
         navigate('/auth/login');
       }
     } catch (error) {

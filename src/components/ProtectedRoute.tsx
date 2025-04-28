@@ -9,9 +9,14 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (!session) {
+      console.log('Protected route: no session, redirecting to login');
       navigate('/auth/login');
     }
   }, [session, navigate]);
 
-  return session ? children : null;
+  if (!session) {
+    return <div className="flex items-center justify-center h-screen">Redirecionando...</div>;
+  }
+
+  return children;
 }
