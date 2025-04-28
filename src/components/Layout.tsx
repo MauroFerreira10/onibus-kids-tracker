@@ -32,7 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, hideNavigation = false
               <path d="M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="currentColor"/>
               <path d="M17 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="currentColor"/>
             </svg>
-            <h1 className="text-xl font-bold">Ônibus Kids Tracker</h1>
+            <h1 className="text-xl font-bold">SafeBus</h1>
           </div>
           <span className="ml-2 text-sm bg-busapp-secondary text-busapp-dark px-2 py-0.5 rounded-full">
             Beta
