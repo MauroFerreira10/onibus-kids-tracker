@@ -7,7 +7,7 @@ import { useBusData } from '@/hooks/useBusData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bus, AlertTriangle, Clock, RefreshCw, Loader2, Navigation, MapPin } from 'lucide-react';
+import { Bus, AlertTriangle, Clock, RefreshCw, Loader2, Navigation, MapPin, Bell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
