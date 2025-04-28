@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bus, Map, User, Calendar } from 'lucide-react';
+import { Bus, Map, User, Calendar, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const { signOut } = useAuth();
   
   const navItems = [
     { label: 'Mapa', path: '/', icon: Map },
@@ -41,6 +43,17 @@ const Navbar: React.FC = () => {
             </li>
           );
         })}
+        <li>
+          <button
+            onClick={signOut}
+            className="flex flex-col items-center p-2 text-gray-500 hover:text-red-500 transition-colors"
+          >
+            <div className="p-2 rounded-full">
+              <LogOut size={20} />
+            </div>
+            <span className="text-xs mt-1">Sair</span>
+          </button>
+        </li>
       </ul>
     </nav>
   );
