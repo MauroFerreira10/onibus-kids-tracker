@@ -1,3 +1,4 @@
+
 import { BusData, RouteData, StopData, UserData } from '@/types';
 
 // Função para gerar dados simulados de ônibus
@@ -7,15 +8,15 @@ export function generateMockBuses(): BusData[] {
       id: 'bus-001',
       name: 'Ônibus 101',
       route: 'Rota A',
-      latitude: -23.5505,
-      longitude: -46.6333, // São Paulo
+      latitude: -14.9167,
+      longitude: 13.4925, // Lubango
       speed: 25,
       direction: 90,
       status: 'active',
       capacity: 45,
       occupancy: 32,
-      currentStop: 'Escola Municipal',
-      nextStop: 'Avenida Paulista',
+      currentStop: 'Faculdade ISPI',
+      nextStop: 'Reitoria da Mandume',
       estimatedTimeToNextStop: 5,
       lastUpdate: new Date().toISOString(),
       onTime: true,
@@ -29,15 +30,15 @@ export function generateMockBuses(): BusData[] {
       id: 'bus-002',
       name: 'Ônibus 202',
       route: 'Rota B',
-      latitude: -23.5605,
-      longitude: -46.6433, // São Paulo, um pouco deslocado
+      latitude: -14.9200,
+      longitude: 13.4960, // Lubango, um pouco deslocado
       speed: 0,
       direction: 180,
       status: 'active',
       capacity: 45,
       occupancy: 38,
-      currentStop: 'Praça da Sé',
-      nextStop: 'Estação da Luz',
+      currentStop: 'Reitoria da Mandume',
+      nextStop: 'Bairro do Tchioco',
       estimatedTimeToNextStop: 12,
       lastUpdate: new Date(Date.now() - 10 * 60000).toISOString(), // 10 minutos atrás
       onTime: false,
@@ -51,15 +52,15 @@ export function generateMockBuses(): BusData[] {
       id: 'bus-003',
       name: 'Ônibus 303',
       route: 'Rota C',
-      latitude: -23.5305,
-      longitude: -46.6133, // São Paulo, mais deslocado
+      latitude: -14.9300,
+      longitude: 13.4890, // Lubango, mais deslocado
       speed: 15,
       direction: 270,
       status: 'delayed',
       capacity: 40,
       occupancy: 35,
-      currentStop: 'Av. Brigadeiro Faria Lima',
-      nextStop: 'Pinheiros',
+      currentStop: 'Bairro do Tchioco',
+      nextStop: 'Faculdade ISPI',
       estimatedTimeToNextStop: 8,
       lastUpdate: new Date(Date.now() - 5 * 60000).toISOString(), // 5 minutos atrás
       onTime: false,

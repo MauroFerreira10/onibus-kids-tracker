@@ -25,7 +25,7 @@ const Routes = () => {
     <Layout>
       <div className="space-y-6">
         <section>
-          <h2 className="text-xl font-bold mb-4">Rotas Ativas</h2>
+          <h2 className="text-xl font-bold mb-4">Rotas Ativas em Lubango</h2>
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
@@ -74,7 +74,7 @@ const Routes = () => {
                         </p>
                       </div>
                       
-                      <h4 className="font-semibold mb-2">Paradas</h4>
+                      <h4 className="font-semibold mb-2">Paradas em Lubango</h4>
                       <ul className="space-y-4">
                         {route.stops.map((stop, index) => (
                           <li key={stop.id} className="relative pl-6">
