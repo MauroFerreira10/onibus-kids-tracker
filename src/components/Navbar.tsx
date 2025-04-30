@@ -1,13 +1,13 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bus, Map, User, Calendar, LogOut, BellRing } from 'lucide-react';
+import { Bus, Map, User, Calendar, LogOut, BellRing, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from './ui/badge';
+import { SheetClose } from '@radix-ui/react-dialog';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   
   // Simular 3 notificações não lidas
   const unreadNotifications = 3;
@@ -58,6 +58,14 @@ const Navbar: React.FC = () => {
             </li>
           );
         })}
+        {user?.role === 'manager' && (
+          <SheetClose asChild>
+            <Link to="/manager/invitations" className="flex items-center py-2">
+              <UserPlus className="mr-2 h-5 w-5" />
+              Gestão de Convites
+            </Link>
+          </SheetClose>
+        )}
         <li>
           <button
             onClick={signOut}

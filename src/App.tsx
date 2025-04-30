@@ -16,6 +16,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Notifications from "./pages/Notifications";
 import DriverDashboard from "./pages/driver/DriverDashboard";
+import Invitations from "./pages/manager/Invitations";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -62,6 +63,11 @@ function App() {
               <Route path="/driver" element={
                 <ProtectedRoute>
                   <DriverDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/manager/invitations" element={
+                <ProtectedRoute>
+                  <Invitations />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
