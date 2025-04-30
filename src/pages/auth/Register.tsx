@@ -49,7 +49,7 @@ const Register = () => {
   const [registrationType, setRegistrationType] = useState<'code' | 'normal'>('normal');
   const [activationCode, setActivationCode] = useState("");
   const [codeVerified, setCodeVerified] = useState(false);
-  const [verifiedRole, setVerifiedRole] = useState<'parent' | 'driver' | 'manager' | null>(null);
+  const [verifiedRole, setVerifiedRole] = useState<'parent' | 'student' | 'driver' | 'manager' | null>(null);
   const [verifiedData, setVerifiedData] = useState<Invitation | null>(null);
 
   // Get role and code from URL if present

@@ -31,7 +31,7 @@ interface ProfileData {
   id: string;
   name: string | null;
   email: string;
-  role: 'parent' | 'student';
+  role: 'parent' | 'student' | 'driver' | 'manager';
   contact_number: string | null;
   address: string | null;
   children?: {
