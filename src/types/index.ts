@@ -56,7 +56,7 @@ export interface UserData {
   id: string;
   name: string;
   email: string;
-  role: 'parent' | 'student' | 'manager' | 'driver';
+  role: 'parent' | 'student' | 'driver' | 'manager';
   phone?: string;
   photo?: string;
   children?: {
@@ -68,6 +68,7 @@ export interface UserData {
     stopName: string;
   }[];
   associatedBusId?: string; // para motoristas
+  schoolId?: string; // ID da escola associada
 }
 
 // Tipos para autenticação
@@ -83,4 +84,20 @@ export interface BusFilters {
   route?: string;
   status?: 'active' | 'inactive' | 'delayed';
   onTime?: boolean;
+}
+
+// Tipos para convites e códigos de ativação
+export interface Invitation {
+  id: string;
+  email?: string; 
+  role: 'parent' | 'driver' | 'manager';
+  activation_code: string;
+  created_at: string;
+  expires_at?: string;
+  used: boolean;
+  used_by?: string;
+  child_name?: string;
+  student_number?: string;
+  school_id?: string;
+  created_by: string;
 }
