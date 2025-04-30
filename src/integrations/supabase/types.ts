@@ -44,6 +44,59 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          activation_code: string
+          child_name: string | null
+          created_at: string | null
+          created_by: string
+          email: string | null
+          expires_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          school_id: string | null
+          student_number: string | null
+          used: boolean | null
+          used_by: string | null
+        }
+        Insert: {
+          activation_code: string
+          child_name?: string | null
+          created_at?: string | null
+          created_by: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
+          student_number?: string | null
+          used?: boolean | null
+          used_by?: string | null
+        }
+        Update: {
+          activation_code?: string
+          child_name?: string | null
+          created_at?: string | null
+          created_by?: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
+          student_number?: string | null
+          used?: boolean | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -53,6 +106,7 @@ export type Database = {
           id: string
           name: string | null
           role: Database["public"]["Enums"]["user_role"]
+          school_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -63,6 +117,7 @@ export type Database = {
           id: string
           name?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -73,6 +128,37 @@ export type Database = {
           id?: string
           name?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      schools: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -85,7 +171,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      user_role: "parent" | "student"
+      user_role: "parent" | "student" | "driver" | "manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -201,7 +287,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["parent", "student"],
+      user_role: ["parent", "student", "driver", "manager"],
     },
   },
 } as const

@@ -23,6 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Invitation } from '@/types';
 
 const userRoleSchema = z.enum(['parent', 'student', 'driver', 'manager']);
 
@@ -48,8 +49,8 @@ const Register = () => {
   const [registrationType, setRegistrationType] = useState<'code' | 'normal'>('normal');
   const [activationCode, setActivationCode] = useState("");
   const [codeVerified, setCodeVerified] = useState(false);
-  const [verifiedRole, setVerifiedRole] = useState<'parent' | 'driver' | null>(null);
-  const [verifiedData, setVerifiedData] = useState<any>(null);
+  const [verifiedRole, setVerifiedRole] = useState<'parent' | 'driver' | 'manager' | null>(null);
+  const [verifiedData, setVerifiedData] = useState<Invitation | null>(null);
 
   // Get role and code from URL if present
   const roleFromUrl = searchParams.get('role');
@@ -90,30 +91,30 @@ const Register = () => {
     try {
       setLoading(true);
       // Check if code exists in invitations table
-      const { data: invitationData, error: invitationError } = await supabase
+      const { data, error } = await supabase
         .from('invitations')
         .select('*')
         .eq('activation_code', code)
         .single();
       
-      if (invitationError || !invitationData) {
+      if (error || !data) {
         toast.error('Código de ativação inválido.');
         return;
       }
       
       // Check if code is already used
-      if (invitationData.used) {
+      if (data.used) {
         toast.error('Este código já foi utilizado.');
         return;
       }
       
       // If code is valid, set form data
-      form.setValue('role', invitationData.role);
-      form.setValue('email', invitationData.email || '');
-      form.setValue('schoolId', invitationData.school_id || '');
+      form.setValue('role', data.role);
+      form.setValue('email', data.email || '');
+      form.setValue('schoolId', data.school_id || '');
       
-      setVerifiedRole(invitationData.role);
-      setVerifiedData(invitationData);
+      setVerifiedRole(data.role);
+      setVerifiedData(data as Invitation);
       setCodeVerified(true);
       toast.success('Código verificado com sucesso!');
       
@@ -427,7 +428,7 @@ const Register = () => {
                         <div className="space-y-4">
                           <Alert className="bg-green-50 text-green-800 border-green-200">
                             <AlertDescription>
-                              Código verificado com sucesso! Você está se registrando como {verifiedRole === 'parent' ? 'Responsável' : verifiedRole === 'driver' ? 'Motorista' : 'Usuário'}.
+                              Código verificado com sucesso! Você está se registrando como {verifiedRole === 'parent' ? 'Responsável' : verifiedRole === 'driver' ? 'Motorista' : verifiedRole === 'manager' ? 'Gestor' : 'Usuário'}.
                             </AlertDescription>
                           </Alert>
                           

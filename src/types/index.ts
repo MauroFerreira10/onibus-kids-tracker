@@ -90,7 +90,7 @@ export interface BusFilters {
 export interface Invitation {
   id: string;
   email?: string; 
-  role: 'parent' | 'driver' | 'manager';
+  role: 'parent' | 'student' | 'driver' | 'manager';
   activation_code: string;
   created_at: string;
   expires_at?: string;
