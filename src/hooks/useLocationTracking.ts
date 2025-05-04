@@ -83,26 +83,31 @@ export const useLocationTracking = ({ vehicle, user, onStatusChange }: UseLocati
 
       setCurrentLocation(locationData);
 
-      // Use RPC method to insert location
-      const { error } = await supabase.rpc('insert_location', {
-        driver_id: user.id,
-        vehicle_id: vehicle.id,
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        spd: position.coords.speed || 0,
-        dir: position.coords.heading || 0
-      });
+      // Insert location data directly into the locations table
+      const { error } = await supabase
+        .from('locations')
+        .insert({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          speed: position.coords.speed || 0,
+          direction: position.coords.heading || 0,
+          vehicle_id: vehicle.id,
+          driver_id: user.id
+        });
 
       if (error) {
         console.error('Erro ao salvar localização:', error);
       }
       
       // Update vehicle's last position
-      await supabase.rpc('update_vehicle_location', {
-        veh_id: vehicle.id,
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      });
+      await supabase
+        .from('vehicles')
+        .update({
+          last_latitude: position.coords.latitude,
+          last_longitude: position.coords.longitude,
+          last_location_update: new Date().toISOString()
+        })
+        .eq('id', vehicle.id);
         
     } catch (error) {
       console.error('Erro ao processar localização:', error);

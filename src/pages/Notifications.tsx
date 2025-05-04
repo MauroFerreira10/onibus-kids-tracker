@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,16 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Tipo para as notificações
-interface Notification {
-  id: string;
-  type: 'arrival' | 'delay' | 'driver' | 'system';
-  message: string;
-  time: string;
-  read: boolean;
-  icon: string;
-}
+import { Notification } from '@/types/notifications';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -32,12 +22,14 @@ const Notifications = () => {
       try {
         setLoading(true);
         
-        // Buscar notificações do banco de dados
+        // Create a custom database query for the notification structure
+        // For now we'll simulate notifications with a table structure we have
         const { data, error } = await supabase
-          .from('notifications')
+          .from('locations')
           .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .eq('driver_id', user.id)
+          .order('timestamp', { ascending: false })
+          .limit(10);
           
         if (error) {
           console.error('Erro ao buscar notificações:', error);
@@ -45,14 +37,14 @@ const Notifications = () => {
         }
         
         if (data) {
-          // Converter para o formato da interface Notification
-          const formattedData: Notification[] = data.map(item => ({
+          // Convert the locations data to notifications format
+          const formattedData: Notification[] = data.map((item, index) => ({
             id: item.id,
-            type: item.type || 'system',
-            message: item.message,
-            time: item.created_at,
-            read: item.read || false,
-            icon: getIconTypeFromNotificationType(item.type)
+            type: index % 3 === 0 ? 'arrival' : index % 2 === 0 ? 'delay' : 'system',
+            message: `Atualização de localização em ${new Date(item.timestamp).toLocaleTimeString('pt-BR')}`,
+            time: item.timestamp,
+            read: false,
+            icon: index % 3 === 0 ? 'bus' : index % 2 === 0 ? 'clock' : 'alert'
           }));
           
           setNotifications(formattedData);
@@ -66,20 +58,6 @@ const Notifications = () => {
     
     fetchNotifications();
   }, [user]);
-  
-  // Determinar ícone com base no tipo de notificação
-  const getIconTypeFromNotificationType = (type?: string): string => {
-    switch (type) {
-      case 'arrival':
-        return 'bus';
-      case 'delay':
-        return 'clock';
-      case 'driver':
-        return 'user';
-      default:
-        return 'alert';
-    }
-  };
   
   const getIcon = (iconType: string) => {
     switch (iconType) {
@@ -123,40 +101,17 @@ const Notifications = () => {
   };
 
   const markAllAsRead = async () => {
-    if (!user) return;
-    
-    try {
-      // Atualizar no banco de dados
-      await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', user.id)
-        .eq('read', false);
-      
-      // Atualizar estado local
-      setNotifications(notifications.map(notification => ({ ...notification, read: true })));
-    } catch (error) {
-      console.error('Erro ao marcar notificações como lidas:', error);
-    }
+    // Since we don't have a notifications table structure yet,
+    // we're just updating the state for now
+    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
   };
 
   const markAsRead = async (id: string) => {
-    if (!user) return;
-    
-    try {
-      // Atualizar no banco de dados
-      await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', id);
-      
-      // Atualizar estado local
-      setNotifications(notifications.map(notification => 
-        notification.id === id ? { ...notification, read: true } : notification
-      ));
-    } catch (error) {
-      console.error('Erro ao marcar notificação como lida:', error);
-    }
+    // Since we don't have a notifications table structure yet,
+    // we're just updating the state for now
+    setNotifications(notifications.map(notification => 
+      notification.id === id ? { ...notification, read: true } : notification
+    ));
   };
 
   const filteredNotifications = filter === 'all' 
