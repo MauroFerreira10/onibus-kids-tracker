@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,9 +85,30 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
         throw new Error(result.error.message);
       }
       
-      const savedVehicle = result.data as VehicleData;
+      // Map the database response to our VehicleData interface
+      const data = result.data;
+      const savedVehicle: VehicleData = {
+        id: data.id,
+        licensePlate: data.license_plate,
+        model: data.model,
+        capacity: data.capacity,
+        year: data.year,
+        driverId: data.driver_id,
+        status: data.status,
+        trackingEnabled: data.tracking_enabled,
+        lastLatitude: data.last_latitude,
+        lastLongitude: data.last_longitude,
+        lastLocationUpdate: data.last_location_update
+      };
       
-      toast.success(`Veículo ${existingVehicle ? 'atualizado' : 'registrado'} com sucesso!`);
+      const actionText = existingVehicle ? 'atualizado' : 'registrado';
+      toast.success(`Veículo ${actionText} com sucesso!`);
+      
+      if (trackingEnabled) {
+        toast.info(`O rastreamento do veículo está ativado. Entre na aba "Localização" para iniciar o rastreamento.`, {
+          duration: 7000
+        });
+      }
       
       if (onVehicleRegistered) {
         onVehicleRegistered(savedVehicle);
@@ -188,6 +210,13 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
                 onCheckedChange={setTrackingEnabled}
               />
             </div>
+          </div>
+          
+          {/* Mensagem informativa sobre o rastreamento */}
+          <div className="bg-blue-50 p-3 rounded-md">
+            <p className="text-blue-800 text-sm">
+              <strong>Rastreamento de localização:</strong> Quando ativado, permite que pais, alunos e gestores acompanhem o ônibus em tempo real durante as viagens.
+            </p>
           </div>
         </CardContent>
         <CardFooter>

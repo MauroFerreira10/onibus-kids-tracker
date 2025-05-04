@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Navigation, Power } from 'lucide-react';
+import { Navigation, Power, AlertTriangle } from 'lucide-react';
 import { VehicleData } from '@/types';
 
 interface LocationControlsProps {
@@ -40,8 +40,17 @@ const LocationControls: React.FC<LocationControlsProps> = ({
       )}
       
       {!trackingEnabled && (
-        <p className="text-sm text-amber-600 text-center mt-2">
-          O rastreamento está desativado para este veículo. Ative-o nas configurações do veículo.
+        <div className="bg-amber-50 p-3 rounded-md text-center mt-2 flex items-center justify-center">
+          <AlertTriangle className="h-4 w-4 text-amber-600 mr-2" />
+          <p className="text-sm text-amber-600">
+            O rastreamento está desativado para este veículo. Ative-o nas configurações do veículo.
+          </p>
+        </div>
+      )}
+      
+      {trackingEnabled && !isTracking && (
+        <p className="text-sm text-center text-gray-500 mt-2">
+          Clique no botão acima para iniciar o compartilhamento de sua localização com os pais e alunos.
         </p>
       )}
     </div>

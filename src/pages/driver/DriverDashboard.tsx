@@ -1,11 +1,10 @@
 
 import React from 'react';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { useBusData } from '@/hooks/useBusData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import RegisterVehicleForm from '@/components/driver/RegisterVehicleForm';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useBusData } from '@/hooks/useBusData';
+import RegisterVehicleForm from '@/components/driver/RegisterVehicleForm';
 import TripStatusHeader from '@/components/driver/dashboard/TripStatusHeader';
 import DriverInfo from '@/components/driver/dashboard/DriverInfo';
 import RouteInfo from '@/components/driver/dashboard/RouteInfo';
@@ -60,7 +59,12 @@ const DriverDashboard = () => {
           <TabsContent value="viagens" className="space-y-4 pt-4">
             {/* Driver info and bus info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DriverInfo user={user} vehicle={vehicle} />
+              <DriverInfo user={user ? { 
+                id: user.id, 
+                name: user.name || user.email, 
+                email: user.email,
+                role: 'driver'
+              } : null} vehicle={vehicle} />
               <RouteInfo />
             </div>
             

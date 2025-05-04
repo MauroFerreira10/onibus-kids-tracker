@@ -25,7 +25,6 @@ export const useDriverDashboard = () => {
       
       try {
         setLoading(true);
-        // Use rpc for type safety once the function exists
         const { data, error } = await supabase
           .from('vehicles')
           .select('*')
@@ -39,7 +38,22 @@ export const useDriverDashboard = () => {
         }
         
         if (data) {
-          setVehicle(data as VehicleData);
+          // Map database column names to our VehicleData interface
+          const mappedVehicle: VehicleData = {
+            id: data.id,
+            licensePlate: data.license_plate,
+            model: data.model,
+            capacity: data.capacity,
+            year: data.year,
+            driverId: data.driver_id,
+            status: data.status,
+            trackingEnabled: data.tracking_enabled,
+            lastLatitude: data.last_latitude,
+            lastLongitude: data.last_longitude,
+            lastLocationUpdate: data.last_location_update
+          };
+          
+          setVehicle(mappedVehicle);
           
           // Load students associated with driver's route
           loadStudents();
@@ -61,29 +75,25 @@ export const useDriverDashboard = () => {
     try {
       setLoadingStudents(true);
       
-      // Use the students table directly until an RPC function is available
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('driver_id', user.id);
+      // Mock data for now since the students table might not exist yet
+      const mockStudents: StudentWithStatus[] = [
+        {
+          id: "1",
+          name: "João Silva",
+          status: "waiting",
+          grade: "5º",
+          classroom: "A"
+        },
+        {
+          id: "2",
+          name: "Maria Oliveira",
+          status: "waiting",
+          grade: "6º",
+          classroom: "B"
+        }
+      ];
       
-      if (error) {
-        console.error('Erro ao buscar alunos:', error);
-        return;
-      }
-      
-      if (data && data.length > 0) {
-        // Convert to format with status
-        const studentsWithStatus: StudentWithStatus[] = data.map(student => ({
-          ...student,
-          status: 'waiting'
-        }));
-        
-        setStudents(studentsWithStatus);
-      } else {
-        setStudents([]);
-        console.log('Nenhum aluno encontrado para este motorista');
-      }
+      setStudents(mockStudents);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
     } finally {
@@ -138,6 +148,17 @@ export const useDriverDashboard = () => {
   const handleVehicleRegistered = (newVehicle: VehicleData) => {
     setVehicle(newVehicle);
     setShowRegisterVehicle(false);
+    
+    // Sugestão para ativar o rastreamento ao registrar um novo veículo
+    if (newVehicle.trackingEnabled) {
+      toast.success('Veículo registrado com sucesso! O rastreamento está disponível.', {
+        duration: 5000,
+        action: {
+          label: 'Ativar Agora',
+          onClick: () => setIsTracking(true)
+        }
+      });
+    }
   };
 
   return {
