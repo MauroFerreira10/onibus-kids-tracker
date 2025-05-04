@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bus, Map, User, Calendar, LogOut, BellRing, UserPlus } from 'lucide-react';
+import { Bus, Map, User, Calendar, LogOut, BellRing, UserPlus, Key } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from './ui/badge';
 import { SheetClose } from './ui/sheet';
@@ -61,9 +61,21 @@ const Navbar: React.FC = () => {
         })}
         {user?.role === 'manager' && (
           <SheetClose asChild>
-            <Link to="/manager/invitations" className="flex items-center py-2">
-              <UserPlus className="mr-2 h-5 w-5" />
-              Gestão de Convites
+            <Link 
+              to="/manager/invitations" 
+              className={`flex flex-col items-center p-2 transition-all duration-200 ${
+                location.pathname === '/manager/invitations' 
+                  ? 'text-busapp-primary scale-110' 
+                  : 'text-gray-500 hover:text-busapp-accent'
+              }`}
+            >
+              <div className={`p-2 rounded-full ${location.pathname === '/manager/invitations' ? 'bg-busapp-primary/10' : ''}`}>
+                <Key size={20} />
+              </div>
+              <span className="text-xs mt-1">Convites</span>
+              {location.pathname === '/manager/invitations' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-busapp-primary mt-1"></span>
+              )}
             </Link>
           </SheetClose>
         )}
