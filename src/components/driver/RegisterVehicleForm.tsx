@@ -27,7 +27,7 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
   const [capacity, setCapacity] = useState(existingVehicle?.capacity || 40);
   const [year, setYear] = useState(existingVehicle?.year || new Date().getFullYear().toString());
   const [status, setStatus] = useState<VehicleData['status']>(existingVehicle?.status || 'active');
-  const [trackingEnabled, setTrackingEnabled] = useState(existingVehicle?.trackingEnabled || true);
+  const [trackingEnabled, setTrackingEnabled] = useState(existingVehicle?.trackingEnabled ?? true);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +49,7 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
       const response = await supabase.rpc(
         existingVehicle ? 'update_vehicle' : 'register_vehicle',
         {
-          veh_id: existingVehicle?.id || undefined,
+          veh_id: existingVehicle?.id,
           license: licensePlate,
           mdl: model,
           cap: capacity,
@@ -69,11 +69,11 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
         driver_id: user.id
       });
       
-      if (fetchError || !vehicleData) {
+      if (fetchError || !vehicleData || vehicleData.length === 0) {
         throw new Error(fetchError?.message || 'Erro ao buscar dados do veículo');
       }
       
-      const savedVehicle = vehicleData as unknown as VehicleData;
+      const savedVehicle = vehicleData[0] as VehicleData;
       
       toast.success(`Veículo ${existingVehicle ? 'atualizado' : 'registrado'} com sucesso!`);
       

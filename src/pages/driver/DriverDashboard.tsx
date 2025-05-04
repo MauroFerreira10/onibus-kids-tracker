@@ -48,21 +48,18 @@ const DriverDashboard = () => {
       
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('vehicles')
-          .select('*')
-          .eq('driverId', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+        const { data, error } = await supabase.rpc('get_vehicle_by_id', {
+          driver_id: user.id
+        });
         
-        if (error && error.code !== 'PGRST116') { // PGRST116 é o erro de "no rows returned"
+        if (error) {
           console.error('Erro ao buscar veículo:', error);
           toast.error('Erro ao carregar informações do veículo');
+          return;
         }
         
-        if (data) {
-          setVehicle(data as VehicleData);
+        if (data && data.length > 0) {
+          setVehicle(data[0] as unknown as VehicleData);
         }
       } catch (error) {
         console.error('Erro ao buscar veículo:', error);

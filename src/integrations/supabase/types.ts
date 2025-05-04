@@ -97,6 +97,47 @@ export type Database = {
           },
         ]
       }
+      locations: {
+        Row: {
+          direction: number | null
+          driver_id: string
+          id: string
+          latitude: number
+          longitude: number
+          speed: number
+          timestamp: string
+          vehicle_id: string
+        }
+        Insert: {
+          direction?: number | null
+          driver_id: string
+          id?: string
+          latitude: number
+          longitude: number
+          speed?: number
+          timestamp?: string
+          vehicle_id: string
+        }
+        Update: {
+          direction?: number | null
+          driver_id?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          speed?: number
+          timestamp?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -163,12 +204,63 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicles: {
+        Row: {
+          capacity: number
+          created_at: string
+          driver_id: string
+          id: string
+          last_latitude: number | null
+          last_location_update: string | null
+          last_longitude: number | null
+          license_plate: string
+          model: string
+          status: string
+          tracking_enabled: boolean
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          last_latitude?: number | null
+          last_location_update?: string | null
+          last_longitude?: number | null
+          license_plate: string
+          model: string
+          status?: string
+          tracking_enabled?: boolean
+          updated_at?: string
+          year: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          last_latitude?: number | null
+          last_location_update?: string | null
+          last_longitude?: number | null
+          license_plate?: string
+          model?: string
+          status?: string
+          tracking_enabled?: boolean
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      clean_old_locations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "parent" | "student" | "driver" | "manager"
