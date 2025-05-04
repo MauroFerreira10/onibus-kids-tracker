@@ -1,4 +1,3 @@
-
 // Tipos para os dados da aplicação
 
 // Dados do ônibus
@@ -89,15 +88,13 @@ export interface BusFilters {
 // Tipos para convites e códigos de ativação
 export interface Invitation {
   id: string;
-  email?: string; 
-  role: 'parent' | 'student' | 'driver' | 'manager';
+  role: string;
+  email: string | null;
+  child_name?: string | null;
+  student_number?: string | null;
   activation_code: string;
-  created_at: string;
-  expires_at?: string;
-  used: boolean;
-  used_by?: string;
-  child_name?: string;
-  student_number?: string;
-  school_id?: string;
   created_by: string;
+  created_at: string;
+  expires_at: string;
+  used: boolean;
 }
