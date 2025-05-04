@@ -1,58 +1,85 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Bell, BellRing, Bus, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Mock data para notificações
-const mockNotifications = [
-  {
-    id: '1',
-    type: 'arrival',
-    message: 'Ônibus está a 5 minutos do seu ponto.',
-    time: '2025-04-28T07:25:00',
-    read: false,
-    icon: 'bus'
-  },
-  {
-    id: '2',
-    type: 'delay',
-    message: 'Transporte atrasado em 10 minutos por trânsito.',
-    time: '2025-04-28T07:10:00',
-    read: false,
-    icon: 'clock'
-  },
-  {
-    id: '3',
-    type: 'driver',
-    message: 'Mudança de motorista registrada hoje.',
-    time: '2025-04-27T18:30:00',
-    read: true,
-    icon: 'user'
-  },
-  {
-    id: '4',
-    type: 'system',
-    message: 'Atualização do aplicativo disponível.',
-    time: '2025-04-26T14:15:00',
-    read: true,
-    icon: 'alert'
-  },
-  {
-    id: '5',
-    type: 'arrival',
-    message: 'O ônibus chegou ao ponto de embarque.',
-    time: '2025-04-26T07:30:00',
-    read: true,
-    icon: 'bus'
-  }
-];
+// Tipo para as notificações
+interface Notification {
+  id: string;
+  type: 'arrival' | 'delay' | 'driver' | 'system';
+  message: string;
+  time: string;
+  read: boolean;
+  icon: string;
+}
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  
+  // Carregar notificações do usuário
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Buscar notificações do banco de dados
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error('Erro ao buscar notificações:', error);
+          return;
+        }
+        
+        if (data) {
+          // Converter para o formato da interface Notification
+          const formattedData: Notification[] = data.map(item => ({
+            id: item.id,
+            type: item.type || 'system',
+            message: item.message,
+            time: item.created_at,
+            read: item.read || false,
+            icon: getIconTypeFromNotificationType(item.type)
+          }));
+          
+          setNotifications(formattedData);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar notificações:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNotifications();
+  }, [user]);
+  
+  // Determinar ícone com base no tipo de notificação
+  const getIconTypeFromNotificationType = (type?: string): string => {
+    switch (type) {
+      case 'arrival':
+        return 'bus';
+      case 'delay':
+        return 'clock';
+      case 'driver':
+        return 'user';
+      default:
+        return 'alert';
+    }
+  };
   
   const getIcon = (iconType: string) => {
     switch (iconType) {
@@ -95,14 +122,41 @@ const Notifications = () => {
     });
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+  const markAllAsRead = async () => {
+    if (!user) return;
+    
+    try {
+      // Atualizar no banco de dados
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+      
+      // Atualizar estado local
+      setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+    } catch (error) {
+      console.error('Erro ao marcar notificações como lidas:', error);
+    }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
+  const markAsRead = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      // Atualizar no banco de dados
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+      
+      // Atualizar estado local
+      setNotifications(notifications.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      ));
+    } catch (error) {
+      console.error('Erro ao marcar notificação como lida:', error);
+    }
   };
 
   const filteredNotifications = filter === 'all' 
@@ -164,7 +218,12 @@ const Notifications = () => {
 
         {/* Notifications list */}
         <div className="space-y-4">
-          {filteredNotifications.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-busapp-primary mx-auto mb-4"></div>
+              <p className="text-gray-500">Carregando notificações...</p>
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow">
               <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-lg font-medium text-gray-500">

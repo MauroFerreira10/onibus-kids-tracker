@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import MapView from '@/components/MapView';
@@ -10,32 +11,33 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { VehicleData } from '@/types';
+import { VehicleData, StudentData } from '@/types';
 import RegisterVehicleForm from '@/components/driver/RegisterVehicleForm';
 import LocationTracker from '@/components/driver/LocationTracker';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
-// Mock dados de alunos para embarcar
-const mockStudents = [
-  { id: '1', name: 'Ana Silva', grade: '5º Ano', pickup: 'Av. Principal, 123', status: 'waiting' },
-  { id: '2', name: 'Bruno Oliveira', grade: '7º Ano', pickup: 'Rua das Flores, 45', status: 'waiting' },
-  { id: '3', name: 'Carla Santos', grade: '3º Ano', pickup: 'Praça Central, 78', status: 'waiting' },
-  { id: '4', name: 'Daniel Costa', grade: '8º Ano', pickup: 'Rua do Comércio, 12', status: 'waiting' },
-  { id: '5', name: 'Eduarda Lima', grade: '4º Ano', pickup: 'Av. Central, 250', status: 'waiting' }
-];
-
 // Status para a viagem
 type TripStatus = 'idle' | 'in_progress' | 'completed';
+
+// Status para os alunos
+type StudentBoardingStatus = 'waiting' | 'boarded' | 'absent';
+
+// Interface para os alunos com status de embarque
+interface StudentWithStatus extends StudentData {
+  status: StudentBoardingStatus;
+  pickupAddress?: string;
+}
 
 const DriverDashboard = () => {
   const { buses, isLoading } = useBusData();
   const { user } = useAuth();
   const [selectedBusId, setSelectedBusId] = useState<string | undefined>(buses.length > 0 ? buses[0].id : undefined);
-  const [students, setStudents] = useState(mockStudents);
+  const [students, setStudents] = useState<StudentWithStatus[]>([]);
   const [tripStatus, setTripStatus] = useState<TripStatus>('idle');
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [vehicle, setVehicle] = useState<VehicleData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingStudents, setLoadingStudents] = useState(false);
   const [showRegisterVehicle, setShowRegisterVehicle] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   
@@ -60,6 +62,9 @@ const DriverDashboard = () => {
         
         if (data && data.length > 0) {
           setVehicle(data[0] as unknown as VehicleData);
+          
+          // Carregar alunos associados à rota do motorista
+          loadStudents();
         }
       } catch (error) {
         console.error('Erro ao buscar veículo:', error);
@@ -70,6 +75,45 @@ const DriverDashboard = () => {
     
     loadDriverVehicle();
   }, [user]);
+  
+  // Função para carregar alunos do banco de dados
+  const loadStudents = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingStudents(true);
+      
+      // Buscar alunos associados à rota do motorista
+      // Nota: Precisamos criar uma função RPC para isso ou usar uma consulta direta
+      // Esta é uma implementação simplificada, podemos melhorar quando tivermos a tabela de rotas
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('driver_id', user.id);
+      
+      if (error) {
+        console.error('Erro ao buscar alunos:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        // Converter para o formato com status
+        const studentsWithStatus: StudentWithStatus[] = data.map(student => ({
+          ...student,
+          status: 'waiting'
+        }));
+        
+        setStudents(studentsWithStatus);
+      } else {
+        setStudents([]);
+        console.log('Nenhum aluno encontrado para este motorista');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar alunos:', error);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
   
   const startTrip = () => {
     if (!vehicle) {
@@ -104,7 +148,7 @@ const DriverDashboard = () => {
     // Resetar após alguns segundos
     setTimeout(() => {
       setTripStatus('idle');
-      setStudents(mockStudents);
+      setStudents(students.map(s => ({ ...s, status: 'waiting' })));
     }, 5000);
   };
   
@@ -222,9 +266,9 @@ const DriverDashboard = () => {
                       <User className="h-8 w-8" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-lg">João Motorista</h3>
-                      <p className="text-sm text-gray-500">ID: #12345</p>
-                      <p className="text-sm text-gray-500">Contato: (99) 9999-9999</p>
+                      <h3 className="font-medium text-lg">{user?.name || "Motorista"}</h3>
+                      <p className="text-sm text-gray-500">ID: #{user?.id?.substring(0, 5) || "N/A"}</p>
+                      <p className="text-sm text-gray-500">Contato: {user?.phone || "N/A"}</p>
                     </div>
                   </div>
                   
@@ -235,7 +279,7 @@ const DriverDashboard = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-700">
                       <Bus className="h-4 w-4 mr-2 text-gray-500" />
-                      <span>Ônibus designado: Escolar #001</span>
+                      <span>Ônibus: {vehicle?.model || "Não registrado"}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -294,58 +338,64 @@ const DriverDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {students.map(student => (
-                    <div 
-                      key={student.id} 
-                      className={`
-                        flex items-center justify-between p-3 rounded-lg border
-                        ${student.status === 'waiting' ? 'bg-white' : 'bg-gray-50'}
-                      `}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-busapp-secondary/20 flex items-center justify-center text-busapp-secondary">
-                          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 15C15.3137 15 18 12.3137 18 9C18 5.68629 15.3137 3 12 3C8.68629 3 6 5.68629 6 9C6 12.3137 8.68629 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M2.90625 20.2491C3.82775 18.6531 5.1537 17.3278 6.75 16.4064C8.3463 15.485 10.1547 15 12 15C13.8453 15 15.6537 15.4851 17.25 16.4065C18.8463 17.3279 20.1722 18.6533 21.0938 20.2493" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{student.name}</h3>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <span className="mr-3">{student.grade}</span>
-                            <MapPin className="h-3 w-3 mr-1" />
-                            <span>{student.pickup}</span>
+                {loadingStudents ? (
+                  <div className="flex justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-busapp-primary"></div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {students.length > 0 ? (
+                      students.map(student => (
+                        <div 
+                          key={student.id} 
+                          className={`
+                            flex items-center justify-between p-3 rounded-lg border
+                            ${student.status === 'waiting' ? 'bg-white' : 'bg-gray-50'}
+                          `}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-busapp-secondary/20 flex items-center justify-center text-busapp-secondary">
+                              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 15C15.3137 15 18 12.3137 18 9C18 5.68629 15.3137 3 12 3C8.68629 3 6 5.68629 6 9C6 12.3137 8.68629 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M2.90625 20.2491C3.82775 18.6531 5.1537 17.3278 6.75 16.4064C8.3463 15.485 10.1547 15 12 15C13.8453 15 15.6537 15.4851 17.25 16.4065C18.8463 17.3279 20.1722 18.6533 21.0938 20.2493" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="font-medium">{student.name}</h3>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <span className="mr-3">{student.grade || 'N/A'}</span>
+                                <MapPin className="h-3 w-3 mr-1" />
+                                <span>{student.pickupAddress || 'Endereço não registrado'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            {student.status === 'waiting' ? (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => markStudentAsBoarded(student.id)}
+                                disabled={tripStatus !== 'in_progress'}
+                              >
+                                Marcar como embarcado
+                              </Button>
+                            ) : (
+                              <Badge variant="outline" className="bg-green-50 text-green-700">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Embarcado
+                              </Badge>
+                            )}
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-gray-500">
+                        Nenhum aluno registrado para esta rota.
                       </div>
-                      
-                      <div>
-                        {student.status === 'waiting' ? (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => markStudentAsBoarded(student.id)}
-                            disabled={tripStatus !== 'in_progress'}
-                          >
-                            Marcar como embarcado
-                          </Button>
-                        ) : (
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Embarcado
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {students.length === 0 && (
-                    <div className="text-center py-6 text-gray-500">
-                      Nenhum aluno para embarque
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

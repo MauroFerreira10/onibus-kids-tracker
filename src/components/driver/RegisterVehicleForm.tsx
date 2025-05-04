@@ -46,19 +46,18 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
       setIsLoading(true);
       
       // Usar RPC para inserir ou atualizar veículo
-      const response = await supabase.rpc(
-        existingVehicle ? 'update_vehicle' : 'register_vehicle',
-        {
-          veh_id: existingVehicle?.id,
-          license: licensePlate,
-          mdl: model,
-          cap: capacity,
-          yr: year,
-          driver: user.id,
-          sts: status,
-          tracking: trackingEnabled
-        }
-      );
+      const rpcName = existingVehicle ? 'update_vehicle' : 'register_vehicle';
+      
+      const response = await supabase.rpc(rpcName, {
+        veh_id: existingVehicle?.id,
+        license: licensePlate,
+        mdl: model,
+        cap: capacity,
+        yr: year,
+        driver: user.id,
+        sts: status,
+        tracking: trackingEnabled
+      });
       
       if (response.error) {
         throw new Error(response.error.message);
@@ -69,8 +68,12 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
         driver_id: user.id
       });
       
-      if (fetchError || !vehicleData || vehicleData.length === 0) {
-        throw new Error(fetchError?.message || 'Erro ao buscar dados do veículo');
+      if (fetchError) {
+        throw new Error(fetchError.message || 'Erro ao buscar dados do veículo');
+      }
+      
+      if (!vehicleData || vehicleData.length === 0) {
+        throw new Error('Veículo não encontrado após registro/atualização');
       }
       
       const savedVehicle = vehicleData[0] as VehicleData;
