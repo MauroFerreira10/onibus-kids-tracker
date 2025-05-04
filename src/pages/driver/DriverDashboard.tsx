@@ -61,7 +61,7 @@ const DriverDashboard = () => {
         }
         
         if (data && data.length > 0) {
-          setVehicle(data[0] as unknown as VehicleData);
+          setVehicle(data[0] as VehicleData);
           
           // Carregar alunos associados à rota do motorista
           loadStudents();
@@ -83,13 +83,10 @@ const DriverDashboard = () => {
     try {
       setLoadingStudents(true);
       
-      // Buscar alunos associados à rota do motorista
-      // Nota: Precisamos criar uma função RPC para isso ou usar uma consulta direta
-      // Esta é uma implementação simplificada, podemos melhorar quando tivermos a tabela de rotas
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('driver_id', user.id);
+      // Buscar alunos associados à rota do motorista usando RPC
+      const { data, error } = await supabase.rpc('get_students_by_driver', {
+        driver_id: user.id
+      });
       
       if (error) {
         console.error('Erro ao buscar alunos:', error);

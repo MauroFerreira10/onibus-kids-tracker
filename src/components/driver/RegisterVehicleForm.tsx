@@ -48,7 +48,7 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
       // Usar RPC para inserir ou atualizar veículo
       const rpcName = existingVehicle ? 'update_vehicle' : 'register_vehicle';
       
-      const response = await supabase.rpc(rpcName, {
+      const { data: vehicleId, error } = await supabase.rpc(rpcName, {
         veh_id: existingVehicle?.id,
         license: licensePlate,
         mdl: model,
@@ -59,31 +59,33 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
         tracking: trackingEnabled
       });
       
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (error) {
+        console.error('Erro ao registrar veículo:', error);
+        throw new Error(error.message);
       }
       
       // Buscar o veículo atualizado/criado
-      const { data: vehicleData, error: fetchError } = await supabase.rpc('get_vehicle_by_id', {
+      const { data, error: fetchError } = await supabase.rpc('get_vehicle_by_id', {
         driver_id: user.id
       });
       
       if (fetchError) {
+        console.error('Erro ao buscar dados do veículo:', fetchError);
         throw new Error(fetchError.message || 'Erro ao buscar dados do veículo');
       }
       
-      if (!vehicleData || vehicleData.length === 0) {
+      if (!data) {
         throw new Error('Veículo não encontrado após registro/atualização');
       }
       
-      const savedVehicle = vehicleData[0] as VehicleData;
+      const savedVehicle = data[0] as VehicleData;
       
       toast.success(`Veículo ${existingVehicle ? 'atualizado' : 'registrado'} com sucesso!`);
       
       if (onVehicleRegistered) {
         onVehicleRegistered(savedVehicle);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao registrar veículo:', error);
       toast.error(`Erro ao ${existingVehicle ? 'atualizar' : 'registrar'} o veículo. Tente novamente.`);
     } finally {
