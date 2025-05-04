@@ -1,17 +1,44 @@
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Bus, Map, User, Calendar, LogOut, BellRing, UserPlus, Key } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Bus, Map, User, Calendar, LogOut, BellRing, Key, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from './ui/badge';
-import { SheetClose } from './ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Button } from './ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const [userRole, setUserRole] = useState<string | null>(null);
   
   // Simular 3 notificações não lidas
   const unreadNotifications = 3;
+  
+  // Verificar o papel do usuário atual
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user?.id)
+          .single();
+        
+        if (!error && data) {
+          setUserRole(data.role);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar perfil:', error);
+      }
+    };
+    
+    if (user?.id) {
+      checkUserRole();
+    }
+  }, [user]);
   
   const navItems = [
     { label: 'Mapa', path: '/', icon: Map },
@@ -59,26 +86,28 @@ const Navbar: React.FC = () => {
             </li>
           );
         })}
-        {user?.role === 'manager' && (
-          <SheetClose asChild>
+        
+        {userRole === 'manager' && (
+          <li>
             <Link 
-              to="/manager/invitations" 
+              to="/manager/dashboard" 
               className={`flex flex-col items-center p-2 transition-all duration-200 ${
-                location.pathname === '/manager/invitations' 
+                location.pathname.includes('/manager') 
                   ? 'text-busapp-primary scale-110' 
                   : 'text-gray-500 hover:text-busapp-accent'
               }`}
             >
-              <div className={`p-2 rounded-full ${location.pathname === '/manager/invitations' ? 'bg-busapp-primary/10' : ''}`}>
-                <Key size={20} />
+              <div className={`p-2 rounded-full ${location.pathname.includes('/manager') ? 'bg-busapp-primary/10' : ''}`}>
+                <LayoutDashboard size={20} />
               </div>
-              <span className="text-xs mt-1">Convites</span>
-              {location.pathname === '/manager/invitations' && (
+              <span className="text-xs mt-1">Gestor</span>
+              {location.pathname.includes('/manager') && (
                 <span className="w-1.5 h-1.5 rounded-full bg-busapp-primary mt-1"></span>
               )}
             </Link>
-          </SheetClose>
+          </li>
         )}
+        
         <li>
           <button
             onClick={signOut}

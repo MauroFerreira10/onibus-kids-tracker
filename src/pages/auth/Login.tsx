@@ -35,8 +35,30 @@ const Login = () => {
         toast.error(error.message);
       } else {
         console.log('Login successful:', data);
-        toast.success('Login realizado com sucesso!');
-        navigate('/');
+        
+        // Verificar o papel do usuário
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error('Error fetching user role:', profileError);
+          toast.success('Login realizado com sucesso!');
+          navigate('/');
+        } else {
+          toast.success('Login realizado com sucesso!');
+          
+          // Direcionar com base no papel do usuário
+          if (profileData.role === 'manager') {
+            navigate('/manager/dashboard');
+          } else if (profileData.role === 'driver') {
+            navigate('/driver');
+          } else {
+            navigate('/');
+          }
+        }
       }
     } catch (error) {
       console.error('Error during login:', error);

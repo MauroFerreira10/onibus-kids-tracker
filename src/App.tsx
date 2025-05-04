@@ -7,6 +7,7 @@ import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+// Páginas
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import RoutesPage from "./pages/Routes";
@@ -17,6 +18,10 @@ import Register from "./pages/auth/Register";
 import Notifications from "./pages/Notifications";
 import DriverDashboard from "./pages/driver/DriverDashboard";
 import Invitations from "./pages/manager/Invitations";
+import ManagerDashboard from "./pages/manager/Dashboard";
+import RegisterStudents from "./pages/manager/RegisterStudents";
+import RegisterParents from "./pages/manager/RegisterParents";
+import RegisterDrivers from "./pages/manager/RegisterDrivers";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -65,11 +70,34 @@ function App() {
                   <DriverDashboard />
                 </ProtectedRoute>
               } />
+              
+              {/* Manager routes */}
               <Route path="/manager/invitations" element={
                 <ProtectedRoute>
                   <Invitations />
                 </ProtectedRoute>
               } />
+              <Route path="/manager/dashboard" element={
+                <ProtectedRoute>
+                  <ManagerDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/manager/register-students" element={
+                <ProtectedRoute>
+                  <RegisterStudents />
+                </ProtectedRoute>
+              } />
+              <Route path="/manager/register-parents" element={
+                <ProtectedRoute>
+                  <RegisterParents />
+                </ProtectedRoute>
+              } />
+              <Route path="/manager/register-drivers" element={
+                <ProtectedRoute>
+                  <RegisterDrivers />
+                </ProtectedRoute>
+              } />
+              
               <Route path="*" element={<NotFound />} />
             </RouterRoutes>
           </TooltipProvider>

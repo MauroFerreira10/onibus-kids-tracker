@@ -1,3 +1,4 @@
+
 // Tipos para os dados da aplicação
 
 // Dados do ônibus
@@ -70,6 +71,13 @@ export interface UserData {
   schoolId?: string; // ID da escola associada
 }
 
+// Dados específicos de gestor
+export interface ManagerData extends UserData {
+  role: 'manager';
+  permissions?: string[];
+  schoolName?: string;
+}
+
 // Tipos para autenticação
 export interface AuthState {
   user: UserData | null;
@@ -97,4 +105,39 @@ export interface Invitation {
   created_at: string;
   expires_at: string;
   used: boolean;
+}
+
+// Dados de estudante
+export interface StudentData {
+  id: string;
+  name: string;
+  studentNumber: string;
+  grade?: string;
+  classroom?: string;
+  parentId?: string;
+  routeId?: string;
+  stopId?: string;
+}
+
+// Dados de motorista
+export interface DriverData {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  photo?: string;
+  busId?: string;
+  routes?: string[];
+  status: 'active' | 'inactive' | 'onTrip';
+  licenseNumber?: string;
+}
+
+// Atividades recentes
+export interface ActivityLog {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  details?: string;
+  timestamp: string;
 }
