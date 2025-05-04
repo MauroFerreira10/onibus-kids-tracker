@@ -87,24 +87,26 @@ const LocationTracker: React.FC<LocationTrackerProps> = ({ vehicle, onStatusChan
 
       setCurrentLocation(locationData);
 
-      // Enviar para o Supabase
-      const { error } = await supabase
-        .from('locations')
-        .insert(locationData);
+      // Usar o método rpc para inserir a localização
+      const { error } = await supabase.rpc('insert_location', {
+        driver_id: user.id,
+        vehicle_id: vehicle.id,
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        spd: position.coords.speed || 0,
+        dir: position.coords.heading || 0
+      });
 
       if (error) {
         console.error('Erro ao salvar localização:', error);
       }
       
-      // Atualizar a última posição do veículo também
-      await supabase
-        .from('vehicles')
-        .update({
-          lastLatitude: position.coords.latitude,
-          lastLongitude: position.coords.longitude,
-          lastLocationUpdate: new Date().toISOString()
-        })
-        .eq('id', vehicle.id);
+      // Atualizar a última posição do veículo
+      await supabase.rpc('update_vehicle_location', {
+        veh_id: vehicle.id,
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      });
         
     } catch (error) {
       console.error('Erro ao processar localização:', error);

@@ -45,37 +45,35 @@ const RegisterVehicleForm: React.FC<RegisterVehicleFormProps> = ({
     try {
       setIsLoading(true);
       
-      const vehicleData: Partial<VehicleData> = {
-        licensePlate,
-        model,
-        capacity,
-        year,
-        driverId: user.id,
-        status,
-        trackingEnabled,
-      };
-      
-      // Persistir no Supabase
-      let response;
-      
-      if (existingVehicle?.id) {
-        response = await supabase
-          .from('vehicles')
-          .update(vehicleData)
-          .eq('id', existingVehicle.id)
-          .select();
-      } else {
-        response = await supabase
-          .from('vehicles')
-          .insert(vehicleData)
-          .select();
-      }
+      // Usar RPC para inserir ou atualizar veículo
+      const response = await supabase.rpc(
+        existingVehicle ? 'update_vehicle' : 'register_vehicle',
+        {
+          veh_id: existingVehicle?.id || undefined,
+          license: licensePlate,
+          mdl: model,
+          cap: capacity,
+          yr: year,
+          driver: user.id,
+          sts: status,
+          tracking: trackingEnabled
+        }
+      );
       
       if (response.error) {
         throw new Error(response.error.message);
       }
       
-      const savedVehicle = response.data[0] as VehicleData;
+      // Buscar o veículo atualizado/criado
+      const { data: vehicleData, error: fetchError } = await supabase.rpc('get_vehicle_by_id', {
+        driver_id: user.id
+      });
+      
+      if (fetchError || !vehicleData) {
+        throw new Error(fetchError?.message || 'Erro ao buscar dados do veículo');
+      }
+      
+      const savedVehicle = vehicleData as unknown as VehicleData;
       
       toast.success(`Veículo ${existingVehicle ? 'atualizado' : 'registrado'} com sucesso!`);
       

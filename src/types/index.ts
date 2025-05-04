@@ -1,3 +1,4 @@
+
 // Tipos para os dados da aplicação
 
 // Dados do ônibus
@@ -142,6 +143,9 @@ export interface VehicleData {
   status: 'active' | 'maintenance' | 'inactive';
   lastMaintenanceDate?: string;
   trackingEnabled: boolean;
+  lastLatitude?: number;
+  lastLongitude?: number;
+  lastLocationUpdate?: string;
 }
 
 // Dados de localização
@@ -164,3 +168,4 @@ export interface ActivityLog {
   details?: string;
   timestamp: string;
 }
+
