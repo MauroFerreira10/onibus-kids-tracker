@@ -22,17 +22,20 @@ interface MapViewProps {
   buses?: BusData[];
   selectedBusId?: string;
   onSelectBus?: (busId: string) => void;
+  centerOnUser?: boolean;  // Nova propriedade para centralizar no usuário
 }
 
 const MapView: React.FC<MapViewProps> = ({ 
   buses = [], 
   selectedBusId,
-  onSelectBus 
+  onSelectBus,
+  centerOnUser = false
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const userPositionMarker = useRef<mapboxgl.Marker | null>(null);
   
   const {
     mapboxToken,
@@ -54,6 +57,106 @@ const MapView: React.FC<MapViewProps> = ({
     setMapLoaded(false);
     setMapReady(false);
   };
+
+  // Efeito para centralizar no usuário quando centerOnUser é true
+  useEffect(() => {
+    if (!mapReady || !map.current || !centerOnUser) return;
+
+    // Remover marcador existente se tiver
+    if (userPositionMarker.current) {
+      userPositionMarker.current.remove();
+      userPositionMarker.current = null;
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Centralizar mapa na posição do usuário
+          map.current?.flyTo({
+            center: [longitude, latitude],
+            zoom: 15,
+            speed: 1.2
+          });
+          
+          // Criar elemento personalizado para o marcador
+          const el = document.createElement('div');
+          el.className = 'user-location-marker';
+          el.innerHTML = `
+            <div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md pulse-animation"></div>
+          `;
+          
+          // Adicionar marcador
+          userPositionMarker.current = new mapboxgl.Marker(el)
+            .setLngLat([longitude, latitude])
+            .addTo(map.current!);
+            
+          // Adicionar estilo CSS para animação
+          const style = document.createElement('style');
+          style.textContent = `
+            .pulse-animation {
+              box-shadow: 0 0 0 rgba(66, 133, 244, 0.4);
+              animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+              0% {
+                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
+              }
+              70% {
+                box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
+              }
+              100% {
+                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0);
+              }
+            }
+          `;
+          document.head.appendChild(style);
+          
+          // Configurar observador de localização para atualizações contínuas
+          const watchId = navigator.geolocation.watchPosition(
+            (newPosition) => {
+              const { latitude: newLat, longitude: newLng } = newPosition.coords;
+              if (userPositionMarker.current) {
+                userPositionMarker.current.setLngLat([newLng, newLat]);
+              }
+            },
+            (error) => {
+              console.error("Erro ao obter localização:", error);
+            },
+            {
+              enableHighAccuracy: true,
+              maximumAge: 10000,
+              timeout: 5000
+            }
+          );
+          
+          // Limpar o observador quando o componente for desmontado
+          return () => {
+            navigator.geolocation.clearWatch(watchId);
+            if (userPositionMarker.current) {
+              userPositionMarker.current.remove();
+            }
+          };
+        },
+        (error) => {
+          console.error("Erro ao obter localização inicial:", error);
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.error("Permissão de localização negada");
+          } else {
+            toast.error("Erro ao obter localização");
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      toast.error("Geolocalização não suportada pelo seu navegador");
+    }
+  }, [mapReady, centerOnUser]);
 
   useEffect(() => {
     console.log("MapView montado ou token atualizado:", mapboxToken ? "Token presente" : "Sem token");

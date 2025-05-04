@@ -1,4 +1,3 @@
-
 // Tipos para os dados da aplicação
 
 // Dados do ônibus
@@ -130,6 +129,30 @@ export interface DriverData {
   routes?: string[];
   status: 'active' | 'inactive' | 'onTrip';
   licenseNumber?: string;
+}
+
+// Dados de veículo
+export interface VehicleData {
+  id: string;
+  licensePlate: string;
+  model: string;
+  capacity: number;
+  year: string;
+  driverId: string;
+  status: 'active' | 'maintenance' | 'inactive';
+  lastMaintenanceDate?: string;
+  trackingEnabled: boolean;
+}
+
+// Dados de localização
+export interface LocationData {
+  latitude: number;
+  longitude: number;
+  speed: number;
+  direction: number;
+  timestamp: string;
+  vehicleId: string;
+  driverId: string;
 }
 
 // Atividades recentes
