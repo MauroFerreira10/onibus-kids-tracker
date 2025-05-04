@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Bus, Map, User, Calendar, LogOut, BellRing, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from './ui/badge';
-import { SheetClose } from '@radix-ui/react-dialog';
+import { SheetClose } from './ui/sheet';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
