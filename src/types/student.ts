@@ -12,5 +12,6 @@ export interface StudentWithStatus {
   pickupAddress?: string;
   stopId?: string;
   stop_id?: string; // Added to match database schema
+  parent_id?: string; // Added to match database schema
   [key: string]: any; // Allow additional properties
 }

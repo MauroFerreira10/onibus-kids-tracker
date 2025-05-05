@@ -152,7 +152,7 @@ const Routes = () => {
         return;
       }
       
-      // Get the student ID for the current user
+      // First check if the student profile exists
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('id')
@@ -169,8 +169,10 @@ const Routes = () => {
         return;
       }
       
+      let studentId = studentData?.id;
+      
+      // If student profile doesn't exist, create one
       if (!studentData) {
-        // Create a student profile if it doesn't exist
         const { data: newStudent, error: createError } = await supabase
           .from('students')
           .insert({
@@ -192,12 +194,18 @@ const Routes = () => {
         }
         
         // Use the newly created student
-        if (newStudent) {
-          markAttendance(newStudent.id, stopId);
-        }
+        studentId = newStudent.id;
       } else {
-        // Use existing student
-        markAttendance(studentData.id, stopId);
+        // Update existing student's stop_id
+        await supabase
+          .from('students')
+          .update({ stop_id: stopId })
+          .eq('id', studentData.id);
+      }
+      
+      // Now process the attendance
+      if (studentId) {
+        await markAttendance(studentId, stopId);
       }
     } catch (error) {
       console.error('Erro ao marcar presença:', error);
@@ -213,12 +221,6 @@ const Routes = () => {
     try {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
-      
-      // Update student's stop_id
-      await supabase
-        .from('students')
-        .update({ stop_id: stopId })
-        .eq('id', studentId);
       
       // Check if there's already a record for today
       const { data: existingRecord } = await supabase
@@ -264,6 +266,9 @@ const Routes = () => {
         description: "Presença confirmada neste ponto de embarque!",
         variant: "default"
       });
+      
+      // Refresh attendance status
+      fetchAttendanceStatus();
     } catch (error) {
       console.error('Erro ao registrar presença:', error);
       toast({
