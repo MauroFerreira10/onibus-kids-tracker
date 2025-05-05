@@ -99,11 +99,16 @@ const Routes = () => {
       const today = new Date().toISOString().split('T')[0];
       
       // Fetch the current user's student profile
-      const { data: studentData } = await supabase
+      const { data: studentData, error: studentError } = await supabase
         .from('students')
-        .select('id')
+        .select('id, stop_id')
         .eq('parent_id', user?.id)
         .maybeSingle();
+      
+      if (studentError) {
+        console.error('Error fetching student data:', studentError);
+        return;
+      }
       
       if (!studentData) return;
       
@@ -122,11 +127,12 @@ const Routes = () => {
       if (attendanceData && attendanceData.length > 0) {
         const statusMap: Record<string, string> = {};
         
-        attendanceData.forEach(record => {
-          if (record.stop_id) {
-            statusMap[record.stop_id] = record.status;
-          }
-        });
+        // Map attendance records to stop IDs
+        // Since stop_id is not in student_attendance, we use the student's assigned stop_id
+        if (studentData.stop_id) {
+          const latestRecord = attendanceData[attendanceData.length - 1];
+          statusMap[studentData.stop_id] = latestRecord.status;
+        }
         
         setAttendanceStatus(statusMap);
       }
@@ -147,31 +153,79 @@ const Routes = () => {
       }
       
       // Get the student ID for the current user
-      const { data: studentData } = await supabase
+      const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('id')
         .eq('parent_id', user.id)
         .maybeSingle();
       
-      if (!studentData) {
+      if (studentError) {
+        console.error('Error fetching student:', studentError);
         toast({
-          title: "Atenção",
-          description: "Você não tem um perfil de aluno registrado.",
-          variant: "default"
+          title: "Erro",
+          description: "Não foi possível verificar seu perfil de estudante.",
+          variant: "destructive"
         });
         return;
       }
       
+      if (!studentData) {
+        // Create a student profile if it doesn't exist
+        const { data: newStudent, error: createError } = await supabase
+          .from('students')
+          .insert({
+            name: user.email?.split('@')[0] || 'Estudante',
+            parent_id: user.id,
+            stop_id: stopId
+          })
+          .select('id')
+          .single();
+        
+        if (createError) {
+          console.error('Error creating student profile:', createError);
+          toast({
+            title: "Erro",
+            description: "Não foi possível criar seu perfil de aluno. Por favor, contate o suporte.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Use the newly created student
+        if (newStudent) {
+          markAttendance(newStudent.id, stopId);
+        }
+      } else {
+        // Use existing student
+        markAttendance(studentData.id, stopId);
+      }
+    } catch (error) {
+      console.error('Erro ao marcar presença:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível marcar presença. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const markAttendance = async (studentId: string, stopId: string) => {
+    try {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
+      
+      // Update student's stop_id
+      await supabase
+        .from('students')
+        .update({ stop_id: stopId })
+        .eq('id', studentId);
       
       // Check if there's already a record for today
       const { data: existingRecord } = await supabase
         .from('student_attendance')
         .select('id, status')
-        .eq('student_id', studentData.id)
+        .eq('student_id', studentId)
         .eq('trip_date', today)
-        .eq('stop_id', stopId)
         .maybeSingle();
       
       if (existingRecord) {
@@ -190,11 +244,10 @@ const Routes = () => {
         const { error } = await supabase
           .from('student_attendance')
           .insert({
-            student_id: studentData.id,
+            student_id: studentId,
             trip_date: today,
-            stop_id: stopId,
             status: 'present_at_stop',
-            marked_by: user.id
+            marked_by: user?.id
           });
         
         if (error) throw error;
@@ -212,7 +265,7 @@ const Routes = () => {
         variant: "default"
       });
     } catch (error) {
-      console.error('Erro ao marcar presença:', error);
+      console.error('Erro ao registrar presença:', error);
       toast({
         title: "Erro",
         description: "Não foi possível marcar presença. Tente novamente.",
@@ -278,12 +331,10 @@ const Routes = () => {
                       <ul className="space-y-4">
                         {route.stops.map((stop, index) => (
                           <li key={stop.id} className="relative pl-6">
-                            {/* Linha vertical conectando as paradas */}
                             {index < route.stops.length - 1 && (
                               <div className="absolute left-[0.65rem] top-6 w-0.5 h-full bg-gray-300 -z-10"></div>
                             )}
                             
-                            {/* Marcador da parada */}
                             <div className="absolute left-0 top-1 w-5 h-5 rounded-full border-2 border-busapp-primary bg-white flex items-center justify-center">
                               <div className="w-2 h-2 rounded-full bg-busapp-primary"></div>
                             </div>
