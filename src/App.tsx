@@ -65,7 +65,9 @@ function App() {
                   <Profile />
                 </ProtectedRoute>
               } />
-              <Route path="/driver" element={
+              
+              {/* Driver routes */}
+              <Route path="/driver/dashboard" element={
                 <ProtectedRoute>
                   <DriverDashboard />
                 </ProtectedRoute>
