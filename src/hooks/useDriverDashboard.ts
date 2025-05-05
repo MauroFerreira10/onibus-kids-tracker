@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -140,7 +140,7 @@ export const useDriverDashboard = () => {
     }
   };
   
-  // Load students
+  // Load students with real-time updates for attendance
   const loadStudents = async (routeIdToLoad: string) => {
     if (!user || !routeIdToLoad) return;
     
@@ -193,6 +193,34 @@ export const useDriverDashboard = () => {
       });
       
       setStudents(studentsWithStatus);
+      
+      // Set up real-time subscription for attendance updates
+      const channel = supabase
+        .channel('student-attendance-changes')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'student_attendance',
+          filter: `trip_date=eq.${today}`
+        }, (payload) => {
+          console.log('Attendance update:', payload);
+          // Update local state when attendance changes
+          if (payload.new && payload.new.student_id) {
+            setStudents(current => 
+              current.map(student => 
+                student.id === payload.new.student_id 
+                  ? { ...student, status: payload.new.status as StudentWithStatus['status'] }
+                  : student
+              )
+            );
+          }
+        })
+        .subscribe();
+        
+      // Clean up subscription
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
     } finally {

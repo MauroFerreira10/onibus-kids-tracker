@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -152,7 +153,7 @@ const Routes = () => {
       }
       
       // First check if the student profile exists
-      const { data: studentData, error: studentError } = await supabase
+      let { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('id')
         .eq('parent_id', user.id)
@@ -168,30 +169,71 @@ const Routes = () => {
         return;
       }
       
-      // If no student profile is found, show an error message instead of creating one
+      // If no student profile is found, create one with basic information
       if (!studentData) {
-        toast({
-          title: "Erro",
-          description: "Você não tem um perfil de estudante associado a esta conta. Por favor, contate a administração.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Update existing student's stop_id
-      const { error: updateError } = await supabase
-        .from('students')
-        .update({ stop_id: stopId })
-        .eq('id', studentData.id);
+        // Get stop information to find the route_id
+        const { data: stopData, error: stopError } = await supabase
+          .from('stops')
+          .select('route_id, name')
+          .eq('id', stopId)
+          .maybeSingle();
+          
+        if (stopError || !stopData) {
+          console.error('Error fetching stop:', stopError);
+          toast({
+            title: "Erro",
+            description: "Não foi possível obter informações sobre o ponto de embarque.",
+            variant: "destructive"
+          });
+          return;
+        }
         
-      if (updateError) {
-        console.error('Error updating student stop:', updateError);
+        // Create a new student profile
+        const { data: newStudent, error: createError } = await supabase
+          .from('students')
+          .insert({
+            parent_id: user.id,
+            name: user.email?.split('@')[0] || 'Estudante',
+            stop_id: stopId,
+            route_id: stopData.route_id,
+            pickup_address: stopData.name
+          })
+          .select('id')
+          .single();
+        
+        if (createError) {
+          console.error('Error creating student profile:', createError);
+          toast({
+            title: "Erro",
+            description: "Não foi possível criar um perfil de estudante. Por favor, contacte a administração.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        studentData = newStudent;
+        
         toast({
-          title: "Erro",
-          description: "Não foi possível atualizar o ponto de embarque.",
-          variant: "destructive"
+          title: "Sucesso",
+          description: "Perfil de estudante criado automaticamente.",
+          variant: "default"
         });
-        return;
+      } else {
+        // Update existing student's stop_id
+        const { error: updateError } = await supabase
+          .from('students')
+          .update({ stop_id: stopId })
+          .eq('id', studentData.id);
+          
+        if (updateError) {
+          console.error('Error updating student stop:', updateError);
+          toast({
+            title: "Erro",
+            description: "Não foi possível atualizar o ponto de embarque.",
+            variant: "destructive"
+          });
+          return;
+        }
       }
       
       // Process the attendance for the existing student
