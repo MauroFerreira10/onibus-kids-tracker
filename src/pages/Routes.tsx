@@ -108,19 +108,26 @@ const Routes = () => {
       if (!studentData) return;
       
       // Fetch attendance status for today
-      const { data: attendanceData } = await supabase
+      const { data: attendanceData, error } = await supabase
         .from('student_attendance')
-        .select('stop_id, status')
+        .select('*')
         .eq('student_id', studentData.id)
         .eq('trip_date', today);
       
+      if (error) {
+        console.error('Error fetching attendance:', error);
+        return;
+      }
+      
       if (attendanceData && attendanceData.length > 0) {
         const statusMap: Record<string, string> = {};
+        
         attendanceData.forEach(record => {
           if (record.stop_id) {
             statusMap[record.stop_id] = record.status;
           }
         });
+        
         setAttendanceStatus(statusMap);
       }
     } catch (error) {
