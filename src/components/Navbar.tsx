@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bus, Map, User, Calendar, LogOut, BellRing, Key, LayoutDashboard } from 'lucide-react';
+import { Bus, Map, User, Calendar, LogOut, BellRing, LayoutDashboard, Steering } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -87,6 +87,29 @@ const Navbar: React.FC = () => {
           );
         })}
         
+        {/* Botão de Motorista */}
+        {userRole === 'driver' && (
+          <li>
+            <Link 
+              to="/driver/dashboard" 
+              className={`flex flex-col items-center p-2 transition-all duration-200 ${
+                location.pathname.includes('/driver') 
+                  ? 'text-busapp-primary scale-110' 
+                  : 'text-gray-500 hover:text-busapp-accent'
+              }`}
+            >
+              <div className={`p-2 rounded-full ${location.pathname.includes('/driver') ? 'bg-busapp-primary/10' : ''}`}>
+                <Steering size={20} />
+              </div>
+              <span className="text-xs mt-1">Motorista</span>
+              {location.pathname.includes('/driver') && (
+                <span className="w-1.5 h-1.5 rounded-full bg-busapp-primary mt-1"></span>
+              )}
+            </Link>
+          </li>
+        )}
+        
+        {/* Botão de Gestor */}
         {userRole === 'manager' && (
           <li>
             <Link 
