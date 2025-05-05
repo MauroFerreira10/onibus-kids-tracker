@@ -30,6 +30,7 @@ const DriverDashboard = () => {
     setShowRegisterVehicle,
     isTracking,
     setIsTracking,
+    routeId,
     startTrip,
     endTrip,
     markStudentAsBoarded,
@@ -65,7 +66,7 @@ const DriverDashboard = () => {
                 email: user.email || '',
                 role: 'driver'
               } : null} vehicle={vehicle} />
-              <RouteInfo />
+              <RouteInfo routeId={routeId} />
             </div>
             
             {/* Students list */}

@@ -1,25 +1,218 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { generateMockRoutes, generateMockStops } from '@/services/mockData';
-import { RouteData, StopData } from '@/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock, CheckCircle } from 'lucide-react';
+import { RouteData, StopData } from '@/types';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Routes = () => {
   const [routes, setRoutes] = useState<RouteData[]>([]);
-  const [stops, setStops] = useState<StopData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
+  const { toast } = useToast();
+  const { user } = useAuth();
   
   useEffect(() => {
-    // Simular carregamento de dados
-    setTimeout(() => {
-      setRoutes(generateMockRoutes());
-      setStops(generateMockStops());
-      setIsLoading(false);
-    }, 1000);
+    fetchRoutes();
   }, []);
+  
+  const fetchRoutes = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch routes from database
+      const { data: routesData, error: routesError } = await supabase
+        .from('routes')
+        .select('*');
+      
+      if (routesError) throw routesError;
+      
+      if (!routesData || routesData.length === 0) {
+        setRoutes([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Fetch stops for all routes
+      const { data: stopsData, error: stopsError } = await supabase
+        .from('stops')
+        .select('*')
+        .in('route_id', routesData.map(r => r.id))
+        .order('sequence_number', { ascending: true });
+      
+      if (stopsError) throw stopsError;
+      
+      // Organize data into the expected format
+      const mappedRoutes: RouteData[] = routesData.map(route => {
+        // Find stops for this route
+        const routeStops = stopsData?.filter(stop => stop.route_id === route.id) || [];
+        
+        return {
+          id: route.id,
+          name: route.name,
+          description: route.description || 'Rota escolar',
+          buses: [route.vehicle_id].filter(Boolean) as string[],
+          stops: routeStops.map(stop => ({
+            id: stop.id,
+            name: stop.name,
+            address: stop.address,
+            latitude: stop.latitude || 0,
+            longitude: stop.longitude || 0,
+            scheduledTime: stop.estimated_time || '08:00',
+            estimatedTime: stop.estimated_time || '08:00'
+          })),
+          schedule: {
+            weekdays: ['segunda', 'terça', 'quarta', 'quinta', 'sexta'],
+            startTime: '07:00',
+            endTime: '08:30'
+          }
+        };
+      });
+      
+      setRoutes(mappedRoutes);
+      
+      // If the user is logged in, fetch their attendance status
+      if (user) {
+        fetchAttendanceStatus();
+      }
+    } catch (error) {
+      console.error('Erro ao buscar rotas:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as rotas.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchAttendanceStatus = async () => {
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Fetch the current user's student profile
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('id')
+        .eq('parent_id', user?.id)
+        .maybeSingle();
+      
+      if (!studentData) return;
+      
+      // Fetch attendance status for today
+      const { data: attendanceData } = await supabase
+        .from('student_attendance')
+        .select('stop_id, status')
+        .eq('student_id', studentData.id)
+        .eq('trip_date', today);
+      
+      if (attendanceData && attendanceData.length > 0) {
+        const statusMap: Record<string, string> = {};
+        attendanceData.forEach(record => {
+          if (record.stop_id) {
+            statusMap[record.stop_id] = record.status;
+          }
+        });
+        setAttendanceStatus(statusMap);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar status de presença:', error);
+    }
+  };
+  
+  const markPresentAtStop = async (stopId: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Atenção",
+          description: "Você precisa estar logado para marcar presença.",
+          variant: "default"
+        });
+        return;
+      }
+      
+      // Get the student ID for the current user
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('id')
+        .eq('parent_id', user.id)
+        .maybeSingle();
+      
+      if (!studentData) {
+        toast({
+          title: "Atenção",
+          description: "Você não tem um perfil de aluno registrado.",
+          variant: "default"
+        });
+        return;
+      }
+      
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check if there's already a record for today
+      const { data: existingRecord } = await supabase
+        .from('student_attendance')
+        .select('id, status')
+        .eq('student_id', studentData.id)
+        .eq('trip_date', today)
+        .eq('stop_id', stopId)
+        .maybeSingle();
+      
+      if (existingRecord) {
+        // Update existing record
+        const { error } = await supabase
+          .from('student_attendance')
+          .update({ 
+            status: 'present_at_stop',
+            marked_at: new Date().toISOString()
+          })
+          .eq('id', existingRecord.id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('student_attendance')
+          .insert({
+            student_id: studentData.id,
+            trip_date: today,
+            stop_id: stopId,
+            status: 'present_at_stop',
+            marked_by: user.id
+          });
+        
+        if (error) throw error;
+      }
+      
+      // Update local state
+      setAttendanceStatus(prev => ({
+        ...prev,
+        [stopId]: 'present_at_stop'
+      }));
+      
+      toast({
+        title: "Sucesso",
+        description: "Presença confirmada neste ponto de embarque!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Erro ao marcar presença:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível marcar presença. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Layout>
@@ -108,6 +301,26 @@ const Routes = () => {
                                   </div>
                                 )}
                               </div>
+                              
+                              {user && (
+                                <div className="mt-3 flex justify-end">
+                                  {attendanceStatus[stop.id] === 'present_at_stop' ? (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 flex items-center">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Presença confirmada
+                                    </Badge>
+                                  ) : (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className="text-busapp-primary border-busapp-primary/30"
+                                      onClick={() => markPresentAtStop(stop.id)}
+                                    >
+                                      Confirmar presença neste ponto
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </li>
                         ))}

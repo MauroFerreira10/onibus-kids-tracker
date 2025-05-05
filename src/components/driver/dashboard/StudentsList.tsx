@@ -49,6 +49,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
                   className={`
                     flex items-center justify-between p-3 rounded-lg border
                     ${student.status === 'waiting' ? 'bg-white' : 'bg-gray-50'}
+                    ${student.status === 'present_at_stop' ? 'bg-green-50 border-green-200' : ''}
                   `}
                 >
                   <div className="flex items-center gap-3">
@@ -69,7 +70,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
                   </div>
                   
                   <div>
-                    {student.status === 'waiting' ? (
+                    {student.status === 'waiting' && (
                       <Button 
                         size="sm" 
                         variant="outline" 
@@ -78,10 +79,37 @@ const StudentsList: React.FC<StudentsListProps> = ({
                       >
                         Marcar como embarcado
                       </Button>
-                    ) : (
+                    )}
+                    
+                    {student.status === 'boarded' && (
                       <Badge variant="outline" className="bg-green-50 text-green-700">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Embarcado
+                      </Badge>
+                    )}
+                    
+                    {student.status === 'present_at_stop' && (
+                      <div className="flex flex-col items-end">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 mb-1">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Presente no ponto
+                        </Badge>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => onMarkAsBoarded(student.id)}
+                          disabled={tripStatus !== 'in_progress'}
+                          className="text-xs"
+                        >
+                          Confirmar embarque
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {student.status === 'absent' && (
+                      <Badge variant="outline" className="bg-red-50 text-red-700">
+                        Ausente
                       </Badge>
                     )}
                   </div>

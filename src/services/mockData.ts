@@ -1,233 +1,86 @@
+import { StopData, RouteData } from '@/types';
 
-import { BusData, RouteData, StopData, UserData } from '@/types';
-
-// Função para gerar dados simulados de ônibus
-export function generateMockBuses(): BusData[] {
-  const buses: BusData[] = [
-    {
-      id: 'bus-001',
-      name: 'Ônibus 101',
-      route: 'Rota A',
-      latitude: -14.9167,
-      longitude: 13.4925, // Lubango
-      speed: 25,
-      direction: 90,
+// Mock function to generate bus data
+export const generateMockBuses = (count: number = 5) => {
+  const buses = [];
+  for (let i = 1; i <= count; i++) {
+    buses.push({
+      id: i.toString(),
+      name: `Bus ${i}`,
+      route: `Route ${i % 3 + 1}`,
+      latitude: -8.837 + Math.random() * 0.1,
+      longitude: 13.245 + Math.random() * 0.1,
+      speed: Math.floor(Math.random() * 60),
+      direction: Math.floor(Math.random() * 360),
       status: 'active',
-      capacity: 45,
-      occupancy: 32,
-      currentStop: 'Faculdade ISPI',
-      nextStop: 'Reitoria da Mandume',
-      estimatedTimeToNextStop: 5,
-      lastUpdate: new Date().toISOString(),
-      onTime: true,
-      driver: {
-        name: 'João Silva',
-        phone: '11 98765-4321',
-        photo: 'https://randomuser.me/api/portraits/men/32.jpg'
-      }
-    },
-    {
-      id: 'bus-002',
-      name: 'Ônibus 202',
-      route: 'Rota B',
-      latitude: -14.9200,
-      longitude: 13.4960, // Lubango, um pouco deslocado
-      speed: 0,
-      direction: 180,
-      status: 'active',
-      capacity: 45,
-      occupancy: 38,
-      currentStop: 'Reitoria da Mandume',
-      nextStop: 'Bairro do Tchioco',
-      estimatedTimeToNextStop: 12,
-      lastUpdate: new Date(Date.now() - 10 * 60000).toISOString(), // 10 minutos atrás
-      onTime: false,
-      driver: {
-        name: 'Maria Oliveira',
-        phone: '11 91234-5678',
-        photo: 'https://randomuser.me/api/portraits/women/44.jpg'
-      }
-    },
-    {
-      id: 'bus-003',
-      name: 'Ônibus 303',
-      route: 'Rota C',
-      latitude: -14.9300,
-      longitude: 13.4890, // Lubango, mais deslocado
-      speed: 15,
-      direction: 270,
-      status: 'delayed',
       capacity: 40,
-      occupancy: 35,
-      currentStop: 'Bairro do Tchioco',
-      nextStop: 'Faculdade ISPI',
-      estimatedTimeToNextStop: 8,
-      lastUpdate: new Date(Date.now() - 5 * 60000).toISOString(), // 5 minutos atrás
-      onTime: false,
+      occupancy: Math.floor(Math.random() * 40),
+      currentStop: `Stop ${Math.floor(Math.random() * 10) + 1}`,
+      nextStop: `Stop ${Math.floor(Math.random() * 10) + 1}`,
+      estimatedTimeToNextStop: Math.floor(Math.random() * 10),
+      lastUpdate: new Date().toISOString(),
+      onTime: Math.random() > 0.2,
       driver: {
-        name: 'Carlos Mendes',
-        phone: '11 95555-9999'
+        name: `Driver ${i}`,
+        phone: '923456789',
+        photo: 'https://randomuser.me/api/portraits/men/1.jpg'
       }
-    },
-  ];
-  
+    });
+  }
   return buses;
-}
+};
 
-// Função para gerar paradas simuladas
-export function generateMockStops(): StopData[] {
-  const stops: StopData[] = [
+// This function is still needed for Schedule.tsx which hasn't been updated yet
+export const generateMockStops = (): StopData[] => {
+  return [
     {
-      id: 'stop-001',
-      name: 'Faculdade ISPI',
-      address: 'Faculdade ISPI, Lubango',
-      latitude: -14.9167,
-      longitude: 13.4925,
+      id: '1',
+      name: 'Escola Municipal',
+      address: 'Rua da Escola, 123',
+      latitude: -8.8368,
+      longitude: 13.2343,
       scheduledTime: '07:30',
-      estimatedTime: '07:30'
+      estimatedTime: '07:30',
+      busId: '1'
     },
     {
-      id: 'stop-002',
-      name: 'Reitoria da Mandume',
-      address: 'Reitoria da Mandume, Lubango',
-      latitude: -14.9200,
-      longitude: 13.4960,
+      id: '2',
+      name: 'Centro Comercial',
+      address: 'Avenida Central, 456',
+      latitude: -8.8389,
+      longitude: 13.2372,
       scheduledTime: '07:45',
-      estimatedTime: '07:50'
+      estimatedTime: '07:52',
+      busId: '1'
     },
     {
-      id: 'stop-003',
-      name: 'Bairro do Tchioco',
-      address: 'Bairro do Tchioco, Lubango',
-      latitude: -14.9300,
-      longitude: 13.4890,
+      id: '3',
+      name: 'Bairro Residencial',
+      address: 'Rua das Flores, 789',
+      latitude: -8.8410,
+      longitude: 13.2401,
       scheduledTime: '08:00',
-      estimatedTime: '08:15'
+      estimatedTime: '08:10',
+      busId: '1'
     }
   ];
-  
-  return stops;
-}
+};
 
-// Função para gerar rotas simuladas
-export function generateMockRoutes(): RouteData[] {
+// This function is also still needed for Schedule.tsx
+export const generateMockRoutes = (): RouteData[] => {
   const stops = generateMockStops();
-  
-  const routes: RouteData[] = [
+  return [
     {
-      id: 'route-001',
-      name: 'ISPI - Mandume',
-      description: 'Faculdade ISPI → Reitoria da Mandume',
-      stops: [stops[0], stops[1]],
-      buses: ['bus-001'],
+      id: '1',
+      name: 'Rota Escolar 01',
+      description: 'Rota matinal para escola',
+      stops: stops,
+      buses: ['1'],
       schedule: {
-        weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+        weekdays: ['segunda', 'terça', 'quarta', 'quinta', 'sexta'],
         startTime: '07:00',
-        endTime: '18:00'
+        endTime: '08:30'
       }
-    },
-    {
-      id: 'route-002',
-      name: 'ISPI - Tchioco',
-      description: 'Faculdade ISPI → Bairro do Tchioco',
-      stops: [stops[0], stops[2]],
-      buses: ['bus-002'],
-      schedule: {
-        weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        startTime: '07:00',
-        endTime: '18:00'
-      }
-    },
-    {
-      id: 'route-003',
-      name: 'Tchioco - ISPI',
-      description: 'Bairro do Tchioco → Faculdade ISPI',
-      stops: [stops[2], stops[0]],
-      buses: ['bus-003'],
-      schedule: {
-        weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        startTime: '07:00',
-        endTime: '18:00'
-      }
-    },
-  ];
-  
-  return routes;
-}
-
-// Função para gerar usuários simulados
-export function generateMockUsers(): UserData[] {
-  const users: UserData[] = [
-    {
-      id: 'user-001',
-      name: 'Roberto Pereira',
-      email: 'roberto@exemplo.com',
-      role: 'parent',
-      phone: '11 91111-2222',
-      children: [
-        {
-          id: 'child-001',
-          name: 'Lucas Pereira',
-          routeId: 'route-001',
-          routeName: 'Rota A',
-          stopId: 'stop-001',
-          stopName: 'Escola Municipal'
-        }
-      ]
-    },
-    {
-      id: 'user-002',
-      name: 'Ana Souza',
-      email: 'ana@exemplo.com',
-      role: 'manager',
-      phone: '11 93333-4444'
-    },
-    {
-      id: 'user-003',
-      name: 'João Silva',
-      email: 'joao@exemplo.com',
-      role: 'driver',
-      phone: '11 95555-6666',
-      associatedBusId: 'bus-001'
     }
   ];
-  
-  return users;
-}
-
-// Simulação de atualização das posições dos ônibus
-export function updateBusPositions(buses: BusData[]): BusData[] {
-  return buses.map(bus => {
-    // Somente atualiza ônibus ativos com velocidade > 0
-    if (bus.status === 'active' && bus.speed > 0) {
-      // Cálculo simplificado para simular movimento
-      // Na vida real, seria baseado em direção e velocidade reais
-      const latChange = (Math.random() * 0.002 - 0.001) * bus.speed / 10;
-      const lngChange = (Math.random() * 0.002 - 0.001) * bus.speed / 10;
-      
-      return {
-        ...bus,
-        latitude: bus.latitude + latChange,
-        longitude: bus.longitude + lngChange,
-        lastUpdate: new Date().toISOString()
-      };
-    }
-    return bus;
-  });
-}
-
-// Simulação de atraso para ônibus
-export function simulateDelays(buses: BusData[]): BusData[] {
-  return buses.map(bus => {
-    // 15% de chance de atraso para cada ônibus
-    if (Math.random() < 0.15) {
-      return {
-        ...bus,
-        status: 'delayed' as const,
-        onTime: false,
-        estimatedTimeToNextStop: bus.estimatedTimeToNextStop + Math.floor(Math.random() * 10) + 5
-      };
-    }
-    return bus;
-  });
-}
+};

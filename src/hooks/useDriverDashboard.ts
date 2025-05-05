@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +17,7 @@ export const useDriverDashboard = () => {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [showRegisterVehicle, setShowRegisterVehicle] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
+  const [routeId, setRouteId] = useState<string | null>(null);
   
   // Load driver's vehicle
   useEffect(() => {
@@ -54,8 +56,19 @@ export const useDriverDashboard = () => {
           
           setVehicle(mappedVehicle);
           
-          // Load students associated with driver's route
-          loadStudents();
+          // Check if driver has a route assigned
+          const { data: routeData, error: routeError } = await supabase
+            .from('routes')
+            .select('id')
+            .eq('driver_id', user.id)
+            .eq('vehicle_id', data.id)
+            .maybeSingle();
+          
+          if (!routeError && routeData) {
+            setRouteId(routeData.id);
+            // Load students associated with driver's route
+            loadStudents(routeData.id);
+          }
         }
       } catch (error) {
         console.error('Erro ao buscar veículo:', error);
@@ -68,31 +81,58 @@ export const useDriverDashboard = () => {
   }, [user]);
   
   // Load students
-  const loadStudents = async () => {
-    if (!user) return;
+  const loadStudents = async (routeIdToLoad: string) => {
+    if (!user || !routeIdToLoad) return;
     
     try {
       setLoadingStudents(true);
       
-      // Mock data for now since the students table might not exist yet
-      const mockStudents: StudentWithStatus[] = [
-        {
-          id: "1",
-          name: "João Silva",
-          status: "waiting",
-          grade: "5º",
-          classroom: "A"
-        },
-        {
-          id: "2",
-          name: "Maria Oliveira",
-          status: "waiting",
-          grade: "6º",
-          classroom: "B"
-        }
-      ];
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
       
-      setStudents(mockStudents);
+      // Fetch students assigned to this route
+      const { data, error } = await supabase
+        .from('students')
+        .select('id, name, grade, classroom, pickup_address, stop_id')
+        .eq('route_id', routeIdToLoad);
+      
+      if (error) {
+        console.error('Erro ao buscar alunos:', error);
+        setStudents([]);
+        return;
+      }
+      
+      if (!data || data.length === 0) {
+        setStudents([]);
+        return;
+      }
+      
+      // Fetch attendance records for today
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('student_attendance')
+        .select('student_id, status')
+        .eq('trip_date', today)
+        .in('student_id', data.map(s => s.id));
+      
+      if (attendanceError) {
+        console.error('Erro ao buscar registros de presença:', attendanceError);
+      }
+      
+      // Map students with their attendance status
+      const studentsWithStatus: StudentWithStatus[] = data.map(student => {
+        const attendance = attendanceData?.find(a => a.student_id === student.id);
+        return {
+          id: student.id,
+          name: student.name,
+          grade: student.grade || 'N/A',
+          classroom: student.classroom || 'N/A',
+          pickupAddress: student.pickup_address || 'Endereço não registrado',
+          stopId: student.stop_id,
+          status: (attendance?.status as StudentWithStatus['status']) || 'waiting'
+        };
+      });
+      
+      setStudents(studentsWithStatus);
     } catch (error) {
       console.error('Erro ao buscar alunos:', error);
     } finally {
@@ -100,11 +140,42 @@ export const useDriverDashboard = () => {
     }
   };
   
-  const startTrip = () => {
+  const startTrip = async () => {
     if (!vehicle) {
       toast.error('Você precisa registrar um veículo antes de iniciar uma viagem');
       setShowRegisterVehicle(true);
       return;
+    }
+    
+    if (!routeId) {
+      toast.error('Você não tem uma rota atribuída ao seu veículo');
+      return;
+    }
+    
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Create attendance records for all students who don't have one yet
+    for (const student of students) {
+      const { data: existing } = await supabase
+        .from('student_attendance')
+        .select('id')
+        .eq('student_id', student.id)
+        .eq('trip_date', today)
+        .maybeSingle();
+      
+      if (!existing) {
+        // Create a new attendance record
+        await supabase
+          .from('student_attendance')
+          .insert({
+            student_id: student.id,
+            trip_date: today,
+            status: 'waiting',
+            marked_by: user?.id,
+            stop_id: student.stopId
+          });
+      }
     }
     
     setTripStatus('in_progress');
@@ -122,7 +193,22 @@ export const useDriverDashboard = () => {
     }
   };
   
-  const endTrip = () => {
+  const endTrip = async () => {
+    // Mark all 'waiting' students as 'absent'
+    if (students.length > 0) {
+      const today = new Date().toISOString().split('T')[0];
+      
+      for (const student of students) {
+        if (student.status === 'waiting') {
+          await supabase
+            .from('student_attendance')
+            .update({ status: 'absent' })
+            .eq('student_id', student.id)
+            .eq('trip_date', today);
+        }
+      }
+    }
+    
     setTripStatus('completed');
     setShowEndDialog(false);
     toast.success('Viagem finalizada com sucesso!');
@@ -133,15 +219,42 @@ export const useDriverDashboard = () => {
     // Reset after a few seconds
     setTimeout(() => {
       setTripStatus('idle');
-      setStudents(students.map(s => ({ ...s, status: 'waiting' })));
+      // Reload students to get fresh status
+      if (routeId) {
+        loadStudents(routeId);
+      }
     }, 5000);
   };
   
-  const markStudentAsBoarded = (studentId: string) => {
-    setStudents(students.map(student => 
-      student.id === studentId ? { ...student, status: 'boarded' } : student
-    ));
-    toast.success('Aluno marcado como embarcado!');
+  const markStudentAsBoarded = async (studentId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Update the attendance record in the database
+      const { error } = await supabase
+        .from('student_attendance')
+        .update({ 
+          status: 'boarded',
+          marked_at: new Date().toISOString(),
+          marked_by: user?.id
+        })
+        .eq('student_id', studentId)
+        .eq('trip_date', today);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setStudents(students.map(student => 
+        student.id === studentId ? { ...student, status: 'boarded' } : student
+      ));
+      
+      toast.success('Aluno marcado como embarcado!');
+    } catch (error) {
+      console.error('Erro ao marcar aluno como embarcado:', error);
+      toast.error('Erro ao atualizar status do aluno');
+    }
   };
   
   const handleVehicleRegistered = (newVehicle: VehicleData) => {
@@ -175,6 +288,7 @@ export const useDriverDashboard = () => {
     setShowRegisterVehicle,
     isTracking,
     setIsTracking,
+    routeId,
     startTrip,
     endTrip,
     markStudentAsBoarded,

@@ -174,6 +174,47 @@ export type Database = {
         }
         Relationships: []
       }
+      routes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          driver_id: string | null
+          end_location: string
+          id: string
+          name: string
+          start_location: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          driver_id?: string | null
+          end_location: string
+          id?: string
+          name: string
+          start_location: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          driver_id?: string | null
+          end_location?: string
+          id?: string
+          name?: string
+          start_location?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
           address: string | null
@@ -203,6 +244,143 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      stops: {
+        Row: {
+          address: string
+          estimated_time: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          route_id: string | null
+          sequence_number: number
+        }
+        Insert: {
+          address: string
+          estimated_time?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          route_id?: string | null
+          sequence_number: number
+        }
+        Update: {
+          address?: string
+          estimated_time?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          route_id?: string | null
+          sequence_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_attendance: {
+        Row: {
+          id: string
+          marked_at: string | null
+          marked_by: string | null
+          status: string | null
+          student_id: string | null
+          trip_date: string
+          trip_id: string | null
+        }
+        Insert: {
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          status?: string | null
+          student_id?: string | null
+          trip_date?: string
+          trip_id?: string | null
+        }
+        Update: {
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          status?: string | null
+          student_id?: string | null
+          trip_date?: string
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          classroom: string | null
+          created_at: string | null
+          grade: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          pickup_address: string | null
+          route_id: string | null
+          stop_id: string | null
+        }
+        Insert: {
+          classroom?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          pickup_address?: string | null
+          route_id?: string | null
+          stop_id?: string | null
+        }
+        Update: {
+          classroom?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          pickup_address?: string | null
+          route_id?: string | null
+          stop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles: {
         Row: {

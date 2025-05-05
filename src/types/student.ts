@@ -1,7 +1,7 @@
 
 // Define student types
 
-export type StudentBoardingStatus = 'waiting' | 'boarded' | 'absent';
+export type StudentBoardingStatus = 'waiting' | 'boarded' | 'absent' | 'present_at_stop';
 
 export interface StudentWithStatus {
   id: string;
@@ -10,5 +10,6 @@ export interface StudentWithStatus {
   grade?: string;
   classroom?: string;
   pickupAddress?: string;
+  stopId?: string;
   [key: string]: any; // Allow additional properties
 }

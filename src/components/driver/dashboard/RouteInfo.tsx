@@ -1,9 +1,103 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Bus, MapPin, Clock } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const RouteInfo: React.FC = () => {
+interface RouteInfoProps {
+  routeId: string | null;
+}
+
+const RouteInfo: React.FC<RouteInfoProps> = ({ routeId }) => {
+  const [routeInfo, setRouteInfo] = useState<{
+    name: string;
+    description: string;
+    stops: { id: string; name: string; address: string }[];
+    nextStop?: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  useEffect(() => {
+    const fetchRouteInfo = async () => {
+      if (!routeId) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch route data
+        const { data: routeData, error: routeError } = await supabase
+          .from('routes')
+          .select('name, description')
+          .eq('id', routeId)
+          .single();
+        
+        if (routeError) throw routeError;
+        
+        // Fetch stops
+        const { data: stopsData, error: stopsError } = await supabase
+          .from('stops')
+          .select('id, name, address, sequence_number')
+          .eq('route_id', routeId)
+          .order('sequence_number', { ascending: true });
+        
+        if (stopsError) throw stopsError;
+        
+        setRouteInfo({
+          name: routeData.name,
+          description: routeData.description || '',
+          stops: stopsData || [],
+          nextStop: stopsData && stopsData.length > 0 ? stopsData[0].address : undefined
+        });
+      } catch (error) {
+        console.error('Erro ao buscar informações da rota:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchRouteInfo();
+  }, [routeId]);
+  
+  if (!routeId) {
+    return (
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center text-lg">
+            <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
+            Informações da Rota
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 text-gray-500">
+            <p>Nenhuma rota atribuída ao seu veículo</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (loading) {
+    return (
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center text-lg">
+            <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
+            Informações da Rota
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-4/5" />
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-5 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
@@ -16,17 +110,17 @@ const RouteInfo: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-medium">Rota:</span>
-            <span>Escola Municipal → Centro</span>
+            <span>{routeInfo?.name || 'Não definida'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-medium">Pontos de parada:</span>
-            <span>12 paradas</span>
+            <span>{routeInfo?.stops.length || 0} paradas</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-medium">Próximo ponto:</span>
             <span className="text-busapp-primary flex items-center">
               <MapPin className="h-4 w-4 mr-1" />
-              Av. Principal, 123
+              {routeInfo?.nextStop || 'Não definido'}
             </span>
           </div>
           <div className="flex items-center justify-between">
