@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,6 +10,7 @@ import RouteInfo from '@/components/driver/dashboard/RouteInfo';
 import StudentsList from '@/components/driver/dashboard/StudentsList';
 import VehicleTab from '@/components/driver/dashboard/VehicleTab';
 import LocationTrackerTab from '@/components/driver/dashboard/LocationTrackerTab';
+import RouteSelector from '@/components/driver/dashboard/RouteSelector';
 import { useDriverDashboard } from '@/hooks/useDriverDashboard';
 
 const DriverDashboard = () => {
@@ -31,6 +31,9 @@ const DriverDashboard = () => {
     isTracking,
     setIsTracking,
     routeId,
+    availableRoutes,
+    loadingRoutes,
+    selectRoute,
     startTrip,
     endTrip,
     markStudentAsBoarded,
@@ -58,6 +61,15 @@ const DriverDashboard = () => {
           </TabsList>
           
           <TabsContent value="viagens" className="space-y-4 pt-4">
+            {/* Route selector (new component) */}
+            <RouteSelector
+              routeId={routeId}
+              availableRoutes={availableRoutes}
+              loadingRoutes={loadingRoutes}
+              onSelectRoute={selectRoute}
+              disabled={tripStatus === 'in_progress'}
+            />
+            
             {/* Driver info and bus info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DriverInfo user={user ? { 

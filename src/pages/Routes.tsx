@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -169,44 +168,35 @@ const Routes = () => {
         return;
       }
       
-      let studentId = studentData?.id;
-      
-      // If student profile doesn't exist, create one
+      // If no student profile is found, show an error message instead of creating one
       if (!studentData) {
-        const { data: newStudent, error: createError } = await supabase
-          .from('students')
-          .insert({
-            name: user.email?.split('@')[0] || 'Estudante',
-            parent_id: user.id,
-            stop_id: stopId
-          })
-          .select('id')
-          .single();
-        
-        if (createError) {
-          console.error('Error creating student profile:', createError);
-          toast({
-            title: "Erro",
-            description: "Não foi possível criar seu perfil de aluno. Por favor, contate o suporte.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // Use the newly created student
-        studentId = newStudent.id;
-      } else {
-        // Update existing student's stop_id
-        await supabase
-          .from('students')
-          .update({ stop_id: stopId })
-          .eq('id', studentData.id);
+        toast({
+          title: "Erro",
+          description: "Você não tem um perfil de estudante associado a esta conta. Por favor, contate a administração.",
+          variant: "destructive"
+        });
+        return;
       }
       
-      // Now process the attendance
-      if (studentId) {
-        await markAttendance(studentId, stopId);
+      // Update existing student's stop_id
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ stop_id: stopId })
+        .eq('id', studentData.id);
+        
+      if (updateError) {
+        console.error('Error updating student stop:', updateError);
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar o ponto de embarque.",
+          variant: "destructive"
+        });
+        return;
       }
+      
+      // Process the attendance for the existing student
+      await markAttendance(studentData.id, stopId);
+      
     } catch (error) {
       console.error('Erro ao marcar presença:', error);
       toast({
