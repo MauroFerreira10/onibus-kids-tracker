@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bus, Map, User, Calendar, LogOut, BellRing, LayoutDashboard, Steering } from 'lucide-react';
+import { Bus, Map, User, Calendar, LogOut, BellRing, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -99,7 +99,7 @@ const Navbar: React.FC = () => {
               }`}
             >
               <div className={`p-2 rounded-full ${location.pathname.includes('/driver') ? 'bg-busapp-primary/10' : ''}`}>
-                <Steering size={20} />
+                <Bus size={20} />
               </div>
               <span className="text-xs mt-1">Motorista</span>
               {location.pathname.includes('/driver') && (
