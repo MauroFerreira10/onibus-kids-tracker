@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,7 +45,7 @@ export const useDriverDashboard = () => {
             capacity: data.capacity,
             year: data.year,
             driverId: data.driver_id,
-            status: data.status,
+            status: data.status as 'active' | 'maintenance' | 'inactive',
             trackingEnabled: data.tracking_enabled,
             lastLatitude: data.last_latitude,
             lastLongitude: data.last_longitude,

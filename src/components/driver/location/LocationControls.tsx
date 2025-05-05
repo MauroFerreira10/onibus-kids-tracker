@@ -49,9 +49,19 @@ const LocationControls: React.FC<LocationControlsProps> = ({
       )}
       
       {trackingEnabled && !isTracking && (
-        <p className="text-sm text-center text-gray-500 mt-2">
-          Clique no botão acima para iniciar o compartilhamento de sua localização com os pais e alunos.
-        </p>
+        <div className="bg-blue-50 p-3 rounded-md text-center mt-2">
+          <p className="text-sm text-blue-700">
+            Quando o rastreamento estiver ativo, sua localização será compartilhada com os pais e alunos em tempo real.
+          </p>
+        </div>
+      )}
+      
+      {isTracking && (
+        <div className="bg-green-50 p-3 rounded-md text-center mt-2">
+          <p className="text-sm text-green-700">
+            Rastreamento ativo! Os pais e alunos podem ver a localização do veículo em tempo real.
+          </p>
+        </div>
       )}
     </div>
   );

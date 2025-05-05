@@ -61,8 +61,8 @@ const DriverDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DriverInfo user={user ? { 
                 id: user.id, 
-                name: user.name || user.email, 
-                email: user.email,
+                name: user.email?.split('@')[0] || 'Motorista', 
+                email: user.email || '',
                 role: 'driver'
               } : null} vehicle={vehicle} />
               <RouteInfo />

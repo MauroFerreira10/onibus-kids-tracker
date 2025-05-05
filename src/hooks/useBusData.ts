@@ -1,46 +1,83 @@
 
 import { useState, useEffect } from 'react';
 import { BusData, BusFilters } from '@/types';
-import { generateMockBuses, updateBusPositions, simulateDelays } from '@/services/mockData';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useBusData(filters?: BusFilters) {
   const [buses, setBuses] = useState<BusData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Inicializar os dados dos ônibus
+  // Fetch real vehicle data from database
   useEffect(() => {
-    try {
-      // Simulando busca de dados
-      setIsLoading(true);
-      setTimeout(() => {
-        const mockBuses = generateMockBuses();
-        setBuses(mockBuses);
+    const fetchVehicles = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Only fetch vehicles with tracking enabled and that have location data
+        const { data, error: fetchError } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('tracking_enabled', true)
+          .not('last_latitude', 'is', null)
+          .not('last_longitude', 'is', null);
+        
+        if (fetchError) {
+          throw new Error(fetchError.message);
+        }
+        
+        if (data) {
+          // Convert vehicle data to BusData format
+          const activeBuses: BusData[] = data.map(vehicle => ({
+            id: vehicle.id,
+            name: `Veículo ${vehicle.license_plate}`,
+            route: vehicle.model,
+            latitude: vehicle.last_latitude,
+            longitude: vehicle.last_longitude,
+            speed: 0, // We don't have real speed data yet
+            direction: 0, // We don't have real direction data yet
+            status: 'active',
+            capacity: vehicle.capacity,
+            occupancy: 0, // We don't have real occupancy data yet
+            currentStop: 'Em trânsito',
+            nextStop: 'Próxima parada',
+            estimatedTimeToNextStop: 0, 
+            lastUpdate: vehicle.last_location_update || new Date().toISOString(),
+            onTime: true
+          }));
+          
+          setBuses(activeBuses);
+        } else {
+          setBuses([]);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar dados dos veículos:', err);
+        setError('Erro ao carregar dados dos veículos');
+        setBuses([]);
+      } finally {
         setIsLoading(false);
-      }, 1000);
-    } catch (err) {
-      setError('Erro ao carregar dados dos ônibus');
-      setIsLoading(false);
-    }
-  }, []);
-  
-  // Atualizar posições periodicamente
-  useEffect(() => {
-    if (buses.length === 0) return;
-    
-    const positionInterval = setInterval(() => {
-      setBuses(prev => updateBusPositions(prev));
-    }, 5000); // Atualiza a cada 5 segundos
-    
-    const delayInterval = setInterval(() => {
-      setBuses(prev => simulateDelays(prev));
-    }, 30000); // Simular atrasos a cada 30 segundos
-    
-    return () => {
-      clearInterval(positionInterval);
-      clearInterval(delayInterval);
+      }
     };
-  }, [buses.length]);
+    
+    fetchVehicles();
+    
+    // Set up real-time subscription for vehicle updates
+    const channel = supabase
+      .channel('vehicle_updates')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'vehicles',
+          filter: 'tracking_enabled=eq.true' 
+        }, 
+        fetchVehicles)
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
   
   // Filtragem de ônibus se houver filtros
   const filteredBuses = filters
@@ -56,12 +93,43 @@ export function useBusData(filters?: BusFilters) {
     buses: filteredBuses,
     isLoading,
     error,
-    refreshBuses: () => {
+    refreshBuses: async () => {
       setIsLoading(true);
-      setTimeout(() => {
-        setBuses(generateMockBuses());
+      
+      try {
+        const { data } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('tracking_enabled', true)
+          .not('last_latitude', 'is', null)
+          .not('last_longitude', 'is', null);
+          
+        if (data) {
+          const activeBuses: BusData[] = data.map(vehicle => ({
+            id: vehicle.id,
+            name: `Veículo ${vehicle.license_plate}`,
+            route: vehicle.model,
+            latitude: vehicle.last_latitude,
+            longitude: vehicle.last_longitude,
+            speed: 0,
+            direction: 0,
+            status: 'active',
+            capacity: vehicle.capacity,
+            occupancy: 0,
+            currentStop: 'Em trânsito',
+            nextStop: 'Próxima parada',
+            estimatedTimeToNextStop: 0,
+            lastUpdate: vehicle.last_location_update || new Date().toISOString(),
+            onTime: true
+          }));
+          
+          setBuses(activeBuses);
+        }
+      } catch (err) {
+        console.error('Erro ao atualizar dados dos veículos:', err);
+      } finally {
         setIsLoading(false);
-      }, 500);
+      }
     }
   };
 }
