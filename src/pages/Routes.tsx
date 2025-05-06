@@ -171,38 +171,54 @@ const Routes = () => {
       
       // If no student profile is found, create one with basic information
       if (!studentData) {
-        // Get stop information to find the route_id
-        const { data: stopData, error: stopError } = await supabase
-          .from('stops')
-          .select('route_id, name')
-          .eq('id', stopId)
-          .maybeSingle();
+        try {
+          // Get stop information to find the route_id
+          const { data: stopData, error: stopError } = await supabase
+            .from('stops')
+            .select('route_id, name')
+            .eq('id', stopId)
+            .maybeSingle();
+            
+          if (stopError || !stopData) {
+            console.error('Error fetching stop:', stopError);
+            toast({
+              title: "Erro",
+              description: "Não foi possível obter informações sobre o ponto de embarque.",
+              variant: "destructive"
+            });
+            return;
+          }
           
-        if (stopError || !stopData) {
-          console.error('Error fetching stop:', stopError);
+          const studentName = user.email?.split('@')[0] || 'Estudante';
+          
+          // Create a new student profile
+          const { data: newStudent, error: createError } = await supabase
+            .from('students')
+            .insert({
+              parent_id: user.id,
+              name: studentName,
+              stop_id: stopId,
+              route_id: stopData.route_id,
+              pickup_address: stopData.name
+            })
+            .select('id')
+            .single();
+          
+          if (createError) {
+            console.error('Error creating student profile:', createError);
+            throw new Error('Não foi possível criar um perfil de estudante');
+          }
+          
+          studentData = newStudent;
+          console.log('Created new student profile:', newStudent);
+          
           toast({
-            title: "Erro",
-            description: "Não foi possível obter informações sobre o ponto de embarque.",
-            variant: "destructive"
+            title: "Sucesso",
+            description: "Perfil de estudante criado automaticamente.",
+            variant: "default"
           });
-          return;
-        }
-        
-        // Create a new student profile
-        const { data: newStudent, error: createError } = await supabase
-          .from('students')
-          .insert({
-            parent_id: user.id,
-            name: user.email?.split('@')[0] || 'Estudante',
-            stop_id: stopId,
-            route_id: stopData.route_id,
-            pickup_address: stopData.name
-          })
-          .select('id')
-          .single();
-        
-        if (createError) {
-          console.error('Error creating student profile:', createError);
+        } catch (error) {
+          console.error('Detailed error:', error);
           toast({
             title: "Erro",
             description: "Não foi possível criar um perfil de estudante. Por favor, contacte a administração.",
@@ -210,14 +226,6 @@ const Routes = () => {
           });
           return;
         }
-        
-        studentData = newStudent;
-        
-        toast({
-          title: "Sucesso",
-          description: "Perfil de estudante criado automaticamente.",
-          variant: "default"
-        });
       } else {
         // Update existing student's stop_id
         const { error: updateError } = await supabase
@@ -237,13 +245,17 @@ const Routes = () => {
       }
       
       // Process the attendance for the existing student
-      await markAttendance(studentData.id, stopId);
+      if (studentData && studentData.id) {
+        await markAttendance(studentData.id, stopId);
+      } else {
+        throw new Error('Dados do estudante não encontrados após criação');
+      }
       
     } catch (error) {
       console.error('Erro ao marcar presença:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível marcar presença. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível marcar presença. Tente novamente.",
         variant: "destructive"
       });
     }
