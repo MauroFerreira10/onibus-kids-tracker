@@ -131,7 +131,7 @@ export const useRoutes = () => {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
       
-      // Use stored procedure to fetch attendance
+      // Call the stored procedure as an RPC function
       const { data: attendanceData, error } = await supabase
         .rpc('get_user_attendance_status', { 
           user_id_param: user.id,
@@ -191,7 +191,7 @@ export const useRoutes = () => {
         return;
       }
       
-      // Use stored procedure to insert attendance record
+      // Call the stored procedure as an RPC function
       const { data, error: insertError } = await supabase
         .rpc('record_user_attendance', {
           user_id_param: user.id,

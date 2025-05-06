@@ -138,6 +138,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          icon: string
+          id: string
+          message: string
+          read: boolean
+          sender_role: string | null
+          time: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          icon: string
+          id?: string
+          message: string
+          read?: boolean
+          sender_role?: string | null
+          time?: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string
+          id?: string
+          message?: string
+          read?: boolean
+          sender_role?: string | null
+          time?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -486,6 +522,23 @@ export type Database = {
       clean_old_locations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_user_attendance_status: {
+        Args: { user_id_param: string; date_param: string }
+        Returns: {
+          stop_id: string
+          route_id: string
+          status: string
+        }[]
+      }
+      record_user_attendance: {
+        Args: {
+          user_id_param: string
+          stop_id_param: string
+          route_id_param: string
+          date_param: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

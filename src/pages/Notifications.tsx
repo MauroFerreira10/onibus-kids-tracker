@@ -22,7 +22,7 @@ const Notifications = () => {
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
   
-  // Carregar notificações do usuário
+  // Load user notifications
   useEffect(() => {
     fetchNotifications();
   }, [user]);
@@ -33,7 +33,7 @@ const Notifications = () => {
     try {
       setLoading(true);
       
-      // First attempt to fetch real notifications
+      // Try to fetch real notifications using our new notifications table
       const { data: notificationData, error: notificationError } = await supabase
         .from('notifications')
         .select('*')
@@ -70,8 +70,20 @@ const Notifications = () => {
           setNotifications(formattedData);
         }
       } else {
-        // Use real notifications if available
-        setNotifications(notificationData || []);
+        // Use real notifications if available (convert to our frontend format)
+        const typedNotifications: Notification[] = notificationData?.map(n => ({
+          id: n.id,
+          type: n.type as any,
+          message: n.message,
+          time: n.time,
+          read: n.read,
+          icon: n.icon,
+          user_id: n.user_id,
+          sender_role: n.sender_role,
+          created_at: n.created_at
+        })) || [];
+        
+        setNotifications(typedNotifications);
       }
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
@@ -96,7 +108,7 @@ const Notifications = () => {
         sender_role: getUserRole()
       };
       
-      // Try to insert into notifications table
+      // Insert into notifications table
       const { error } = await supabase
         .from('notifications')
         .insert(notification);
@@ -184,7 +196,7 @@ const Notifications = () => {
     if (!user) return;
     
     try {
-      // Try to update real notifications if possible
+      // Update real notifications if possible
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
@@ -205,7 +217,7 @@ const Notifications = () => {
     if (!user) return;
     
     try {
-      // Try to update real notifications if possible
+      // Update real notifications if possible
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
