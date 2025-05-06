@@ -215,6 +215,54 @@ export type Database = {
           },
         ]
       }
+      schedules: {
+        Row: {
+          arrival_time: string
+          created_at: string
+          day_of_week: number
+          departure_time: string
+          id: string
+          route_id: string | null
+          stop_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arrival_time: string
+          created_at?: string
+          day_of_week: number
+          departure_time: string
+          id?: string
+          route_id?: string | null
+          stop_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arrival_time?: string
+          created_at?: string
+          day_of_week?: number
+          departure_time?: string
+          id?: string
+          route_id?: string | null
+          stop_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedules_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
           address: string | null

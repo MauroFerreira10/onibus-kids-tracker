@@ -1,24 +1,96 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { BusData, StopData } from '@/types';
-import { generateMockStops } from '@/services/mockData';
+import { StopData } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, MapPin } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const Schedule = () => {
   const [stops, setStops] = useState<StopData[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
-    // Simular carregamento de dados
-    setTimeout(() => {
-      setStops(generateMockStops());
+    fetchStops();
+  }, [selectedDate]);
+  
+  const fetchStops = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get day of the week (0 = Sunday, 1 = Monday, etc.)
+      const dayOfWeek = selectedDate.getDay();
+      
+      // Only show stops on weekdays (Monday-Friday)
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        setStops([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Fetch stops from database
+      const { data: stopsData, error } = await supabase
+        .from('stops')
+        .select('*')
+        .order('sequence_number', { ascending: true });
+      
+      if (error) {
+        console.error("Erro ao buscar paradas:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar as paradas.",
+          variant: "destructive"
+        });
+        setStops([]);
+        return;
+      }
+      
+      // Add the specific time schedules for the stops
+      const formattedStops = stopsData.map(stop => ({
+        id: stop.id,
+        name: stop.name,
+        address: stop.address,
+        latitude: stop.latitude || 0,
+        longitude: stop.longitude || 0,
+        scheduledTime: getScheduledTimeForStop(stop.name),
+        estimatedTime: getEstimatedTimeForStop(stop.name)
+      }));
+      
+      setStops(formattedStops);
+    } catch (error) {
+      console.error("Erro:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um problema ao carregar os horários.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
+  
+  // Helper function to get scheduled time based on stop name
+  const getScheduledTimeForStop = (stopName: string): string => {
+    if (stopName.toLowerCase().includes('reitoria') || 
+        stopName.toLowerCase().includes('mandume')) {
+      return '07:30';
+    } else if (stopName.toLowerCase().includes('tchioco')) {
+      return '07:50';
+    } else {
+      return '07:40'; // Default time for other stops
+    }
+  };
+  
+  // Helper function to get estimated time (could be different from scheduled in real app)
+  const getEstimatedTimeForStop = (stopName: string): string => {
+    // For now, return the same time as scheduled
+    return getScheduledTimeForStop(stopName);
+  };
   
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
@@ -38,6 +110,9 @@ const Schedule = () => {
     newDate.setDate(selectedDate.getDate() + days);
     setSelectedDate(newDate);
   };
+  
+  // Check if selected date is a weekend
+  const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
   
   return (
     <Layout>
@@ -75,9 +150,36 @@ const Schedule = () => {
           </div>
         </section>
         
+        {/* Informação sobre horários */}
+        <section className="bg-white p-4 rounded-lg shadow-sm border">
+          <h3 className="font-semibold text-lg mb-2">Informações de Horário</h3>
+          <p className="text-sm text-gray-600">
+            Os autocarros operam de segunda a sexta-feira com os seguintes horários:
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            <li className="flex items-center">
+              <Clock size={16} className="mr-2 text-busapp-primary" />
+              <span>Reitoria da Mandume: <strong>07:30</strong></span>
+            </li>
+            <li className="flex items-center">
+              <Clock size={16} className="mr-2 text-busapp-primary" />
+              <span>Bairro do Tchioco: <strong>07:50</strong></span>
+            </li>
+          </ul>
+        </section>
+        
         {/* Lista de horários por parada */}
         <section>
           <h2 className="text-xl font-bold mb-4">Horários para {formatDate(selectedDate)}</h2>
+          
+          {isWeekend && (
+            <Alert className="mb-4">
+              <AlertTitle>Sem serviço</AlertTitle>
+              <AlertDescription>
+                Os autocarros não operam aos fins de semana. Por favor, selecione um dia útil (segunda a sexta-feira).
+              </AlertDescription>
+            </Alert>
+          )}
           
           {isLoading ? (
             <div className="space-y-2">
@@ -95,7 +197,10 @@ const Schedule = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-lg">{stop.name}</h3>
-                      <p className="text-sm text-gray-600">{stop.address}</p>
+                      <p className="text-sm text-gray-600 flex items-center">
+                        <MapPin size={14} className="mr-1" />
+                        {stop.address}
+                      </p>
                       
                       <div className="mt-3 flex items-center">
                         <div className="mr-4">
@@ -137,7 +242,7 @@ const Schedule = () => {
                 </div>
               ))}
               
-              {stops.length === 0 && (
+              {stops.length === 0 && !isWeekend && (
                 <div className="text-center py-8 text-gray-500">
                   <p>Nenhum horário disponível para esta data.</p>
                 </div>

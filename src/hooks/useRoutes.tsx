@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RouteData } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useRoutes = () => {
@@ -14,7 +14,18 @@ export const useRoutes = () => {
   
   useEffect(() => {
     fetchRoutes();
-  }, []);
+    
+    // Listen for trip notifications
+    if (user) {
+      subscribeToTripNotifications();
+    }
+    
+    return () => {
+      // Clean up subscription
+      const channel = supabase.channel('schema-db-changes');
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const fetchRoutes = async () => {
     try {
@@ -63,8 +74,8 @@ export const useRoutes = () => {
           })),
           schedule: {
             weekdays: ['segunda', 'terça', 'quarta', 'quinta', 'sexta'],
-            startTime: '07:00',
-            endTime: '08:30'
+            startTime: '07:30',
+            endTime: '07:50'
           }
         };
       });
@@ -87,6 +98,32 @@ export const useRoutes = () => {
     }
   };
 
+  const subscribeToTripNotifications = () => {
+    // Subscribe to trip_started events
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: 'type=eq.trip_started'
+        },
+        (payload) => {
+          // Show a notification to the user
+          toast({
+            title: "Viagem iniciada",
+            description: payload.new.message || "Um motorista iniciou uma viagem.",
+            variant: "default"
+          });
+        }
+      )
+      .subscribe();
+      
+    return channel;
+  };
+
   const fetchAttendanceStatus = async () => {
     try {
       if (!user) return;
@@ -94,8 +131,7 @@ export const useRoutes = () => {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
       
-      // Use a raw query to fetch attendance from the attendance_simple table
-      // since it's not in the TypeScript definitions yet
+      // Use stored procedure to fetch attendance
       const { data: attendanceData, error } = await supabase
         .rpc('get_user_attendance_status', { 
           user_id_param: user.id,
@@ -155,7 +191,7 @@ export const useRoutes = () => {
         return;
       }
       
-      // Use a stored procedure to insert attendance record
+      // Use stored procedure to insert attendance record
       const { data, error: insertError } = await supabase
         .rpc('record_user_attendance', {
           user_id_param: user.id,

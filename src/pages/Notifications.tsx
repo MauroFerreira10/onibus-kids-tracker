@@ -1,38 +1,57 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, Bell, BellRing, Bus, Clock } from 'lucide-react';
+import { AlertCircle, Bell, BellRing, Bus, Clock, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Notification } from '@/types/notifications';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 const Notifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
   
   // Carregar notificações do usuário
   useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!user) return;
+    fetchNotifications();
+  }, [user]);
+  
+  const fetchNotifications = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
       
-      try {
-        setLoading(true);
+      // First attempt to fetch real notifications
+      const { data: notificationData, error: notificationError } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (notificationError) {
+        console.error('Erro ao buscar notificações:', notificationError);
         
-        // Create a custom database query for the notification structure
-        // For now we'll simulate notifications with a table structure we have
+        // Fallback to locations data as sample
         const { data, error } = await supabase
           .from('locations')
           .select('*')
           .eq('driver_id', user.id)
           .order('timestamp', { ascending: false })
           .limit(10);
-          
+            
         if (error) {
-          console.error('Erro ao buscar notificações:', error);
+          console.error('Erro ao buscar dados de localização:', error);
           return;
         }
         
@@ -44,20 +63,81 @@ const Notifications = () => {
             message: `Atualização de localização em ${new Date(item.timestamp).toLocaleTimeString('pt-BR')}`,
             time: item.timestamp,
             read: false,
-            icon: index % 3 === 0 ? 'bus' : index % 2 === 0 ? 'clock' : 'alert'
+            icon: index % 3 === 0 ? 'bus' : index % 2 === 0 ? 'clock' : 'alert',
+            user_id: item.driver_id
           }));
           
           setNotifications(formattedData);
         }
-      } catch (error) {
-        console.error('Erro ao buscar notificações:', error);
-      } finally {
-        setLoading(false);
+      } else {
+        // Use real notifications if available
+        setNotifications(notificationData || []);
       }
-    };
+    } catch (error) {
+      console.error('Erro ao buscar notificações:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const sendNotification = async () => {
+    if (!user || !newMessage.trim()) return;
     
-    fetchNotifications();
-  }, [user]);
+    try {
+      setIsSending(true);
+      
+      const notification = {
+        type: 'system',
+        message: newMessage.trim(),
+        time: new Date().toISOString(),
+        read: false,
+        icon: 'alert',
+        user_id: user.id,
+        sender_role: getUserRole()
+      };
+      
+      // Try to insert into notifications table
+      const { error } = await supabase
+        .from('notifications')
+        .insert(notification);
+      
+      if (error) {
+        console.error('Erro ao enviar notificação:', error);
+        throw error;
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: "Notificação enviada com sucesso!",
+        variant: "default"
+      });
+      
+      setShowSendDialog(false);
+      setNewMessage('');
+      fetchNotifications(); // Refresh the list
+      
+    } catch (error) {
+      console.error('Erro ao enviar notificação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar a notificação.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+  
+  const getUserRole = () => {
+    // This is a placeholder - in a real app, you would get this from the user's profile
+    // or from a context that holds the user's role
+    return 'driver'; // or 'manager'
+  };
+  
+  const canSendNotifications = () => {
+    const role = getUserRole();
+    return role === 'driver' || role === 'manager';
+  };
   
   const getIcon = (iconType: string) => {
     switch (iconType) {
@@ -101,17 +181,47 @@ const Notifications = () => {
   };
 
   const markAllAsRead = async () => {
-    // Since we don't have a notifications table structure yet,
-    // we're just updating the state for now
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+    if (!user) return;
+    
+    try {
+      // Try to update real notifications if possible
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id);
+      
+      if (error) {
+        console.error('Erro ao marcar notificações como lidas:', error);
+      }
+      
+      // Update local state anyway
+      setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+    } catch (error) {
+      console.error('Erro ao marcar notificações como lidas:', error);
+    }
   };
 
   const markAsRead = async (id: string) => {
-    // Since we don't have a notifications table structure yet,
-    // we're just updating the state for now
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
+    if (!user) return;
+    
+    try {
+      // Try to update real notifications if possible
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Erro ao marcar notificação como lida:', error);
+      }
+      
+      // Update local state anyway
+      setNotifications(notifications.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      ));
+    } catch (error) {
+      console.error('Erro ao marcar notificação como lida:', error);
+    }
   };
 
   const filteredNotifications = filter === 'all' 
@@ -134,15 +244,27 @@ const Notifications = () => {
               <Badge className="bg-busapp-primary ml-2">{unreadCount} não lidas</Badge>
             )}
           </div>
-          {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={markAllAsRead}
-            >
-              Marcar todas como lidas
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={markAllAsRead}
+              >
+                Marcar todas como lidas
+              </Button>
+            )}
+            {canSendNotifications() && (
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setShowSendDialog(true)}
+              >
+                <Send className="h-4 w-4 mr-1" />
+                Enviar notificação
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
@@ -231,6 +353,49 @@ const Notifications = () => {
           )}
         </div>
       </div>
+      
+      {/* Dialog for sending a new notification */}
+      <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Enviar nova notificação</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Escreva a mensagem da notificação aqui..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowSendDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={sendNotification} 
+              disabled={!newMessage.trim() || isSending}
+            >
+              {isSending ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent border-white rounded-full"></div>
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-1" />
+                  Enviar
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
