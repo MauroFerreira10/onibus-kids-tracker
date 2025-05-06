@@ -94,12 +94,13 @@ export const useRoutes = () => {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch attendance directly from attendance_simple table
+      // Use a raw query to fetch attendance from the attendance_simple table
+      // since it's not in the TypeScript definitions yet
       const { data: attendanceData, error } = await supabase
-        .from('attendance_simple')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', today);
+        .rpc('get_user_attendance_status', { 
+          user_id_param: user.id,
+          date_param: today
+        });
       
       if (error) {
         console.error('Error fetching attendance:', error);
@@ -110,7 +111,7 @@ export const useRoutes = () => {
         const statusMap: Record<string, string> = {};
         
         // Map each stop attendance status
-        attendanceData.forEach(record => {
+        attendanceData.forEach((record: {stop_id: string}) => {
           statusMap[record.stop_id] = 'present_at_stop';
         });
         
@@ -154,22 +155,20 @@ export const useRoutes = () => {
         return;
       }
       
-      // Inserir diretamente na tabela de presença simplificada
-      const { error: insertError } = await supabase
-        .from('attendance_simple')
-        .insert({
-          user_id: user.id,
-          stop_id: stopId,
-          route_id: stopData.route_id,
-          date: today,
-          status: 'present_at_stop'
+      // Use a stored procedure to insert attendance record
+      const { data, error: insertError } = await supabase
+        .rpc('record_user_attendance', {
+          user_id_param: user.id,
+          stop_id_param: stopId,
+          route_id_param: stopData.route_id,
+          date_param: today
         });
       
       if (insertError) {
         console.error('Erro ao registrar presença:', insertError);
         
-        // Verificar se é erro de registro duplicado
-        if (insertError.message.includes('duplicate key')) {
+        // Check if it's a duplicate record error
+        if (insertError.message.includes('duplicate key') || insertError.message.includes('already exists')) {
           toast({
             title: "Informação",
             description: "Você já confirmou presença neste ponto hoje.",
@@ -186,7 +185,7 @@ export const useRoutes = () => {
         return;
       }
       
-      // Atualizar estado local
+      // Update local state
       setAttendanceStatus(prev => ({
         ...prev,
         [stopId]: 'present_at_stop'
