@@ -4,6 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { RouteData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  fetchRoutesData, 
+  fetchStopsForRoutes, 
+  mapRoutesToDataFormat 
+} from '@/services/routeService';
+import { 
+  fetchUserAttendanceStatus, 
+  markUserPresenceAtStop 
+} from '@/services/attendanceService';
+import { subscribeToTripNotifications } from '@/services/notificationService';
 
 export const useRoutes = () => {
   const [routes, setRoutes] = useState<RouteData[]>([]);
@@ -17,7 +27,16 @@ export const useRoutes = () => {
     
     // Listen for trip notifications
     if (user) {
-      subscribeToTripNotifications();
+      const channel = subscribeToTripNotifications();
+      
+      // Process notifications
+      channel.on('broadcast', { event: 'trip_started' }, (payload) => {
+        toast({
+          title: "Viagem iniciada",
+          description: payload.message || "Um motorista iniciou uma viagem.",
+          variant: "default"
+        });
+      });
     }
     
     return () => {
@@ -31,12 +50,7 @@ export const useRoutes = () => {
     try {
       setIsLoading(true);
       
-      // Fetch routes from database
-      const { data: routesData, error: routesError } = await supabase
-        .from('routes')
-        .select('*');
-      
-      if (routesError) throw routesError;
+      const routesData = await fetchRoutesData();
       
       if (!routesData || routesData.length === 0) {
         setRoutes([]);
@@ -45,46 +59,16 @@ export const useRoutes = () => {
       }
       
       // Fetch stops for all routes
-      const { data: stopsData, error: stopsError } = await supabase
-        .from('stops')
-        .select('*')
-        .in('route_id', routesData.map(r => r.id))
-        .order('sequence_number', { ascending: true });
-      
-      if (stopsError) throw stopsError;
+      const stopsData = await fetchStopsForRoutes(routesData.map(r => r.id));
       
       // Organize data into the expected format
-      const mappedRoutes: RouteData[] = routesData.map(route => {
-        // Find stops for this route
-        const routeStops = stopsData?.filter(stop => stop.route_id === route.id) || [];
-        
-        return {
-          id: route.id,
-          name: route.name,
-          description: route.description || 'Rota escolar',
-          buses: [route.vehicle_id].filter(Boolean) as string[],
-          stops: routeStops.map(stop => ({
-            id: stop.id,
-            name: stop.name,
-            address: stop.address,
-            latitude: stop.latitude || 0,
-            longitude: stop.longitude || 0,
-            scheduledTime: stop.estimated_time || '08:00',
-            estimatedTime: stop.estimated_time || '08:00'
-          })),
-          schedule: {
-            weekdays: ['segunda', 'terça', 'quarta', 'quinta', 'sexta'],
-            startTime: '07:30',
-            endTime: '07:50'
-          }
-        };
-      });
+      const mappedRoutes = mapRoutesToDataFormat(routesData, stopsData);
       
       setRoutes(mappedRoutes);
       
       // If the user is logged in, fetch their attendance status
       if (user) {
-        fetchAttendanceStatus();
+        updateAttendanceStatus();
       }
     } catch (error) {
       console.error('Erro ao buscar rotas:', error);
@@ -98,61 +82,12 @@ export const useRoutes = () => {
     }
   };
 
-  const subscribeToTripNotifications = () => {
-    // Subscribe to trip_started events
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'notifications',
-          filter: 'type=eq.trip_started'
-        },
-        (payload) => {
-          // Show a notification to the user
-          toast({
-            title: "Viagem iniciada",
-            description: payload.new.message || "Um motorista iniciou uma viagem.",
-            variant: "default"
-          });
-        }
-      )
-      .subscribe();
-      
-    return channel;
-  };
-
-  const fetchAttendanceStatus = async () => {
+  const updateAttendanceStatus = async () => {
     try {
       if (!user) return;
       
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Call the stored procedure as an RPC function
-      const { data: attendanceData, error } = await supabase
-        .rpc('get_user_attendance_status', { 
-          user_id_param: user.id,
-          date_param: today
-        });
-      
-      if (error) {
-        console.error('Error fetching attendance:', error);
-        return;
-      }
-      
-      if (attendanceData && attendanceData.length > 0) {
-        const statusMap: Record<string, string> = {};
-        
-        // Map each stop attendance status
-        attendanceData.forEach((record: {stop_id: string}) => {
-          statusMap[record.stop_id] = 'present_at_stop';
-        });
-        
-        setAttendanceStatus(statusMap);
-      }
+      const statusMap = await fetchUserAttendanceStatus(user.id);
+      setAttendanceStatus(statusMap);
     } catch (error) {
       console.error('Erro ao buscar status de presença:', error);
     }
@@ -171,9 +106,6 @@ export const useRoutes = () => {
       
       console.log(`Marcando presença no ponto ${stopId} para o usuário ${user.id}`);
       
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
-      
       // Get stop information to find the route_id
       const { data: stopData, error: stopError } = await supabase
         .from('stops')
@@ -191,35 +123,7 @@ export const useRoutes = () => {
         return;
       }
       
-      // Call the stored procedure as an RPC function
-      const { data, error: insertError } = await supabase
-        .rpc('record_user_attendance', {
-          user_id_param: user.id,
-          stop_id_param: stopId,
-          route_id_param: stopData.route_id,
-          date_param: today
-        });
-      
-      if (insertError) {
-        console.error('Erro ao registrar presença:', insertError);
-        
-        // Check if it's a duplicate record error
-        if (insertError.message.includes('duplicate key') || insertError.message.includes('already exists')) {
-          toast({
-            title: "Informação",
-            description: "Você já confirmou presença neste ponto hoje.",
-            variant: "default"
-          });
-          return;
-        }
-        
-        toast({
-          title: "Erro",
-          description: "Não foi possível registrar sua presença. Por favor, tente novamente.",
-          variant: "destructive"
-        });
-        return;
-      }
+      await markUserPresenceAtStop(user.id, stopId, stopData);
       
       // Update local state
       setAttendanceStatus(prev => ({
@@ -233,8 +137,18 @@ export const useRoutes = () => {
         variant: "default"
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao marcar presença:', error);
+      
+      if (error.message === 'DUPLICATE_RECORD') {
+        toast({
+          title: "Informação",
+          description: "Você já confirmou presença neste ponto hoje.",
+          variant: "default"
+        });
+        return;
+      }
+      
       toast({
         title: "Erro",
         description: "Ocorreu um problema ao registrar sua presença. Por favor, tente novamente mais tarde.",
