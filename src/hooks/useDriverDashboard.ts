@@ -167,12 +167,12 @@ export const useDriverDashboard = () => {
         return;
       }
       
-      // Fetch attendance records for today
+      // Fetch attendance records for today from attendance_simple
       const { data: attendanceData, error: attendanceError } = await supabase
-        .from('student_attendance')
-        .select('student_id, status')
-        .eq('trip_date', today)
-        .in('student_id', data.map(s => s.id));
+        .from('attendance_simple')
+        .select('user_id, status, stop_id')
+        .eq('date', today)
+        .eq('route_id', routeIdToLoad);
       
       if (attendanceError) {
         console.error('Erro ao buscar registros de presença:', attendanceError);
@@ -180,15 +180,15 @@ export const useDriverDashboard = () => {
       
       // Map students with their attendance status
       const studentsWithStatus: StudentWithStatus[] = data.map(student => {
-        const attendance = attendanceData?.find(a => a.student_id === student.id);
+        const attendance = attendanceData?.find(a => a.user_id === student.id);
         return {
           id: student.id,
           name: student.name,
           grade: student.grade || 'N/A',
           classroom: student.classroom || 'N/A',
           pickupAddress: student.pickup_address || 'Endereço não registrado',
-          stopId: student.stop_id,
-          status: (attendance?.status as StudentWithStatus['status']) || 'waiting'
+          stopId: attendance?.stop_id || student.stop_id,
+          status: attendance ? 'present_at_stop' : 'waiting'
         };
       });
       
@@ -196,20 +196,20 @@ export const useDriverDashboard = () => {
       
       // Set up real-time subscription for attendance updates
       const channel = supabase
-        .channel('student-attendance-changes')
+        .channel('attendance-changes')
         .on('postgres_changes', {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
-          table: 'student_attendance',
-          filter: `trip_date=eq.${today}`
+          table: 'attendance_simple',
+          filter: `route_id=eq.${routeIdToLoad}`
         }, (payload) => {
           console.log('Attendance update:', payload);
           // Update local state when attendance changes
-          if (payload.new && payload.new.student_id) {
+          if (payload.new && 'user_id' in payload.new && 'stop_id' in payload.new) {
             setStudents(current => 
               current.map(student => 
-                student.id === payload.new.student_id 
-                  ? { ...student, status: payload.new.status as StudentWithStatus['status'] }
+                student.id === (payload.new as { user_id: string }).user_id 
+                  ? { ...student, status: 'present_at_stop', stopId: (payload.new as { stop_id: string }).stop_id }
                   : student
               )
             );
@@ -222,7 +222,8 @@ export const useDriverDashboard = () => {
         supabase.removeChannel(channel);
       };
     } catch (error) {
-      console.error('Erro ao buscar alunos:', error);
+      console.error('Erro ao carregar alunos:', error);
+      setStudents([]);
     } finally {
       setLoadingStudents(false);
     }

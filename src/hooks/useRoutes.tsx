@@ -1,9 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RouteData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { 
   fetchRoutesData, 
   fetchStopsForRoutes, 
@@ -13,7 +14,7 @@ import {
   fetchUserAttendanceStatus, 
   markUserPresenceAtStop 
 } from '@/services/attendanceService';
-import { subscribeToTripNotifications } from '@/services/notificationService';
+import { subscribeToNotifications } from '@/services/notificationService';
 
 export const useRoutes = () => {
   const [routes, setRoutes] = useState<RouteData[]>([]);
@@ -21,66 +22,67 @@ export const useRoutes = () => {
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
-    fetchRoutes();
-    
-    // Listen for trip notifications
-    if (user) {
-      const channel = subscribeToTripNotifications();
-      
-      // Process notifications
-      channel.on('broadcast', { event: 'trip_started' }, (payload) => {
+    if (!user) {
+      navigate('/auth/login');
+      return;
+    }
+
+    const fetchRoutes = async () => {
+      try {
+        setIsLoading(true);
+        
+        const routesData = await fetchRoutesData();
+        
+        if (!routesData || routesData.length === 0) {
+          setRoutes([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Fetch stops for all routes
+        const stopsData = await fetchStopsForRoutes(routesData.map(r => r.id));
+        
+        // Organize data into the expected format
+        const mappedRoutes = mapRoutesToDataFormat(routesData, stopsData);
+        
+        setRoutes(mappedRoutes);
+        
+        // If the user is logged in, fetch their attendance status
+        if (user) {
+          updateAttendanceStatus();
+        }
+      } catch (error) {
+        console.error('Erro ao buscar rotas:', error);
         toast({
-          title: "Viagem iniciada",
-          description: payload.message || "Um motorista iniciou uma viagem.",
+          title: "Erro",
+          description: "Erro ao carregar rotas",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoutes();
+
+    // Configurar subscrição para notificações
+    const channel = subscribeToNotifications((notification) => {
+      if (notification.type === 'trip_started') {
+        toast({
+          title: "Notificação",
+          description: notification.message,
           variant: "default"
         });
-      });
-    }
-    
-    return () => {
-      // Clean up subscription
-      const channel = supabase.channel('schema-db-changes');
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+      }
+    });
 
-  const fetchRoutes = async () => {
-    try {
-      setIsLoading(true);
-      
-      const routesData = await fetchRoutesData();
-      
-      if (!routesData || routesData.length === 0) {
-        setRoutes([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Fetch stops for all routes
-      const stopsData = await fetchStopsForRoutes(routesData.map(r => r.id));
-      
-      // Organize data into the expected format
-      const mappedRoutes = mapRoutesToDataFormat(routesData, stopsData);
-      
-      setRoutes(mappedRoutes);
-      
-      // If the user is logged in, fetch their attendance status
-      if (user) {
-        updateAttendanceStatus();
-      }
-    } catch (error) {
-      console.error('Erro ao buscar rotas:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as rotas.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user, navigate]);
 
   const updateAttendanceStatus = async () => {
     try {

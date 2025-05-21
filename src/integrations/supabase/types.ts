@@ -514,6 +514,58 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_simple: {
+        Row: {
+          id: string
+          user_id: string
+          stop_id: string
+          route_id: string
+          date: string
+          status: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stop_id: string
+          route_id: string
+          date?: string
+          status?: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stop_id?: string
+          route_id?: string
+          date?: string
+          status?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_simple_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_simple_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_simple_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

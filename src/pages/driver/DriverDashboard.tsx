@@ -12,9 +12,14 @@ import VehicleTab from '@/components/driver/dashboard/VehicleTab';
 import LocationTrackerTab from '@/components/driver/dashboard/LocationTrackerTab';
 import RouteSelector from '@/components/driver/dashboard/RouteSelector';
 import { useDriverDashboard } from '@/hooks/useDriverDashboard';
+import { Button } from '@/components/ui/button';
+import { Bus, Clock, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const DriverDashboard = () => {
   const { buses } = useBusData();
+  const { toast } = useToast();
   const {
     user,
     selectedBusId,
@@ -39,6 +44,43 @@ const DriverDashboard = () => {
     markStudentAsBoarded,
     handleVehicleRegistered
   } = useDriverDashboard();
+
+  const sendQuickMessage = async (message: string, type: string) => {
+    if (!user) return;
+    
+    try {
+      const notification = {
+        type,
+        message,
+        time: new Date().toISOString(),
+        read: false,
+        icon: type === 'delay' ? 'clock' : type === 'arrival' ? 'bus' : 'alert',
+        user_id: user.id,
+        sender_role: 'driver'
+      };
+
+      const { error } = await supabase
+        .from('notifications')
+        .insert(notification);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Mensagem enviada com sucesso!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar a mensagem.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Layout>
@@ -69,6 +111,37 @@ const DriverDashboard = () => {
               onSelectRoute={selectRoute}
               disabled={tripStatus === 'in_progress'}
             />
+            
+            {/* Quick Message Buttons */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => sendQuickMessage("Ônibus atrasado", "delay")}
+                className="flex items-center"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Ônibus atrasado
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => sendQuickMessage("Chegando na rota principal", "arrival")}
+                className="flex items-center"
+              >
+                <Bus className="h-4 w-4 mr-2" />
+                Chegando na rota principal
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => sendQuickMessage("Problema no trajeto", "alert")}
+                className="flex items-center"
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Problema no trajeto
+              </Button>
+            </div>
             
             {/* Driver info and bus info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

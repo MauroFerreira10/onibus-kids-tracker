@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -306,26 +305,19 @@ const Profile = () => {
             {/* Visualização do perfil */}
             {!isEditing && (
               <>
-                <div className="flex flex-col items-center">
-                  <Avatar className="w-24 h-24">
-                    <AvatarImage src={null} alt={profileData.name || ''} />
-                    <AvatarFallback className="bg-busapp-primary text-white text-xl">
-                      {profileData.name ? profileData.name.substring(0, 2).toUpperCase() : 'US'}
-                    </AvatarFallback>
+                <div className="flex items-center space-x-4">
+                  <Avatar className="w-20 h-20">
+                    <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                    <AvatarFallback>{profileData.name?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
                   </Avatar>
-                  <h2 className="text-2xl font-bold mt-4">{profileData.name || 'Usuário'}</h2>
-                  <p className="text-gray-500 capitalize">
-                    {profileData.role === 'parent' ? 'Responsável' : 'Aluno'}
-                  </p>
-                  
-                  <div className="mt-4 flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                      Editar perfil
-                    </Button>
+                  <div>
+                    <h2 className="text-2xl font-bold">{profileData.name || 'Nome não informado'}</h2>
+                    <p className="text-sm text-muted-foreground">{profileData.role ? profileData.role.charAt(0).toUpperCase() + profileData.role.slice(1) : 'Papel não informado'}</p>
+                    <Button variant="outline" size="sm" className="mt-2" onClick={() => setIsEditing(true)}>Editar perfil</Button>
                   </div>
                 </div>
                 
-                <Separator />
+                <Separator className="my-6" />
                 
                 {/* Seção específica para pais - filhos vinculados */}
                 {profileData.role === 'parent' && (
