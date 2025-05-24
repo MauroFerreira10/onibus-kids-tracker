@@ -102,7 +102,7 @@ const DriverDashboard = () => {
             <TabsTrigger value="localizacao" className="flex-1">Localização</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="viagens" className="space-y-4 pt-4">
+          <TabsContent value="viagens" className="space-y-4 pt-4 overflow-y-auto max-h-full">
             {/* Route selector (new component) */}
             <RouteSelector
               routeId={routeId}

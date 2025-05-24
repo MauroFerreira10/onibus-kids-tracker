@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,8 @@ const studentSchema = z.object({
   email: z.string().email("Email inválido"),
   studentNumber: z.string().min(1, "Número de estudante é obrigatório"),
   password: z.string().min(6, "Senha precisa de pelo menos 6 caracteres"),
+  address: z.string().optional(),
+  phoneNumber: z.string().optional()
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -33,6 +34,8 @@ const RegisterStudents = () => {
       email: '',
       studentNumber: '',
       password: '',
+      address: '',
+      phoneNumber: ''
     }
   });
 
@@ -71,6 +74,8 @@ const RegisterStudents = () => {
     try {
       setLoading(true);
       
+      console.log('Dados do formulário:', data); // Log para debug
+      
       // Registrar o aluno com Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -78,42 +83,83 @@ const RegisterStudents = () => {
         options: {
           data: {
             name: data.name,
-            role: 'student',
+            role: 'student'
           }
         }
       });
 
       if (authError) {
-        console.error('Erro ao registrar aluno:', authError);
+        console.error('Erro detalhado ao registrar aluno:', authError);
         toast.error(authError.message);
         return;
       }
 
       if (!authData.user) {
+        console.error('Nenhum usuário retornado após registro');
         toast.error('Erro ao criar o usuário');
         return;
       }
-      
-      // Atualizar perfil com informações adicionais
+
+      const userId = authData.user.id;
+      console.log('Usuário criado com sucesso:', userId);
+
+      // Atualizar o perfil existente
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          email: data.email,
           name: data.name,
           role: 'student',
+          updated_at: new Date().toISOString()
         })
-        .eq('id', authData.user.id);
+        .eq('id', userId);
         
       if (profileError) {
-        console.error('Erro ao atualizar perfil:', profileError);
-        toast.error('Erro ao atualizar o perfil');
+        console.error('Erro detalhado ao atualizar perfil:', profileError);
+        toast.error('Erro ao atualizar o perfil: ' + profileError.message);
         return;
       }
+
+      console.log('Perfil atualizado com sucesso');
+
+      // Criar registro na tabela students com todos os dados
+      const studentDataToInsert = {
+        id: userId,
+        name: data.name,
+        student_number: data.studentNumber,
+        email: data.email,
+        pickup_address: data.address || null,
+        phone_number: data.phoneNumber || null,
+        created_at: new Date().toISOString()
+      };
+
+      console.log('Dados a serem inseridos na tabela students:', studentDataToInsert);
+
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .insert(studentDataToInsert)
+        .select()
+        .single();
+
+      if (studentError) {
+        console.error('Erro detalhado ao criar registro do aluno:', studentError);
+        toast.error('Erro ao criar registro do aluno: ' + studentError.message);
+        return;
+      }
+
+      if (!studentData) {
+        console.error('Nenhum dado retornado após criar registro do aluno');
+        toast.error('Erro ao confirmar registro do aluno');
+        return;
+      }
+
+      console.log('Registro do aluno criado com sucesso:', studentData);
       
       toast.success('Aluno registrado com sucesso!');
       form.reset();
     } catch (error) {
-      console.error('Erro ao registrar aluno:', error);
-      toast.error('Erro ao registrar aluno');
+      console.error('Erro completo ao registrar aluno:', error);
+      toast.error('Erro ao registrar aluno. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -193,6 +239,34 @@ const RegisterStudents = () => {
                       <FormDescription>
                         A senha deve ter pelo menos 6 caracteres
                       </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Endereço</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Endereço do aluno" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número de Telemóvel</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Número de telemóvel do aluno" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

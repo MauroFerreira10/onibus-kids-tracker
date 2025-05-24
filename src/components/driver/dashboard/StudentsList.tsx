@@ -61,7 +61,7 @@ const StudentsList: React.FC<StudentsListProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-busapp-primary"></div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 overflow-y-auto max-h-96">
             {students.length > 0 ? (
               sortedStudents.map(student => (
                 <div 

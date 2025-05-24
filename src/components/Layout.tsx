@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from './Navbar';
@@ -16,7 +15,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title, hideNavigation = false
         <title>{title} | BusApp</title>
       )}
       {!hideNavigation && <Navbar />}
-      <main className="flex-1 container mx-auto px-4 py-6">
+      <main className="flex-1 container mx-auto px-4 py-6 pb-16">
         {children}
       </main>
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bus, Map, User, Calendar, LogOut, BellRing, LayoutDashboard } from 'lucide-react';
@@ -13,6 +12,8 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   
   // Simular 3 notificações não lidas
   const unreadNotifications = 3;
@@ -40,6 +41,37 @@ const Navbar: React.FC = () => {
     }
   }, [user]);
   
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      const isNearBottom = window.innerHeight - event.clientY < 100;
+
+      if (isNearBottom) {
+        setIsVisible(true);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          setTimeoutId(null);
+        }
+      } else {
+        if (!timeoutId) {
+          const id = setTimeout(() => {
+            setIsVisible(false);
+            setTimeoutId(null);
+          }, 500);
+          setTimeoutId(id);
+        }
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [timeoutId]);
+  
   const navItems = [
     { label: 'Mapa', path: '/', icon: Map },
     { label: 'Rotas', path: '/routes', icon: Bus },
@@ -54,7 +86,7 @@ const Navbar: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-10 shadow-lg">
+    <nav className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-10 shadow-lg transform transition-transform duration-300 ${isVisible ? 'translate-y-0' : 'translate-y-full'}`}>
       <ul className="flex justify-around items-center">
         {navItems.map((item) => {
           const IconComponent = item.icon;

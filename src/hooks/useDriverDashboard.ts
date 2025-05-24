@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { VehicleData } from '@/types';
 import { StudentWithStatus } from '@/types/student';
+import { StudentBoardingStatus } from '@/types/student';
 
 export const useDriverDashboard = () => {
   const { user } = useAuth();
@@ -151,79 +152,109 @@ export const useDriverDashboard = () => {
       const today = new Date().toISOString().split('T')[0];
       
       // Fetch students assigned to this route
-      const { data, error } = await supabase
+      const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select('id, name, grade, classroom, pickup_address, stop_id')
         .eq('route_id', routeIdToLoad);
-      
-      if (error) {
-        console.error('Erro ao buscar alunos:', error);
+
+      if (studentsError) {
+        console.error('Erro ao buscar alunos:', studentsError);
         setStudents([]);
         return;
       }
       
-      if (!data || data.length === 0) {
+      if (!studentsData || studentsData.length === 0) {
+        console.log('LoadStudents: Nenhum aluno encontrado para a rota', routeIdToLoad);
         setStudents([]);
         return;
       }
-      
-      // Fetch attendance records for today from attendance_simple
-      const { data: attendanceData, error: attendanceError } = await supabase
-        .from('attendance_simple')
-        .select('user_id, status, stop_id')
-        .eq('date', today)
-        .eq('route_id', routeIdToLoad);
-      
-      if (attendanceError) {
-        console.error('Erro ao buscar registros de presença:', attendanceError);
+
+      // Fetch attendance records from both tables
+      const [attendanceRecords, attendanceSimple] = await Promise.all([
+        supabase
+          .from('student_attendance')
+          .select('student_id, status, trip_date')
+          .eq('trip_date', today)
+          .eq('route_id', routeIdToLoad),
+        supabase
+          .from('attendance_simple')
+          .select('user_id, status, date')
+          .eq('date', today)
+          .eq('route_id', routeIdToLoad)
+      ]);
+
+      if (attendanceRecords.error) {
+        console.error('Erro ao buscar registros de presença:', attendanceRecords.error);
+      }
+
+      if (attendanceSimple.error) {
+        console.error('Erro ao buscar registros simples de presença:', attendanceSimple.error);
       }
       
-      // Map students with their attendance status
-      const studentsWithStatus: StudentWithStatus[] = data.map(student => {
-        const attendance = attendanceData?.find(a => a.user_id === student.id);
+      // Combine attendance data from both tables
+      const allAttendanceData = [
+        ...(attendanceRecords.data || []).map(record => ({
+          student_id: record.student_id,
+          status: record.status
+        })),
+        ...(attendanceSimple.data || []).map(record => ({
+          student_id: record.user_id,
+          status: record.status
+        }))
+      ];
+
+      const studentsWithStatus: StudentWithStatus[] = studentsData.map(student => {
+        const attendance = allAttendanceData.find(a => a.student_id === student.id);
+        const status = (attendance?.status as StudentBoardingStatus) || 'waiting';
         return {
           id: student.id,
           name: student.name,
           grade: student.grade || 'N/A',
           classroom: student.classroom || 'N/A',
           pickupAddress: student.pickup_address || 'Endereço não registrado',
-          stopId: attendance?.stop_id || student.stop_id,
-          status: attendance ? 'present_at_stop' : 'waiting'
+          stopId: student.stop_id,
+          status
         };
       });
       
       setStudents(studentsWithStatus);
-      
-      // Set up real-time subscription for attendance updates
-      const channel = supabase
-        .channel('attendance-changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'attendance_simple',
-          filter: `route_id=eq.${routeIdToLoad}`
-        }, (payload) => {
-          console.log('Attendance update:', payload);
-          // Update local state when attendance changes
-          if (payload.new && 'user_id' in payload.new && 'stop_id' in payload.new) {
-            setStudents(current => 
-              current.map(student => 
-                student.id === (payload.new as { user_id: string }).user_id 
-                  ? { ...student, status: 'present_at_stop', stopId: (payload.new as { stop_id: string }).stop_id }
-                  : student
-              )
-            );
+
+      // Subscribe to real-time updates for both attendance tables
+      const subscription = supabase
+        .channel('student_attendance_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'student_attendance',
+            filter: `route_id=eq.${routeIdToLoad}`
+          },
+          async () => {
+            loadStudents(routeIdToLoad);
           }
-        })
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'attendance_simple',
+            filter: `route_id=eq.${routeIdToLoad}`
+          },
+          async () => {
+            loadStudents(routeIdToLoad);
+          }
+        )
         .subscribe();
-        
-      // Clean up subscription
+
       return () => {
-        supabase.removeChannel(channel);
+        subscription.unsubscribe();
       };
     } catch (error) {
-      console.error('Erro ao carregar alunos:', error);
+      console.error('Erro no loadStudents:', error);
       setStudents([]);
+      toast.error('Erro ao carregar lista de alunos.');
     } finally {
       setLoadingStudents(false);
     }
@@ -319,19 +350,33 @@ export const useDriverDashboard = () => {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Update the attendance record in the database
-      const { error } = await supabase
-        .from('student_attendance')
-        .update({ 
-          status: 'boarded',
-          marked_at: new Date().toISOString(),
-          marked_by: user?.id
-        })
-        .eq('student_id', studentId)
-        .eq('trip_date', today);
+      // Update both attendance tables
+      const [recordsResult, simpleResult] = await Promise.all([
+        supabase
+          .from('student_attendance')
+          .update({ 
+            status: 'boarded',
+            marked_at: new Date().toISOString(),
+            marked_by: user?.id
+          })
+          .eq('student_id', studentId)
+          .eq('trip_date', today),
+        supabase
+          .from('attendance_simple')
+          .update({ 
+            status: 'boarded',
+            created_at: new Date().toISOString()
+          })
+          .eq('user_id', studentId)
+          .eq('date', today)
+      ]);
       
-      if (error) {
-        throw error;
+      if (recordsResult.error) {
+        throw recordsResult.error;
+      }
+
+      if (simpleResult.error) {
+        throw simpleResult.error;
       }
       
       // Update local state

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -177,6 +176,24 @@ const Register = () => {
         console.error('Profile update error:', profileError);
         toast.error('Erro ao atualizar o perfil');
         return;
+      }
+      
+      // If user is a student, create student record
+      if (data.role === 'student') {
+        const { error: studentError } = await supabase
+          .from('students')
+          .insert({
+            id: authData.user.id,
+            name: data.name,
+            student_number: data.studentNumber || null,
+            created_at: new Date().toISOString()
+          });
+          
+        if (studentError) {
+          console.error('Student creation error:', studentError);
+          toast.error('Erro ao cadastrar informações do aluno');
+          return;
+        }
       }
       
       // If user is a parent, create child record
