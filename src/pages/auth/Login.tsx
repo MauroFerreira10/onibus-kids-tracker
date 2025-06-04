@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,7 @@ import { toast } from 'sonner';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import logo from '@/assets/logo.svg';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,6 +30,33 @@ const Login = () => {
 
       // If user exists, just sign in
       if (existingUser && existingUser.user) {
+        // Verificar e atualizar o perfil se necessário
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', existingUser.user.id)
+          .single();
+
+        if (profileError || !profileData || profileData.role !== 'manager') {
+          // Atualizar ou criar o perfil
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: existingUser.user.id,
+              name: 'Mauro Sawilala',
+              role: 'manager',
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'id'
+            });
+
+          if (updateError) {
+            console.error('Error updating profile:', updateError);
+            toast.error('Erro ao atualizar perfil');
+            return;
+          }
+        }
+
         toast.success('Login realizado com sucesso!');
         navigate('/manager/dashboard');
         return;
@@ -39,6 +66,12 @@ const Login = () => {
       const { data, error } = await supabase.auth.signUp({
         email: 'maurosawilala@gmail.com',
         password: '000000',
+        options: {
+          data: {
+            name: 'Mauro Sawilala',
+            role: 'manager'
+          }
+        }
       });
 
       if (error) {
@@ -51,11 +84,18 @@ const Login = () => {
       if (data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ role: 'manager' })
-          .eq('id', data.user.id);
+          .insert({
+            id: data.user.id,
+            name: 'Mauro Sawilala',
+            role: 'manager',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
         
         if (profileError) {
-          console.error('Error updating profile:', profileError);
+          console.error('Error creating profile:', profileError);
+          toast.error('Erro ao criar perfil');
+          return;
         }
         
         // Sign in with the new account
@@ -141,44 +181,64 @@ const Login = () => {
 
   return (
     <Layout title="Login" hideNavigation>
-      <div className="h-[calc(100vh-12rem)] flex items-center justify-center">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader className="space-y-1">
+      <div 
+        className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative"
+        style={{
+          backgroundImage: 'url("/src/assets/images/lubango_bus.jpeg")', // Substitua esta URL pelo caminho para sua imagem de Lubango (ex: '/src/assets/images/sua_imagem_lubango.jpg')
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div className="w-full max-w-md px-4 relative z-10">
+          <div className="text-center mb-8">
+            <img src={logo} alt="SafeBus Logo" className="w-24 h-24 mx-auto mb-4" />
+            <h1 className="text-4xl font-bold text-white mb-2">SafeBus</h1>
+            <p className="text-white/90">Sua segurança é nossa prioridade</p>
+          </div>
+          <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+            <CardHeader className="space-y-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-t-lg">
               <CardTitle className="text-2xl text-center">Login</CardTitle>
-              <CardDescription className="text-center">
+              <CardDescription className="text-center text-white/90">
                 Entre com sua conta para acessar o sistema
               </CardDescription>
             </CardHeader>
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-gray-700">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
+                  <Label htmlFor="password" className="text-gray-700">Senha</Label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-medium py-2.5" 
+                  disabled={loading}
+                >
                   {loading ? "Entrando..." : "Entrar"}
                 </Button>
-                <div className="text-center text-sm">
+                <div className="text-center text-sm text-gray-600 mt-4">
                   Não tem uma conta?{" "}
-                  <Link to="/auth/register" className="text-busapp-primary hover:underline">
+                  <Link to="/auth/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
                     Registrar
                   </Link>
                 </div>
@@ -189,7 +249,7 @@ const Login = () => {
       </div>
       
       <Dialog open={showDemoDialog} onOpenChange={setShowDemoDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Conta de Demonstração</DialogTitle>
             <DialogDescription>
@@ -198,12 +258,17 @@ const Login = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setShowDemoDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDemoDialog(false)}
+              className="border-gray-200 hover:bg-gray-100"
+            >
               Cancelar
             </Button>
             <Button 
               onClick={createManagerAccount} 
               disabled={creatingDemoAccount}
+              className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white"
             >
               {creatingDemoAccount ? "Criando..." : "Criar Conta"}
             </Button>

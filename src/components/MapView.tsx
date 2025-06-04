@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -69,90 +68,106 @@ const MapView: React.FC<MapViewProps> = ({
     }
 
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          // Centralizar mapa na posição do usuário
-          map.current?.flyTo({
-            center: [longitude, latitude],
-            zoom: 15,
-            speed: 1.2
-          });
-          
-          // Criar elemento personalizado para o marcador
-          const el = document.createElement('div');
-          el.className = 'user-location-marker';
-          el.innerHTML = `
-            <div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md pulse-animation"></div>
-          `;
-          
-          // Adicionar marcador
-          userPositionMarker.current = new mapboxgl.Marker(el)
-            .setLngLat([longitude, latitude])
-            .addTo(map.current!);
+      let retryCount = 0;
+      const maxRetries = 3;
+      const timeout = 10000; // Aumentado para 10 segundos
+
+      const getLocation = () => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
             
-          // Adicionar estilo CSS para animação
-          const style = document.createElement('style');
-          style.textContent = `
-            .pulse-animation {
-              box-shadow: 0 0 0 rgba(66, 133, 244, 0.4);
-              animation: pulse 2s infinite;
-            }
-            @keyframes pulse {
-              0% {
-                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
+            // Não centralizar o mapa na posição do usuário, apenas adicionar o marcador
+            // O mapa permanecerá centralizado no Lubango
+            
+            // Criar elemento personalizado para o marcador
+            const el = document.createElement('div');
+            el.className = 'user-location-marker';
+            el.innerHTML = `
+              <div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md pulse-animation"></div>
+            `;
+            
+            // Adicionar marcador
+            userPositionMarker.current = new mapboxgl.Marker(el)
+              .setLngLat([longitude, latitude])
+              .addTo(map.current!);
+              
+            // Adicionar estilo CSS para animação
+            const style = document.createElement('style');
+            style.textContent = `
+              .pulse-animation {
+                box-shadow: 0 0 0 rgba(66, 133, 244, 0.4);
+                animation: pulse 2s infinite;
               }
-              70% {
-                box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
+              @keyframes pulse {
+                0% {
+                  box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
+                }
+                70% {
+                  box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
+                }
+                100% {
+                  box-shadow: 0 0 0 0 rgba(66, 133, 244, 0);
+                }
               }
-              100% {
-                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0);
+            `;
+            document.head.appendChild(style);
+            
+            // Configurar observador de localização para atualizações contínuas
+            const watchId = navigator.geolocation.watchPosition(
+              (newPosition) => {
+                const { latitude: newLat, longitude: newLng } = newPosition.coords;
+                if (userPositionMarker.current) {
+                  userPositionMarker.current.setLngLat([newLng, newLat]);
+                }
+              },
+              (error) => {
+                console.error("Erro ao obter localização:", error);
+                handleLocationError(error);
+              },
+              {
+                enableHighAccuracy: true,
+                maximumAge: 10000,
+                timeout: timeout
               }
-            }
-          `;
-          document.head.appendChild(style);
-          
-          // Configurar observador de localização para atualizações contínuas
-          const watchId = navigator.geolocation.watchPosition(
-            (newPosition) => {
-              const { latitude: newLat, longitude: newLng } = newPosition.coords;
+            );
+            
+            // Limpar o observador quando o componente for desmontado
+            return () => {
+              navigator.geolocation.clearWatch(watchId);
               if (userPositionMarker.current) {
-                userPositionMarker.current.setLngLat([newLng, newLat]);
+                userPositionMarker.current.remove();
               }
-            },
-            (error) => {
-              console.error("Erro ao obter localização:", error);
-            },
-            {
-              enableHighAccuracy: true,
-              maximumAge: 10000,
-              timeout: 5000
-            }
-          );
-          
-          // Limpar o observador quando o componente for desmontado
-          return () => {
-            navigator.geolocation.clearWatch(watchId);
-            if (userPositionMarker.current) {
-              userPositionMarker.current.remove();
-            }
-          };
-        },
-        (error) => {
-          console.error("Erro ao obter localização inicial:", error);
-          if (error.code === error.PERMISSION_DENIED) {
-            toast.error("Permissão de localização negada");
-          } else {
-            toast.error("Erro ao obter localização");
+            };
+          },
+          (error) => {
+            console.error("Erro ao obter localização inicial:", error);
+            handleLocationError(error);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: timeout,
+            maximumAge: 0
           }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
+        );
+      };
+
+      const handleLocationError = (error: GeolocationPositionError) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error("Permissão de localização negada");
+          return;
         }
-      );
+
+        if (retryCount < maxRetries) {
+          retryCount++;
+          toast.info(`Tentando obter localização novamente (${retryCount}/${maxRetries})...`);
+          setTimeout(getLocation, 2000); // Espera 2 segundos antes de tentar novamente
+        } else {
+          toast.error("Não foi possível obter sua localização após várias tentativas");
+        }
+      };
+
+      getLocation();
     } else {
       toast.error("Geolocalização não suportada pelo seu navegador");
     }

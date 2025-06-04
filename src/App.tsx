@@ -1,6 +1,4 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
@@ -22,6 +20,7 @@ import ManagerDashboard from "./pages/manager/Dashboard";
 import RegisterStudents from "./pages/manager/RegisterStudents";
 import RegisterParents from "./pages/manager/RegisterParents";
 import RegisterDrivers from "./pages/manager/RegisterDrivers";
+import Chat from "./pages/Chat";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -33,7 +32,6 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
-            <Sonner />
             <RouterRoutes>
               {/* Public routes */}
               <Route path="/auth/login" element={<Login />} />
@@ -63,6 +61,13 @@ function App() {
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } />
+              
+              {/* Nova rota para o Chat */}
+              <Route path="/chat" element={
+                <ProtectedRoute>
+                  <Chat />
                 </ProtectedRoute>
               } />
               

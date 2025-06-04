@@ -12,6 +12,7 @@ export interface Notification {
   user_id?: string;
   sender_role?: string;
   created_at?: string;
+  expires_at?: string;
 }
 
 export const sendNotification = async (notification: {
@@ -22,12 +23,17 @@ export const sendNotification = async (notification: {
   sender_role?: string;
 }) => {
   try {
+    // Calculate expiration date (24 hours from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 1);
+
     const { data, error } = await supabase
       .from('notifications')
       .insert([{
         ...notification,
         time: new Date().toISOString(),
-        read: false
+        read: false,
+        expires_at: expiresAt.toISOString()
       }])
       .select()
       .single();
@@ -45,6 +51,7 @@ export const getNotifications = async () => {
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
+      .gt('expires_at', new Date().toISOString()) // Only get non-expired notifications
       .order('created_at', { ascending: false })
       .limit(50);
 

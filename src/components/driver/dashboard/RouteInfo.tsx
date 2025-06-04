@@ -1,15 +1,20 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Bus, MapPin, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { stopService } from '@/services/stopService';
+import { toast } from 'sonner';
+import { BusArrivalNotification } from '@/components/notifications/BusArrivalNotification';
 
 interface RouteInfoProps {
   routeId: string | null;
+  vehicleId: string;
+  currentStopId?: string;
 }
 
-const RouteInfo: React.FC<RouteInfoProps> = ({ routeId }) => {
+const RouteInfo: React.FC<RouteInfoProps> = ({ routeId, vehicleId, currentStopId }) => {
   const [routeInfo, setRouteInfo] = useState<{
     name: string;
     description: string;
@@ -17,6 +22,7 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId }) => {
     nextStop?: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isArrived, setIsArrived] = useState(false);
   
   useEffect(() => {
     const fetchRouteInfo = async () => {
@@ -59,6 +65,38 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId }) => {
     fetchRouteInfo();
   }, [routeId]);
   
+  const handleArrival = async () => {
+    if (!currentStopId) return;
+    
+    try {
+      setLoading(true);
+      await stopService.registerArrival(currentStopId, vehicleId);
+      setIsArrived(true);
+      toast.success('Chegada registrada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao registrar chegada:', error);
+      toast.error('Erro ao registrar chegada');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeparture = async () => {
+    if (!currentStopId) return;
+    
+    try {
+      setLoading(true);
+      await stopService.registerDeparture(currentStopId, vehicleId);
+      setIsArrived(false);
+      toast.success('Saída registrada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao registrar saída:', error);
+      toast.error('Erro ao registrar saída');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!routeId) {
     return (
       <Card className="border shadow-sm">
@@ -107,7 +145,7 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="font-medium">Rota:</span>
             <span>{routeInfo?.name || 'Não definida'}</span>
@@ -120,7 +158,7 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId }) => {
             <span className="font-medium">Próximo ponto:</span>
             <span className="text-busapp-primary flex items-center">
               <MapPin className="h-4 w-4 mr-1" />
-              {routeInfo?.nextStop || 'Não definido'}
+              {currentStopId ? 'Parada atual' : 'Não definido'}
             </span>
           </div>
           <div className="flex items-center justify-between">
@@ -129,6 +167,32 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId }) => {
               <Clock className="h-4 w-4 mr-1 text-gray-500" />
               3 minutos
             </span>
+          </div>
+
+          {currentStopId && (
+            <div className="flex justify-center space-x-4">
+              {!isArrived ? (
+                <Button
+                  onClick={handleArrival}
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Registrar Chegada
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleDeparture}
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Registrar Saída
+                </Button>
+              )}
+            </div>
+          )}
+
+          <div className="mt-4">
+            <BusArrivalNotification vehicleId={vehicleId} />
           </div>
         </div>
       </CardContent>

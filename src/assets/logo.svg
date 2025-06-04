@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Círculo de fundo -->
+  <circle cx="100" cy="100" r="90" fill="url(#gradient)" />
+  
+  <!-- Ícone de ônibus estilizado -->
+  <path d="M60 70C60 65.5817 63.5817 62 68 62H132C136.418 62 140 65.5817 140 70V110C140 114.418 136.418 118 132 118H68C63.5817 118 60 114.418 60 110V70Z" fill="white"/>
+  
+  <!-- Janelas do ônibus -->
+  <rect x="70" y="75" width="20" height="20" rx="2" fill="#4F46E5"/>
+  <rect x="95" y="75" width="20" height="20" rx="2" fill="#4F46E5"/>
+  <rect x="120" y="75" width="20" height="20" rx="2" fill="#4F46E5"/>
+  
+  <!-- Rodas do ônibus -->
+  <circle cx="75" cy="110" r="8" fill="#1E293B"/>
+  <circle cx="125" cy="110" r="8" fill="#1E293B"/>
+  
+  <!-- Escudo de proteção -->
+  <path d="M100 40C100 40 85 50 85 70C85 85 92 95 100 95C108 95 115 85 115 70C115 50 100 40 100 40Z" fill="white"/>
+  
+  <!-- Gradiente de fundo -->
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+</svg> 

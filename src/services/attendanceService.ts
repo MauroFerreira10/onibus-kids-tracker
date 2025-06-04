@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -63,6 +62,17 @@ export const markUserPresenceAtStop = async (userId: string, stopId: string, sto
     }
     
     throw insertError;
+  }
+
+  // Atualiza o stop_id do estudante
+  const { error: updateError } = await supabase
+    .from('students')
+    .update({ stop_id: stopId })
+    .eq('id', userId);
+
+  if (updateError) {
+    console.error('Erro ao atualizar stop_id do estudante:', updateError);
+    // Não lançamos erro aqui para não interromper o fluxo principal
   }
   
   return data;

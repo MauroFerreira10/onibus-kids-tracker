@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -33,26 +32,55 @@ export const useLocationTracking = ({ vehicle, user, onStatusChange }: UseLocati
       return;
     }
 
-    try {
-      // Request permission and start continuous tracking
-      const id = navigator.geolocation.watchPosition(
-        handlePositionUpdate,
-        handleLocationError,
-        {
-          enableHighAccuracy: true, // High accuracy
-          maximumAge: 10000, // Use cache up to 10 seconds
-          timeout: 5000 // Timeout after 5 seconds
-        }
-      );
+    let retryCount = 0;
+    const maxRetries = 3;
+    const timeout = 10000; // Aumentado para 10 segundos
 
-      setWatchId(id);
-      setIsTracking(true);
-      if (onStatusChange) onStatusChange(true);
-      toast.success('Rastreamento de localização iniciado');
-    } catch (error) {
-      console.error('Erro ao iniciar rastreamento:', error);
-      toast.error('Não foi possível iniciar o rastreamento');
-    }
+    const startWatching = () => {
+      try {
+        // Request permission and start continuous tracking
+        const id = navigator.geolocation.watchPosition(
+          handlePositionUpdate,
+          (error) => {
+            console.error('Erro ao obter localização:', error);
+            handleLocationError(error);
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: 10000,
+            timeout: timeout
+          }
+        );
+
+        setWatchId(id);
+        setIsTracking(true);
+        if (onStatusChange) onStatusChange(true);
+        toast.success('Rastreamento de localização iniciado');
+      } catch (error) {
+        console.error('Erro ao iniciar rastreamento:', error);
+        toast.error('Não foi possível iniciar o rastreamento');
+      }
+    };
+
+    const handleLocationError = (error: GeolocationPositionError) => {
+      if (error.code === error.PERMISSION_DENIED) {
+        setPermissionDenied(true);
+        toast.error('Permissão para acessar localização negada');
+        stopTracking();
+        return;
+      }
+
+      if (retryCount < maxRetries) {
+        retryCount++;
+        toast.info(`Tentando obter localização novamente (${retryCount}/${maxRetries})...`);
+        setTimeout(startWatching, 2000); // Espera 2 segundos antes de tentar novamente
+      } else {
+        toast.error('Não foi possível obter sua localização após várias tentativas');
+        stopTracking();
+      }
+    };
+
+    startWatching();
   };
 
   // Stop tracking
@@ -112,20 +140,6 @@ export const useLocationTracking = ({ vehicle, user, onStatusChange }: UseLocati
     } catch (error) {
       console.error('Erro ao processar localização:', error);
     }
-  };
-
-  // Handle location errors
-  const handleLocationError = (error: GeolocationPositionError) => {
-    if (error.code === error.PERMISSION_DENIED) {
-      setPermissionDenied(true);
-      toast.error('Permissão para acessar localização negada');
-    } else if (error.code === error.POSITION_UNAVAILABLE) {
-      toast.error('Informações de localização não disponíveis');
-    } else if (error.code === error.TIMEOUT) {
-      toast.error('Tempo esgotado para obter localização');
-    }
-    
-    stopTracking();
   };
 
   // Clean up tracking when component unmounts

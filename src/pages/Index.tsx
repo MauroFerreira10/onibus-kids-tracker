@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import MapView from '@/components/MapView';
@@ -15,6 +14,7 @@ import NextStopCard from '@/components/dashboard/NextStopCard';
 import StatusCard from '@/components/dashboard/StatusCard';
 import TripHistoryDialog from '@/components/dashboard/TripHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import RecentNotificationsDialog from '@/components/notifications/RecentNotificationsDialog';
 
 const Index = () => {
   const { buses, isLoading, error, refreshBuses } = useBusData();
@@ -23,6 +23,7 @@ const Index = () => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { user } = useAuth();
+  const [showNotifications, setShowNotifications] = useState(false);
   
   const selectedBus = selectedBusId ? buses.find(bus => bus.id === selectedBusId) : null;
 
@@ -172,7 +173,7 @@ const Index = () => {
           <Button 
             variant="outline" 
             className="flex-1 bg-white border-busapp-primary/20 text-busapp-primary hover:bg-busapp-primary/5"
-            onClick={() => toast.info("Notificações em breve disponíveis")}
+            onClick={() => setShowNotifications(true)}
           >
             <Bell className="mr-2 h-5 w-5" />
             Notificações Recentes
@@ -279,6 +280,11 @@ const Index = () => {
           </Tabs>
         </div>
       </div>
+
+      <RecentNotificationsDialog 
+        open={showNotifications}
+        onOpenChange={setShowNotifications}
+      />
     </Layout>
   );
 };

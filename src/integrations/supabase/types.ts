@@ -6,597 +6,171 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
-      children: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          parent_id: string
-          student_number: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          parent_id: string
-          student_number?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          parent_id?: string
-          student_number?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "children_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      invitations: {
-        Row: {
-          activation_code: string
-          child_name: string | null
-          created_at: string | null
-          created_by: string
-          email: string | null
-          expires_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["user_role"]
-          school_id: string | null
-          student_number: string | null
-          used: boolean | null
-          used_by: string | null
-        }
-        Insert: {
-          activation_code: string
-          child_name?: string | null
-          created_at?: string | null
-          created_by: string
-          email?: string | null
-          expires_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          student_number?: string | null
-          used?: boolean | null
-          used_by?: string | null
-        }
-        Update: {
-          activation_code?: string
-          child_name?: string | null
-          created_at?: string | null
-          created_by?: string
-          email?: string | null
-          expires_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          student_number?: string | null
-          used?: boolean | null
-          used_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invitations_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      locations: {
-        Row: {
-          direction: number | null
-          driver_id: string
-          id: string
-          latitude: number
-          longitude: number
-          speed: number
-          timestamp: string
-          vehicle_id: string
-        }
-        Insert: {
-          direction?: number | null
-          driver_id: string
-          id?: string
-          latitude: number
-          longitude: number
-          speed?: number
-          timestamp?: string
-          vehicle_id: string
-        }
-        Update: {
-          direction?: number | null
-          driver_id?: string
-          id?: string
-          latitude?: number
-          longitude?: number
-          speed?: number
-          timestamp?: string
-          vehicle_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "locations_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notifications: {
-        Row: {
-          created_at: string | null
-          icon: string
-          id: string
-          message: string
-          read: boolean
-          sender_role: string | null
-          time: string
-          type: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          icon: string
-          id?: string
-          message: string
-          read?: boolean
-          sender_role?: string | null
-          time?: string
-          type: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          icon?: string
-          id?: string
-          message?: string
-          read?: boolean
-          sender_role?: string | null
-          time?: string
-          type?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
-          address: string | null
+          id: string
+          name: string
+          role: 'parent' | 'student' | 'driver' | 'manager'
           contact_number: string | null
-          created_at: string | null
-          email: string
-          id: string
-          name: string | null
-          role: Database["public"]["Enums"]["user_role"]
+          address: string | null
           school_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          address?: string | null
-          contact_number?: string | null
-          created_at?: string | null
-          email: string
-          id: string
-          name?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          address?: string | null
-          contact_number?: string | null
-          created_at?: string | null
-          email?: string
-          id?: string
-          name?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      routes: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          driver_id: string | null
-          end_location: string
-          id: string
-          name: string
-          start_location: string
-          vehicle_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          driver_id?: string | null
-          end_location: string
-          id?: string
-          name: string
-          start_location: string
-          vehicle_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          driver_id?: string | null
-          end_location?: string
-          id?: string
-          name?: string
-          start_location?: string
-          vehicle_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "routes_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      schedules: {
-        Row: {
-          arrival_time: string
           created_at: string
-          day_of_week: number
-          departure_time: string
-          id: string
-          route_id: string | null
-          stop_id: string | null
           updated_at: string
         }
         Insert: {
-          arrival_time: string
+          id: string
+          name: string
+          role: 'parent' | 'student' | 'driver' | 'manager'
+          contact_number?: string | null
+          address?: string | null
+          school_id?: string | null
           created_at?: string
-          day_of_week: number
-          departure_time: string
-          id?: string
-          route_id?: string | null
-          stop_id?: string | null
           updated_at?: string
         }
         Update: {
-          arrival_time?: string
-          created_at?: string
-          day_of_week?: number
-          departure_time?: string
           id?: string
-          route_id?: string | null
-          stop_id?: string | null
+          name?: string
+          role?: 'parent' | 'student' | 'driver' | 'manager'
+          contact_number?: string | null
+          address?: string | null
+          school_id?: string | null
+          created_at?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "schedules_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "routes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "schedules_stop_id_fkey"
-            columns: ["stop_id"]
-            isOneToOne: false
-            referencedRelation: "stops"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      schools: {
-        Row: {
-          address: string | null
-          contact_email: string | null
-          contact_phone: string | null
-          created_at: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          address?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          address?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      stops: {
-        Row: {
-          address: string
-          estimated_time: string | null
-          id: string
-          latitude: number | null
-          longitude: number | null
-          name: string
-          route_id: string | null
-          sequence_number: number
-        }
-        Insert: {
-          address: string
-          estimated_time?: string | null
-          id?: string
-          latitude?: number | null
-          longitude?: number | null
-          name: string
-          route_id?: string | null
-          sequence_number: number
-        }
-        Update: {
-          address?: string
-          estimated_time?: string | null
-          id?: string
-          latitude?: number | null
-          longitude?: number | null
-          name?: string
-          route_id?: string | null
-          sequence_number?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stops_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "routes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      student_attendance: {
-        Row: {
-          id: string
-          marked_at: string | null
-          marked_by: string | null
-          status: string | null
-          student_id: string | null
-          trip_date: string
-          trip_id: string | null
-        }
-        Insert: {
-          id?: string
-          marked_at?: string | null
-          marked_by?: string | null
-          status?: string | null
-          student_id?: string | null
-          trip_date?: string
-          trip_id?: string | null
-        }
-        Update: {
-          id?: string
-          marked_at?: string | null
-          marked_by?: string | null
-          status?: string | null
-          student_id?: string | null
-          trip_date?: string
-          trip_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_attendance_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       students: {
         Row: {
-          classroom: string | null
-          created_at: string | null
-          grade: string | null
           id: string
           name: string
-          parent_id: string | null
-          pickup_address: string | null
-          route_id: string | null
-          stop_id: string | null
+          student_number: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          classroom?: string | null
-          created_at?: string | null
-          grade?: string | null
-          id?: string
+          id: string
           name: string
-          parent_id?: string | null
-          pickup_address?: string | null
-          route_id?: string | null
-          stop_id?: string | null
+          student_number?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          classroom?: string | null
-          created_at?: string | null
-          grade?: string | null
           id?: string
           name?: string
-          parent_id?: string | null
-          pickup_address?: string | null
-          route_id?: string | null
-          stop_id?: string | null
+          student_number?: string | null
+          created_at?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "students_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "students_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "routes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "students_stop_id_fkey"
-            columns: ["stop_id"]
-            isOneToOne: false
-            referencedRelation: "stops"
-            referencedColumns: ["id"]
-          },
-        ]
       }
-      vehicles: {
+      children: {
         Row: {
-          capacity: number
+          id: string
+          parent_id: string
+          name: string
+          student_number: string | null
           created_at: string
-          driver_id: string
-          id: string
-          last_latitude: number | null
-          last_location_update: string | null
-          last_longitude: number | null
-          license_plate: string
-          model: string
-          status: string
-          tracking_enabled: boolean
           updated_at: string
-          year: string
         }
         Insert: {
-          capacity?: number
-          created_at?: string
-          driver_id: string
           id?: string
-          last_latitude?: number | null
-          last_location_update?: string | null
-          last_longitude?: number | null
-          license_plate: string
-          model: string
-          status?: string
-          tracking_enabled?: boolean
+          parent_id: string
+          name: string
+          student_number?: string | null
+          created_at?: string
           updated_at?: string
-          year: string
         }
         Update: {
-          capacity?: number
-          created_at?: string
-          driver_id?: string
           id?: string
-          last_latitude?: number | null
-          last_location_update?: string | null
-          last_longitude?: number | null
-          license_plate?: string
-          model?: string
-          status?: string
-          tracking_enabled?: boolean
+          parent_id?: string
+          name?: string
+          student_number?: string | null
+          created_at?: string
           updated_at?: string
-          year?: string
         }
-        Relationships: []
       }
-      attendance_simple: {
+      invitations: {
         Row: {
           id: string
-          user_id: string
-          stop_id: string
-          route_id: string
-          date: string
-          status: string
-          created_at: string | null
+          role: 'parent' | 'driver' | 'manager'
+          email: string
+          activation_code: string
+          created_by: string
+          school_id: string
+          used: boolean
+          used_by: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
-          user_id: string
-          stop_id: string
-          route_id: string
-          date?: string
-          status?: string
-          created_at?: string | null
+          role: 'parent' | 'driver' | 'manager'
+          email: string
+          activation_code: string
+          created_by: string
+          school_id: string
+          used?: boolean
+          used_by?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
-          user_id?: string
-          stop_id?: string
-          route_id?: string
-          date?: string
-          status?: string
-          created_at?: string | null
+          role?: 'parent' | 'driver' | 'manager'
+          email?: string
+          activation_code?: string
+          created_by?: string
+          school_id?: string
+          used?: boolean
+          used_by?: string | null
+          created_at?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_simple_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_simple_stop_id_fkey"
-            columns: ["stop_id"]
-            isOneToOne: false
-            referencedRelation: "stops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_simple_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "routes"
-            referencedColumns: ["id"]
-          }
-        ]
+      }
+      trip_history: {
+        Row: {
+          id: string
+          route_id: string
+          vehicle_id: string
+          start_time: string
+          end_time: string
+          completed_stops: number
+          total_stops: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          route_id: string
+          vehicle_id: string
+          start_time: string
+          end_time: string
+          completed_stops: number
+          total_stops: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          route_id?: string
+          vehicle_id?: string
+          start_time?: string
+          end_time?: string
+          completed_stops?: number
+          total_stops?: number
+          created_at?: string
+          updated_at?: string
+        }
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      clean_old_locations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_user_attendance_status: {
-        Args: { user_id_param: string; date_param: string }
-        Returns: {
-          stop_id: string
-          route_id: string
-          status: string
-        }[]
-      }
-      record_user_attendance: {
-        Args: {
-          user_id_param: string
-          stop_id_param: string
-          route_id_param: string
-          date_param: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      user_role: "parent" | "student" | "driver" | "manager"
-    }
-    CompositeTypes: {
       [_ in never]: never
     }
   }
@@ -690,21 +264,6 @@ export type Enums<
   ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {

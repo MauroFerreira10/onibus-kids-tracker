@@ -97,6 +97,10 @@ const Notifications = () => {
     try {
       setIsSending(true);
 
+      // Calculate expiration date (24 hours from now)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1);
+
       const notification = {
         type: 'system',
         message: newMessage.trim(),
@@ -104,7 +108,8 @@ const Notifications = () => {
         read: false,
         icon: 'alert',
         user_id: user.id,
-        sender_role: getUserRole()
+        sender_role: getUserRole(),
+        expires_at: expiresAt.toISOString()
       };
 
       // Insert into notifications table

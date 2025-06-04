@@ -107,9 +107,10 @@ const RegisterStudents = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          email: data.email,
           name: data.name,
           role: 'student',
+          contact_number: data.phoneNumber || null,
+          address: data.address || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
@@ -127,10 +128,8 @@ const RegisterStudents = () => {
         id: userId,
         name: data.name,
         student_number: data.studentNumber,
-        email: data.email,
-        pickup_address: data.address || null,
-        phone_number: data.phoneNumber || null,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
       console.log('Dados a serem inseridos na tabela students:', studentDataToInsert);

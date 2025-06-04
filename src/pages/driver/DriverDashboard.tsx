@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -16,10 +16,39 @@ import { Button } from '@/components/ui/button';
 import { Bus, Clock, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const DriverDashboard = () => {
   const { buses } = useBusData();
   const { toast } = useToast();
+  const [tripStartTime, setTripStartTime] = useState<Date | undefined>();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const checkDriverRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        navigate('/auth/login');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error || data.role !== 'driver') {
+        toast.error('Acesso restrito a motoristas');
+        navigate('/');
+      }
+    };
+
+    checkDriverRole();
+  }, [navigate, toast]);
+
   const {
     user,
     selectedBusId,
@@ -39,16 +68,35 @@ const DriverDashboard = () => {
     availableRoutes,
     loadingRoutes,
     selectRoute,
-    startTrip,
-    endTrip,
+    startTrip: originalStartTrip,
+    endTrip: originalEndTrip,
     markStudentAsBoarded,
-    handleVehicleRegistered
+    handleVehicleRegistered,
+    currentStopId,
+    setCurrentStopId
   } = useDriverDashboard();
+
+  const currentRoute = availableRoutes.find(route => route.id === routeId);
+
+  // Sobrescrever as funções startTrip e endTrip para gerenciar o tripStartTime
+  const startTrip = () => {
+    setTripStartTime(new Date());
+    originalStartTrip();
+  };
+
+  const endTrip = () => {
+    originalEndTrip();
+    setTripStartTime(undefined);
+  };
 
   const sendQuickMessage = async (message: string, type: string) => {
     if (!user) return;
     
     try {
+      // Calculate expiration date (24 hours from now)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1);
+
       const notification = {
         type,
         message,
@@ -56,7 +104,8 @@ const DriverDashboard = () => {
         read: false,
         icon: type === 'delay' ? 'clock' : type === 'arrival' ? 'bus' : 'alert',
         user_id: user.id,
-        sender_role: 'driver'
+        sender_role: 'driver',
+        expires_at: expiresAt.toISOString()
       };
 
       const { error } = await supabase
@@ -93,6 +142,8 @@ const DriverDashboard = () => {
           setShowEndDialog={setShowEndDialog}
           startTrip={startTrip}
           endTrip={endTrip}
+          currentRoute={currentRoute}
+          tripStartTime={tripStartTime}
         />
         
         <Tabs defaultValue={vehicle ? "viagens" : "veiculo"} className="w-full">
@@ -151,7 +202,11 @@ const DriverDashboard = () => {
                 email: user.email || '',
                 role: 'driver'
               } : null} vehicle={vehicle} />
-              <RouteInfo routeId={routeId} />
+              <RouteInfo 
+                routeId={routeId} 
+                vehicleId={vehicle?.id || ''} 
+                currentStopId={currentStopId}
+              />
             </div>
             
             {/* Students list */}

@@ -6,6 +6,12 @@ import { VehicleData } from '@/types';
 import { StudentWithStatus } from '@/types/student';
 import { StudentBoardingStatus } from '@/types/student';
 
+interface Route {
+  id: string;
+  name: string;
+  total_stops?: number;
+}
+
 export const useDriverDashboard = () => {
   const { user } = useAuth();
   const [selectedBusId, setSelectedBusId] = useState<string | undefined>();
@@ -18,8 +24,9 @@ export const useDriverDashboard = () => {
   const [showRegisterVehicle, setShowRegisterVehicle] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [routeId, setRouteId] = useState<string | null>(null);
-  const [availableRoutes, setAvailableRoutes] = useState<Array<{id: string, name: string}>>([]);
+  const [availableRoutes, setAvailableRoutes] = useState<Route[]>([]);
   const [loadingRoutes, setLoadingRoutes] = useState(false);
+  const [currentStopId, setCurrentStopId] = useState<string | undefined>();
   
   // Load driver's vehicle
   useEffect(() => {
@@ -59,7 +66,7 @@ export const useDriverDashboard = () => {
           setVehicle(mappedVehicle);
           
           // Load available routes
-          loadAvailableRoutes();
+          fetchRoutes();
           
           // Check if driver has a route assigned
           const { data: routeData, error: routeError } = await supabase
@@ -85,59 +92,43 @@ export const useDriverDashboard = () => {
     loadDriverVehicle();
   }, [user]);
   
-  // Load available routes
-  const loadAvailableRoutes = async () => {
+  const fetchRoutes = async () => {
     try {
       setLoadingRoutes(true);
       const { data, error } = await supabase
         .from('routes')
-        .select('id, name');
-        
+        .select('id, name, total_stops')
+        .order('name');
+
       if (error) {
-        console.error('Erro ao buscar rotas disponíveis:', error);
-        return;
+        throw error;
       }
-      
-      setAvailableRoutes(data || []);
+
+      // Se total_stops não estiver disponível, calcula baseado nos alunos
+      const routesWithStops = await Promise.all((data || []).map(async (route) => {
+        if (route.total_stops !== undefined) {
+          return route;
+        }
+
+        // Conta o número de paradas únicas para esta rota
+        const { count } = await supabase
+          .from('students')
+          .select('stop_id', { count: 'exact', head: true })
+          .eq('route_id', route.id)
+          .not('stop_id', 'is', null);
+
+        return {
+          ...route,
+          total_stops: count || 0
+        };
+      }));
+
+      setAvailableRoutes(routesWithStops);
     } catch (error) {
       console.error('Erro ao buscar rotas:', error);
+      toast.error('Erro ao carregar rotas');
     } finally {
       setLoadingRoutes(false);
-    }
-  };
-  
-  // Select a route for the driver
-  const selectRoute = async (selectedRouteId: string) => {
-    if (!user || !vehicle) {
-      toast.error('Você precisa ter um veículo registrado para selecionar uma rota');
-      return;
-    }
-    
-    try {
-      // Update the route with the driver and vehicle information
-      const { error } = await supabase
-        .from('routes')
-        .update({
-          driver_id: user.id,
-          vehicle_id: vehicle.id
-        })
-        .eq('id', selectedRouteId);
-        
-      if (error) {
-        console.error('Erro ao selecionar rota:', error);
-        toast.error('Não foi possível selecionar esta rota');
-        return;
-      }
-      
-      // Update local state
-      setRouteId(selectedRouteId);
-      toast.success('Rota selecionada com sucesso!');
-      
-      // Load students for this route
-      loadStudents(selectedRouteId);
-    } catch (error) {
-      console.error('Erro ao selecionar rota:', error);
-      toast.error('Erro ao atribuir rota ao motorista');
     }
   };
   
@@ -259,6 +250,52 @@ export const useDriverDashboard = () => {
       setLoadingStudents(false);
     }
   };
+  
+  // Select a route for the driver
+  const selectRoute = useCallback(async (newRouteId: string) => {
+    try {
+      setLoadingRoutes(true);
+      
+      // Atualiza a rota com o motorista e veículo
+      if (vehicle?.id && user?.id) {
+        const { error } = await supabase
+          .from('routes')
+          .update({
+            driver_id: user.id,
+            vehicle_id: vehicle.id
+          })
+          .eq('id', newRouteId);
+        
+        if (error) throw error;
+      }
+      
+      setRouteId(newRouteId);
+      
+      // Busca a primeira parada da rota
+      const { data: stops, error: stopsError } = await supabase
+        .from('stops')
+        .select('id')
+        .eq('route_id', newRouteId)
+        .order('sequence_number', { ascending: true })
+        .limit(1);
+      
+      if (stopsError) throw stopsError;
+      
+      if (stops && stops.length > 0) {
+        setCurrentStopId(stops[0].id);
+      }
+      
+      // Carrega os alunos da rota
+      loadStudents(newRouteId);
+      
+      toast.success('Rota selecionada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao selecionar rota:', error);
+      toast.error('Erro ao selecionar rota');
+    } finally {
+      setLoadingRoutes(false);
+    }
+  }, [vehicle?.id, user?.id, loadStudents]);
   
   const startTrip = async () => {
     if (!vehicle) {
@@ -429,6 +466,8 @@ export const useDriverDashboard = () => {
     startTrip,
     endTrip,
     markStudentAsBoarded,
-    handleVehicleRegistered
+    handleVehicleRegistered,
+    currentStopId,
+    setCurrentStopId,
   };
 };

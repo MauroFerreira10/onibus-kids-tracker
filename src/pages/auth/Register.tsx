@@ -23,8 +23,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Invitation } from '@/types';
+import logo from '@/assets/logo.svg';
 
-const userRoleSchema = z.enum(['parent', 'student', 'driver', 'manager']);
+const userRoleSchema = z.enum(['student', 'parent', 'driver', 'manager']);
 
 const registerSchema = z.object({
   name: z.string().min(3, "Nome precisa de pelo menos 3 caracteres"),
@@ -33,7 +34,6 @@ const registerSchema = z.object({
   role: userRoleSchema,
   contactNumber: z.string().optional(),
   address: z.string().optional(),
-  childName: z.string().optional(),
   studentNumber: z.string().optional(),
   activationCode: z.string().optional(),
   schoolId: z.string().optional(),
@@ -48,7 +48,7 @@ const Register = () => {
   const [registrationType, setRegistrationType] = useState<'code' | 'normal'>('normal');
   const [activationCode, setActivationCode] = useState("");
   const [codeVerified, setCodeVerified] = useState(false);
-  const [verifiedRole, setVerifiedRole] = useState<'parent' | 'student' | 'driver' | 'manager' | null>(null);
+  const [verifiedRole, setVerifiedRole] = useState<'student' | 'parent' | 'driver' | 'manager' | null>(null);
   const [verifiedData, setVerifiedData] = useState<Invitation | null>(null);
 
   // Get role and code from URL if present
@@ -63,7 +63,7 @@ const Register = () => {
     }
     
     // Set initial role if provided in URL
-    if (roleFromUrl && ['parent', 'driver', 'manager'].includes(roleFromUrl)) {
+    if (roleFromUrl && ['student'].includes(roleFromUrl)) {
       form.setValue('role', roleFromUrl as any);
     }
   }, [roleFromUrl, codeFromUrl]);
@@ -77,7 +77,6 @@ const Register = () => {
       role: 'student',
       contactNumber: '',
       address: '',
-      childName: '',
       studentNumber: '',
       activationCode: '',
       schoolId: '',
@@ -94,9 +93,15 @@ const Register = () => {
         .from('invitations')
         .select('*')
         .eq('activation_code', code)
-        .single();
+        .maybeSingle();
       
-      if (error || !data) {
+      if (error) {
+        console.error('Erro ao verificar código:', error);
+        toast.error('Erro ao verificar código de ativação.');
+        return;
+      }
+      
+      if (!data) {
         toast.error('Código de ativação inválido.');
         return;
       }
@@ -104,6 +109,13 @@ const Register = () => {
       // Check if code is already used
       if (data.used) {
         toast.error('Este código já foi utilizado.');
+        return;
+      }
+      
+      // Check if code has expired
+      const expiresAt = new Date(data.expires_at);
+      if (expiresAt < new Date()) {
+        toast.error('Este código de ativação expirou.');
         return;
       }
       
@@ -137,6 +149,14 @@ const Register = () => {
     try {
       setLoading(true);
       
+      console.log('Iniciando registro com dados:', { ...data, password: '[REDACTED]' });
+      
+      // Validar dados antes do registro
+      if (!data.email || !data.password || !data.name || !data.role) {
+        toast.error('Por favor, preencha todos os campos obrigatórios');
+        return;
+      }
+
       // Register user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -145,72 +165,71 @@ const Register = () => {
           data: {
             name: data.name,
             role: data.role,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
       if (authError) {
-        console.error('Registration error:', authError);
-        toast.error(authError.message);
+        console.error('Erro detalhado no registro:', authError);
+        if (authError.message.includes('already registered')) {
+          toast.error('Este email já está registrado');
+        } else {
+          toast.error(`Erro no registro: ${authError.message}`);
+        }
         return;
       }
 
       if (!authData.user) {
+        console.error('Nenhum usuário retornado após registro');
         toast.error('Erro ao criar o usuário');
         return;
       }
+
+      console.log('Usuário criado com sucesso:', authData.user.id);
       
-      // Update profile with additional information
+      // Update profile with additional information using upsert
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: authData.user.id,
           name: data.name,
           role: data.role,
           contact_number: data.contactNumber || null,
           address: data.address || null,
           school_id: data.schoolId || null,
-        })
-        .eq('id', authData.user.id);
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        });
         
       if (profileError) {
-        console.error('Profile update error:', profileError);
-        toast.error('Erro ao atualizar o perfil');
+        console.error('Erro detalhado ao atualizar perfil:', profileError);
+        toast.error(`Erro ao atualizar perfil: ${profileError.message}`);
         return;
       }
+      
+      console.log('Perfil atualizado com sucesso');
       
       // If user is a student, create student record
       if (data.role === 'student') {
         const { error: studentError } = await supabase
           .from('students')
-          .insert({
+          .upsert({
             id: authData.user.id,
             name: data.name,
-            student_number: data.studentNumber || null,
-            created_at: new Date().toISOString()
+            student_number: data.studentNumber || null
+          }, {
+            onConflict: 'id'
           });
           
         if (studentError) {
-          console.error('Student creation error:', studentError);
-          toast.error('Erro ao cadastrar informações do aluno');
+          console.error('Erro detalhado ao criar registro do aluno:', studentError);
+          toast.error(`Erro ao cadastrar aluno: ${studentError.message}`);
           return;
         }
-      }
-      
-      // If user is a parent, create child record
-      if (data.role === 'parent' && data.childName) {
-        const { error: childError } = await supabase
-          .from('children')
-          .insert({
-            parent_id: authData.user.id,
-            name: data.childName,
-            student_number: data.studentNumber || null,
-          });
-          
-        if (childError) {
-          console.error('Child creation error:', childError);
-          toast.error('Erro ao cadastrar informações do filho');
-          return;
-        }
+        
+        console.log('Registro do aluno criado com sucesso');
       }
       
       // If registration was with activation code, mark it as used
@@ -221,17 +240,17 @@ const Register = () => {
           .eq('id', verifiedData.id);
           
         if (updateCodeError) {
-          console.error('Error updating activation code:', updateCodeError);
+          console.error('Erro ao atualizar código de ativação:', updateCodeError);
           // Not critical, just log
         }
       }
       
-      console.log('Registration successful:', authData);
+      console.log('Registro concluído com sucesso');
       toast.success('Registro realizado com sucesso! Entre com suas credenciais.');
       navigate('/auth/login');
     } catch (error) {
-      console.error('Error during registration:', error);
-      toast.error('Erro ao criar conta');
+      console.error('Erro durante o registro:', error);
+      toast.error('Erro ao criar conta. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -239,21 +258,35 @@ const Register = () => {
 
   return (
     <Layout title="Registro" hideNavigation>
-      <div className="h-[calc(100vh-12rem)] flex items-center justify-center overflow-y-auto py-8">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Criar Conta</CardTitle>
-              <CardDescription className="text-center">
-                Entre com seus dados para criar uma nova conta
+      <div 
+        className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative"
+        style={{
+          backgroundImage: 'url("/src/assets/images/lubango_bus.jpeg")', // Substitua esta URL pelo caminho para sua imagem de Lubango (ex: '/src/assets/images/sua_imagem_lubango.jpg')
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div className="w-full max-w-md px-4 relative z-10">
+          <div className="text-center mb-8">
+            <img src={logo} alt="SafeBus Logo" className="w-24 h-24 mx-auto mb-4" />
+            <h1 className="text-4xl font-bold text-white mb-2">SafeBus</h1>
+            <p className="text-white/90">Sua segurança é nossa prioridade</p>
+          </div>
+          <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+            <CardHeader className="space-y-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-t-lg">
+              <CardTitle className="text-2xl text-center">Registro</CardTitle>
+              <CardDescription className="text-center text-white/90">
+                Crie sua conta para começar
               </CardDescription>
             </CardHeader>
             
             <Tabs defaultValue="normal" value={registrationType} onValueChange={(v) => setRegistrationType(v as 'code' | 'normal')}>
-              <div className="px-6">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="normal">Cadastro Normal</TabsTrigger>
-                  <TabsTrigger value="code">Código de Ativação</TabsTrigger>
+              <div className="px-6 pt-4">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                  <TabsTrigger value="normal" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">Cadastro Normal</TabsTrigger>
+                  <TabsTrigger value="code" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">Código de Ativação</TabsTrigger>
                 </TabsList>
               </div>
               
@@ -266,9 +299,13 @@ const Register = () => {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome completo</FormLabel>
+                            <FormLabel className="text-gray-700">Nome completo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu nome" {...field} />
+                              <Input 
+                                placeholder="Seu nome" 
+                                {...field} 
+                                className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -280,9 +317,9 @@ const Register = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel className="text-gray-700">Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="seu@email.com" {...field} />
+                              <Input type="email" placeholder="seu@email.com" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -294,9 +331,9 @@ const Register = () => {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Senha</FormLabel>
+                            <FormLabel className="text-gray-700">Senha</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} />
+                              <Input type="password" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -308,21 +345,21 @@ const Register = () => {
                         name="role"
                         render={({ field }) => (
                           <FormItem className="space-y-3">
-                            <FormLabel>Você é</FormLabel>
+                            <FormLabel>Tipo de Usuário</FormLabel>
                             <FormControl>
                               <RadioGroup
                                 onValueChange={field.onChange}
                                 defaultValue={field.value}
                                 className="flex flex-col space-y-1"
                               >
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="student" id="student" />
-                                  <Label htmlFor="student">Aluno</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="parent" id="parent" />
-                                  <Label htmlFor="parent">Responsável</Label>
-                                </div>
+                                <FormItem className="flex items-center space-x-3 space-y-0">
+                                  <FormControl>
+                                    <RadioGroupItem value="student" />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    Estudante
+                                  </FormLabel>
+                                </FormItem>
                               </RadioGroup>
                             </FormControl>
                             <FormMessage />
@@ -332,7 +369,7 @@ const Register = () => {
                       
                       <Alert className="bg-yellow-50 text-yellow-800 border-yellow-200">
                         <AlertDescription>
-                          Pais/Responsáveis e Motoristas normalmente são registrados através de um código de ativação fornecido pelo gestor escolar.
+                          Pais/Responsáveis, Motoristas e Gestores são registrados através de um código de ativação fornecido pelo gestor escolar.
                         </AlertDescription>
                       </Alert>
                       
@@ -341,9 +378,9 @@ const Register = () => {
                         name="contactNumber"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Telefone</FormLabel>
+                            <FormLabel className="text-gray-700">Telefone</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu telefone" {...field} />
+                              <Input placeholder="Seu telefone" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -355,54 +392,42 @@ const Register = () => {
                         name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Endereço</FormLabel>
+                            <FormLabel className="text-gray-700">Endereço</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu endereço" {...field} />
+                              <Input placeholder="Seu endereço" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       
-                      {watchRole === 'parent' && (
-                        <>
-                          <FormField
-                            control={form.control}
-                            name="childName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nome do filho</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Nome do filho" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
+                      {watchRole === 'student' && (
                           <FormField
                             control={form.control}
                             name="studentNumber"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Número de estudante</FormLabel>
+                              <FormLabel className="text-gray-700">Número de estudante</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Número de estudante do filho" {...field} />
+                                <Input placeholder="Seu número de estudante" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        </>
                       )}
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4">
-                      <Button type="submit" className="w-full" disabled={loading}>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-medium py-2.5" 
+                        disabled={loading}
+                      >
                         {loading ? "Registrando..." : "Registrar"}
                       </Button>
-                      <div className="text-center text-sm">
+                      <div className="text-center text-sm text-gray-600 mt-4">
                         Já tem uma conta?{" "}
-                        <Link to="/auth/login" className="text-busapp-primary hover:underline">
+                        <Link to="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
                           Entrar
                         </Link>
                       </div>
@@ -416,18 +441,16 @@ const Register = () => {
                   {!codeVerified ? (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="activation-code">Digite o código de ativação</Label>
+                        <Label htmlFor="activation-code" className="text-gray-700">Digite o código de ativação</Label>
                         <div className="flex justify-center my-4">
-                          <InputOTP maxLength={6} value={activationCode} onChange={setActivationCode}>
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} />
-                              <InputOTPSlot index={1} />
-                              <InputOTPSlot index={2} />
-                              <InputOTPSlot index={3} />
-                              <InputOTPSlot index={4} />
-                              <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                          </InputOTP>
+                          <Input 
+                            type="text"
+                            value={activationCode}
+                            onChange={(e) => setActivationCode(e.target.value.toUpperCase())}
+                            maxLength={6}
+                            className="text-center text-2xl tracking-widest uppercase"
+                            placeholder="Digite o código"
+                          />
                         </div>
                         <p className="text-center text-sm text-gray-500">
                           O código de ativação é fornecido pelo gestor escolar
@@ -454,9 +477,13 @@ const Register = () => {
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Nome completo</FormLabel>
+                                <FormLabel className="text-gray-700">Nome completo</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Seu nome" {...field} />
+                                  <Input 
+                                    placeholder="Seu nome" 
+                                    {...field} 
+                                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -468,13 +495,14 @@ const Register = () => {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Email</FormLabel>
+                                <FormLabel className="text-gray-700">Email</FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="email" 
                                     placeholder="seu@email.com" 
                                     {...field} 
                                     disabled={!!verifiedData?.email}
+                                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -487,9 +515,9 @@ const Register = () => {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Senha</FormLabel>
+                                <FormLabel className="text-gray-700">Senha</FormLabel>
                                 <FormControl>
-                                  <Input type="password" {...field} />
+                                  <Input type="password" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -501,9 +529,9 @@ const Register = () => {
                             name="contactNumber"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Telefone</FormLabel>
+                                <FormLabel className="text-gray-700">Telefone</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Seu telefone" {...field} />
+                                  <Input placeholder="Seu telefone" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -517,23 +545,9 @@ const Register = () => {
                                 name="address"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Endereço para coleta/entrega</FormLabel>
+                                    <FormLabel className="text-gray-700">Endereço para coleta/entrega</FormLabel>
                                     <FormControl>
-                                      <Input placeholder="Seu endereço" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={form.control}
-                                name="childName"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Nome do filho</FormLabel>
-                                    <FormControl>
-                                      <Input placeholder="Nome do filho" {...field} value={verifiedData?.child_name || field.value} disabled={!!verifiedData?.child_name} />
+                                      <Input placeholder="Seu endereço" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
@@ -545,9 +559,9 @@ const Register = () => {
                                 name="studentNumber"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Número de estudante</FormLabel>
+                                    <FormLabel className="text-gray-700">Número de estudante</FormLabel>
                                     <FormControl>
-                                      <Input placeholder="Número de estudante do filho" {...field} value={verifiedData?.student_number || field.value} disabled={!!verifiedData?.student_number} />
+                                      <Input placeholder="Número de estudante do filho" {...field} value={verifiedData?.student_number || field.value} disabled={!!verifiedData?.student_number} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
@@ -556,7 +570,23 @@ const Register = () => {
                             </>
                           )}
                           
-                          <Button type="submit" className="w-full" disabled={loading}>
+                          {verifiedRole === 'student' && (
+                            <FormField
+                              control={form.control}
+                              name="studentNumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-gray-700">Número de estudante</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Seu número de estudante" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                          
+                          <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-medium py-2.5" disabled={loading}>
                             {loading ? "Registrando..." : "Completar Registro"}
                           </Button>
                         </div>
@@ -568,7 +598,7 @@ const Register = () => {
                   {!codeVerified && (
                     <div className="text-center text-sm">
                       Já tem uma conta?{" "}
-                      <Link to="/auth/login" className="text-busapp-primary hover:underline">
+                      <Link to="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
                         Entrar
                       </Link>
                     </div>

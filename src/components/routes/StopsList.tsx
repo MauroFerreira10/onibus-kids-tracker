@@ -1,9 +1,8 @@
-
 import React from 'react';
-import { MapPin, CheckCircle } from 'lucide-react';
+import { MapPin, Clock, CheckCircle2 } from 'lucide-react';
 import { StopData } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { BusArrivalNotification } from '@/components/notifications/BusArrivalNotification';
+import { ArrivalNotification } from '@/components/notifications/ArrivalNotification';
 
 interface StopsListProps {
   stops: StopData[];
@@ -12,102 +11,70 @@ interface StopsListProps {
   user: any | null;
 }
 
-export const StopsList = ({ stops, attendanceStatus, markPresentAtStop, user }: StopsListProps) => {
+export const StopsList: React.FC<StopsListProps> = ({
+  stops,
+  attendanceStatus,
+  markPresentAtStop,
+  user
+}) => {
   return (
-    <>
-      <h4 className="font-semibold mb-2">Paradas em Lubango</h4>
-      <ul className="space-y-4">
-        {stops.map((stop, index) => (
-          <StopItem 
-            key={stop.id} 
-            stop={stop} 
-            index={index} 
-            isLast={index === stops.length - 1}
-            attendanceStatus={attendanceStatus[stop.id]}
-            markPresentAtStop={markPresentAtStop}
-            user={user}
-          />
-        ))}
-      </ul>
-    </>
-  );
-};
+    <div className="space-y-4 mt-4">
+      {stops.map((stop, index) => (
+        <div key={stop.id} className="relative">
+          {/* Linha conectora */}
+          {index < stops.length - 1 && (
+            <div className="absolute left-4 top-8 bottom-0 w-0.5 bg-gray-200" />
+          )}
+          
+          <div className="flex items-start">
+            {/* Ícone da parada */}
+            <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-busapp-primary/10 flex items-center justify-center">
+              <MapPin className="h-4 w-4 text-busapp-primary" />
+            </div>
+            
+            {/* Conteúdo da parada */}
+            <div className="ml-4 flex-1">
+              <div className="bg-white rounded-lg border p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">{stop.name}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{stop.address}</p>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Clock className="h-4 w-4 mr-1" />
+                    {stop.estimatedTime}
+                  </div>
+                </div>
 
-interface StopItemProps {
-  stop: StopData;
-  index: number;
-  isLast: boolean;
-  attendanceStatus?: string;
-  markPresentAtStop: (stopId: string) => Promise<void>;
-  user: any | null;
-}
+                {/* Notificações de chegada */}
+                <div className="mt-3">
+                  <BusArrivalNotification stopId={stop.id} />
+                  <ArrivalNotification stopId={stop.id} />
+                </div>
 
-const StopItem = ({ stop, index, isLast, attendanceStatus, markPresentAtStop, user }: StopItemProps) => {
-  return (
-    <li className="relative pl-6">
-      {!isLast && (
-        <div className="absolute left-[0.65rem] top-6 w-0.5 h-full bg-gray-300 -z-10"></div>
-      )}
-      
-      <div className="absolute left-0 top-1 w-5 h-5 rounded-full border-2 border-busapp-primary bg-white flex items-center justify-center">
-        <div className="w-2 h-2 rounded-full bg-busapp-primary"></div>
-      </div>
-      
-      <div className="bg-white border rounded-lg shadow-sm p-3">
-        <h5 className="font-semibold">{stop.name}</h5>
-        <p className="text-gray-600 text-sm flex items-center mt-1">
-          <MapPin size={14} className="mr-1" />
-          {stop.address}
-        </p>
-        
-        <StopTimeInfo 
-          scheduledTime={stop.scheduledTime} 
-          estimatedTime={stop.estimatedTime} 
-        />
-        
-        {user && (
-          <div className="mt-3 flex justify-end">
-            {attendanceStatus === 'present_at_stop' ? (
-              <Badge variant="outline" className="bg-green-50 text-green-700 flex items-center">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Presença confirmada
-              </Badge>
-            ) : (
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="text-busapp-primary border-busapp-primary/30"
-                onClick={() => markPresentAtStop(stop.id)}
-              >
-                Confirmar presença neste ponto
-              </Button>
-            )}
+                {/* Status de presença */}
+                {user && (
+                  <div className="mt-3 pt-3 border-t border-dashed border-gray-200">
+                    {attendanceStatus[stop.id] === 'present' ? (
+                      <div className="flex items-center text-green-600">
+                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                        <span className="text-sm">Presença confirmada</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => markPresentAtStop(stop.id)}
+                        className="text-sm text-busapp-primary hover:text-busapp-primary/80"
+                      >
+                        Confirmar presença
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
-    </li>
-  );
-};
-
-interface StopTimeInfoProps {
-  scheduledTime?: string;
-  estimatedTime?: string;
-}
-
-const StopTimeInfo = ({ scheduledTime, estimatedTime }: StopTimeInfoProps) => {
-  return (
-    <div className="flex justify-between items-center mt-2 text-sm">
-      <div className="text-gray-500">
-        <span>Horário planejado:</span>
-        <span className="ml-1 font-medium">{scheduledTime}</span>
-      </div>
-      
-      {scheduledTime !== estimatedTime && (
-        <div className="text-yellow-600">
-          <span>Estimado:</span>
-          <span className="ml-1 font-medium">{estimatedTime}</span>
         </div>
-      )}
+      ))}
     </div>
   );
 };

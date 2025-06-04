@@ -1,4 +1,3 @@
-
 // Tipos para os dados da aplicação
 
 // Dados do ônibus
@@ -96,15 +95,18 @@ export interface BusFilters {
 // Tipos para convites e códigos de ativação
 export interface Invitation {
   id: string;
-  role: string;
+  role: 'parent' | 'driver' | 'manager';
   email: string | null;
-  child_name?: string | null;
-  student_number?: string | null;
   activation_code: string;
   created_by: string;
-  created_at: string;
-  expires_at: string;
+  school_id: string | null;
   used: boolean;
+  used_by: string | null;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+  child_name?: string | null;
+  student_number?: string | null;
 }
 
 // Dados de estudante
@@ -167,5 +169,65 @@ export interface ActivityLog {
   action: string;
   details?: string;
   timestamp: string;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  role: 'parent' | 'student' | 'driver' | 'manager';
+  contact_number: string | null;
+  address: string | null;
+  school_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Student {
+  id: string;
+  name: string;
+  student_number: string | null;
+  route_id: string | null;
+  stop_id: string | null;
+  grade: string | null;
+  classroom: string | null;
+  pickup_address: string | null;
+  return_address: string | null;
+  pickup_time: string | null;
+  return_time: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Child {
+  id: string;
+  parent_id: string;
+  name: string;
+  student_number: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TripHistory {
+  id: string;
+  route_id: string;
+  vehicle_id: string;
+  start_time: string;
+  end_time: string;
+  completed_stops: number;
+  total_stops: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  student_id: string;
+  route_id: string;
+  stop_id: string;
+  status: 'present' | 'absent' | 'late';
+  timestamp: string;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
