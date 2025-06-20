@@ -1,20 +1,27 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Fetches the user's attendance status for a specific date
+ * Fetches the user's attendance status for the last 7 days
  */
 export const fetchUserAttendanceStatus = async (userId: string) => {
   if (!userId) return {};
   
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split('T')[0];
+  // Get today's date and 7 days ago in YYYY-MM-DD format
+  const today = new Date();
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(today.getDate() - 7);
+  
+  const todayStr = today.toISOString().split('T')[0];
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
   
   // Call the stored procedure as an RPC function
   const { data: attendanceData, error } = await supabase
-    .rpc('get_user_attendance_status', { 
-      user_id_param: userId,
-      date_param: today
-    });
+    .from('attendance_simple')
+    .select('stop_id, date')
+    .eq('user_id', userId)
+    .gte('date', sevenDaysAgoStr)
+    .lte('date', todayStr)
+    .order('date', { ascending: false });
   
   if (error) {
     console.error('Error fetching attendance:', error);

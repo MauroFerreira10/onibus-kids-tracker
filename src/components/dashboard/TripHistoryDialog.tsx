@@ -39,10 +39,16 @@ const TripHistoryDialog: React.FC<TripHistoryDialogProps> = ({ busId }) => {
       let query = supabase
         .from('trip_history')
         .select(`
-          *,
-          vehicles (
-            license_plate,
-            model
+          id,
+          vehicle_id,
+          start_time,
+          end_time,
+          status,
+          total_stops,
+          delay_minutes,
+          created_at,
+          routes!inner (
+            name
           )
         `)
         .order('start_time', { ascending: false })
@@ -58,7 +64,20 @@ const TripHistoryDialog: React.FC<TripHistoryDialogProps> = ({ busId }) => {
         throw error;
       }
 
-      setTripHistory(data || []);
+      // Mapear os dados para o formato esperado pela interface
+      const formattedData = data?.map(item => ({
+        id: item.id,
+        vehicle_id: item.vehicle_id,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        status: item.status as 'completed' | 'delayed' | 'cancelled',
+        route_name: item.routes.name,
+        total_stops: item.total_stops,
+        delay_minutes: item.delay_minutes,
+        created_at: item.created_at,
+      })) || [];
+
+      setTripHistory(formattedData);
     } catch (error) {
       console.error('Erro ao buscar histórico de viagens:', error);
       toast.error('Erro ao carregar histórico de viagens');

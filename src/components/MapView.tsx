@@ -2,14 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BusData } from '@/types';
-import { Loader2, MapPin, Bus } from 'lucide-react';
+import { Loader2, MapPin, Bus, Navigation, Layers, Compass } from 'lucide-react';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import MapboxTokenForm from './map/MapboxTokenForm';
 import BusMarkers from './map/BusMarkers';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const MAPBOX_TOKEN = '';
+const MAPBOX_TOKEN = 'pk.eyJ1IjoidGhlbWF1cmEiLCJhIjoiY205c2ZseHp1MDA2ZzJscjl2MDhuZThqOCJ9.oY8tNNZXXS5azwRemSrocw';
 
 // Coordenadas do Lubango, Angola
 const LUBANGO_CENTER = {
@@ -21,7 +23,7 @@ interface MapViewProps {
   buses?: BusData[];
   selectedBusId?: string;
   onSelectBus?: (busId: string) => void;
-  centerOnUser?: boolean;  // Nova propriedade para centralizar no usuário
+  centerOnUser?: boolean;
 }
 
 const MapView: React.FC<MapViewProps> = ({ 
@@ -34,6 +36,7 @@ const MapView: React.FC<MapViewProps> = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [mapStyle, setMapStyle] = useState<'streets' | 'satellite'>('streets');
   const userPositionMarker = useRef<mapboxgl.Marker | null>(null);
   
   const {
@@ -61,7 +64,6 @@ const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     if (!mapReady || !map.current || !centerOnUser) return;
 
-    // Remover marcador existente se tiver
     if (userPositionMarker.current) {
       userPositionMarker.current.remove();
       userPositionMarker.current = null;
@@ -70,29 +72,23 @@ const MapView: React.FC<MapViewProps> = ({
     if (navigator.geolocation) {
       let retryCount = 0;
       const maxRetries = 3;
-      const timeout = 10000; // Aumentado para 10 segundos
+      const timeout = 10000;
 
       const getLocation = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
             
-            // Não centralizar o mapa na posição do usuário, apenas adicionar o marcador
-            // O mapa permanecerá centralizado no Lubango
-            
-            // Criar elemento personalizado para o marcador
             const el = document.createElement('div');
             el.className = 'user-location-marker';
             el.innerHTML = `
               <div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md pulse-animation"></div>
             `;
             
-            // Adicionar marcador
             userPositionMarker.current = new mapboxgl.Marker(el)
               .setLngLat([longitude, latitude])
               .addTo(map.current!);
               
-            // Adicionar estilo CSS para animação
             const style = document.createElement('style');
             style.textContent = `
               .pulse-animation {
@@ -113,7 +109,6 @@ const MapView: React.FC<MapViewProps> = ({
             `;
             document.head.appendChild(style);
             
-            // Configurar observador de localização para atualizações contínuas
             const watchId = navigator.geolocation.watchPosition(
               (newPosition) => {
                 const { latitude: newLat, longitude: newLng } = newPosition.coords;
@@ -132,7 +127,6 @@ const MapView: React.FC<MapViewProps> = ({
               }
             );
             
-            // Limpar o observador quando o componente for desmontado
             return () => {
               navigator.geolocation.clearWatch(watchId);
               if (userPositionMarker.current) {
@@ -161,7 +155,7 @@ const MapView: React.FC<MapViewProps> = ({
         if (retryCount < maxRetries) {
           retryCount++;
           toast.info(`Tentando obter localização novamente (${retryCount}/${maxRetries})...`);
-          setTimeout(getLocation, 2000); // Espera 2 segundos antes de tentar novamente
+          setTimeout(getLocation, 2000);
         } else {
           toast.error("Não foi possível obter sua localização após várias tentativas");
         }
@@ -174,17 +168,11 @@ const MapView: React.FC<MapViewProps> = ({
   }, [mapReady, centerOnUser]);
 
   useEffect(() => {
-    console.log("MapView montado ou token atualizado:", mapboxToken ? "Token presente" : "Sem token");
-    
-    if (!mapContainer.current || !mapboxToken) {
-      console.log("Container não disponível ou token não definido");
-      return;
-    }
+    if (!mapContainer.current || !mapboxToken) return;
     
     clearCurrentMap();
 
     try {
-      console.log(`Inicializando mapa com token: ${mapboxToken.substring(0, 10)}...`);
       setIsLoading(true);
       
       mapboxgl.accessToken = mapboxToken;
@@ -196,11 +184,9 @@ const MapView: React.FC<MapViewProps> = ({
         return;
       }
       
-      console.log(`Dimensões do container: ${mapContainer.current.offsetWidth}x${mapContainer.current.offsetHeight}`);
-      
       const newMap = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v11',
+        style: mapStyle === 'streets' ? 'mapbox://styles/mapbox/streets-v11' : 'mapbox://styles/mapbox/satellite-v9',
         center: [LUBANGO_CENTER.lng, LUBANGO_CENTER.lat],
         zoom: 13,
         failIfMajorPerformanceCaveat: false,
@@ -210,11 +196,9 @@ const MapView: React.FC<MapViewProps> = ({
       newMap.addControl(new mapboxgl.AttributionControl({ compact: true }));
       
       newMap.on('load', () => {
-        console.log("✅ Mapa carregado com sucesso!");
         setMapLoaded(true);
         setIsLoading(false);
         
-        // Adicionar um delay para garantir que o mapa está totalmente renderizado
         setTimeout(() => {
           setMapReady(true);
           toast.success('Mapa carregado com sucesso!');
@@ -250,23 +234,71 @@ const MapView: React.FC<MapViewProps> = ({
       setIsLoading(false);
       clearCurrentMap();
     }
-  }, [mapboxToken, setIsLoading]);
+  }, [mapboxToken, mapStyle, setIsLoading]);
+
+  const toggleMapStyle = () => {
+    setMapStyle(prev => prev === 'streets' ? 'satellite' : 'streets');
+  };
 
   return (
-    <div className="relative w-full h-[calc(100vh-14rem)] rounded-lg overflow-hidden bg-gradient-to-b from-busapp-primary/5 to-busapp-primary/10 border border-busapp-primary/20">
-      <div className="absolute top-2 left-2 z-10 flex gap-2">
-        {mapReady && buses.length > 0 && (
-          <Badge variant="secondary" className="bg-busapp-secondary text-busapp-dark font-medium">
-            <Bus className="w-3 h-3 mr-1" />
-            {buses.length} ônibus ativos
-          </Badge>
-        )}
-        
+    <div className="relative w-full h-[calc(100vh-14rem)] rounded-xl overflow-hidden bg-gradient-to-b from-blue-50 to-indigo-50 border border-blue-200 shadow-lg">
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+        <AnimatePresence>
+          {mapReady && buses.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium px-3 py-1.5">
+                <Bus className="w-4 h-4 mr-1.5" />
+                {buses.length} ônibus ativos
+              </Badge>
+            </motion.div>
+          )}
+          
+          {mapReady && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Badge variant="outline" className="bg-white/90 backdrop-blur-sm px-3 py-1.5">
+                <MapPin className="w-4 h-4 mr-1.5" />
+                Lubango, Angola
+              </Badge>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
         {mapReady && (
-          <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
-            <MapPin className="w-3 h-3 mr-1" />
-            Lubango, Angola
-          </Badge>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex gap-2"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleMapStyle}
+              className="bg-white/90 backdrop-blur-sm hover:bg-white"
+            >
+              <Layers className="w-4 h-4 mr-1.5" />
+              {mapStyle === 'streets' ? 'Satélite' : 'Ruas'}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetToken}
+              className="bg-white/90 backdrop-blur-sm hover:bg-white"
+            >
+              <Compass className="w-4 h-4 mr-1.5" />
+              Alterar Token
+            </Button>
+          </motion.div>
         )}
       </div>
 
@@ -282,33 +314,27 @@ const MapView: React.FC<MapViewProps> = ({
 
       <div 
         ref={mapContainer} 
-        className="w-full h-full transition-opacity duration-500"
+        className="w-full h-full transition-all duration-500"
         style={{ 
           display: mapboxToken && !tokenError ? 'block' : 'none',
           opacity: mapReady ? 1 : 0,
-          border: '1px solid #ccc',
-          borderRadius: '0.5rem'
+          borderRadius: '0.75rem'
         }}
       />
 
-      {isLoading && mapboxToken && !tokenError && (
-        <div className="absolute inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
-          <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg">
-            <Loader2 className="h-12 w-12 animate-spin text-busapp-primary mb-4" />
-            <p className="text-xl font-medium text-busapp-primary">Carregando o mapa...</p>
+      {isLoading && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20"
+        >
+          <div className="flex flex-col items-center bg-white p-8 rounded-xl shadow-xl">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+            <p className="text-xl font-medium text-blue-800">Carregando o mapa...</p>
             <p className="text-gray-500 mt-2">Aguarde um momento</p>
           </div>
-        </div>
-      )}
-
-      {mapboxToken && !tokenError && !isLoading && (
-        <button 
-          onClick={resetToken}
-          className="absolute top-2 right-2 bg-white/90 p-2 rounded-md shadow-md z-10 text-sm hover:bg-gray-100 transition-colors"
-          title="Alterar Token do Mapbox"
-        >
-          Alterar Token
-        </button>
+        </motion.div>
       )}
 
       {map.current && mapLoaded && buses.length > 0 && (

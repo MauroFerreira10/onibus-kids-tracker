@@ -28,25 +28,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (currentSession) {
         console.log('Session found or signed in');
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentSession.user.id)
-          .single();
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentSession.user.id)
+            .single();
 
-        if (profileError) {
-          console.error('Error fetching user role:', profileError);
-        } else {
-          console.log('User role:', profileData.role);
-          if (isInitialCheckComplete && window.location.pathname.includes('/auth/')) {
-            if (profileData.role === 'driver') {
-              navigate('/driver');
-            } else if (profileData.role === 'manager') {
-              navigate('/manager/dashboard');
-            } else {
-              navigate('/');
+          if (profileError) {
+            console.error('Error fetching user role:', profileError);
+            
+            // Se o erro for porque o perfil não existe, vamos criá-lo
+            if (profileError.code === 'PGRST116') {
+              console.log('Perfil não encontrado. Criando novo perfil...');
+              
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: currentSession.user.id,
+                  name: currentSession.user.email?.split('@')[0] || 'Usuário',
+                  role: 'parent', // Role padrão
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+              if (createError) {
+                console.error('Erro ao criar perfil:', createError);
+              } else {
+                console.log('Perfil criado com sucesso:', newProfile);
+                if (isInitialCheckComplete && window.location.pathname.includes('/auth/')) {
+                  navigate('/');
+                }
+              }
+            } else if (profileError.code === '406') {
+              console.error('Erro de formato na requisição. Verificando cabeçalhos...');
+              // Tentar novamente com cabeçalhos explícitos
+              const { data: retryData, error: retryError } = await supabase
+                .from('profiles')
+                .select('id, name, role, contact_number, address, school_id, created_at, updated_at')
+                .eq('id', currentSession.user.id)
+                .single();
+              
+              if (retryError) {
+                console.error('Erro na segunda tentativa:', retryError);
+              } else {
+                console.log('User role (segunda tentativa):', retryData.role);
+                if (isInitialCheckComplete && window.location.pathname.includes('/auth/')) {
+                  if (retryData.role === 'driver') {
+                    navigate('/driver');
+                  } else if (retryData.role === 'manager') {
+                    navigate('/manager/dashboard');
+                  } else {
+                    navigate('/');
+                  }
+                }
+              }
+            }
+          } else {
+            console.log('User role:', profileData.role);
+            if (isInitialCheckComplete && window.location.pathname.includes('/auth/')) {
+              if (profileData.role === 'driver') {
+                navigate('/driver');
+              } else if (profileData.role === 'manager') {
+                navigate('/manager/dashboard');
+              } else {
+                navigate('/');
+              }
             }
           }
+        } catch (error) {
+          console.error('Erro ao buscar perfil:', error);
         }
       } else {
         console.log('No session');

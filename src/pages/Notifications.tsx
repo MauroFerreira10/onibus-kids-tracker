@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, Bell, BellRing, Bus, Clock, Send } from 'lucide-react';
+import { AlertCircle, Bell, BellRing, Bus, Clock, Send, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ import { Notification } from '@/types/notifications';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -36,6 +37,7 @@ const Notifications = () => {
       const { data: notificationData, error: notificationError } = await supabase
         .from('notifications')
         .select('*')
+        .gt('expires_at', new Date().toISOString()) // Only get non-expired notifications
         .order('created_at', { ascending: false });
 
       if (notificationError) {
@@ -163,6 +165,8 @@ const Notifications = () => {
         return <Clock className="h-5 w-5 text-yellow-500" />;
       case 'alert':
         return <AlertCircle className="h-5 w-5 text-red-500" />;
+      case 'message':
+        return <MessageSquare className="h-5 w-5 text-green-500" />;
       case 'user':
         return <svg className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 15C15.3137 15 18 12.3137 18 9C18 5.68629 15.3137 3 12 3C8.68629 3 6 5.68629 6 9C6 12.3137 8.68629 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -265,127 +269,196 @@ const Notifications = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BellRing className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">Notificações</h1>
-            {unreadCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {unreadCount} não lidas
-              </Badge>
-            )}
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 space-y-8">
+          {/* Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl"
+          >
+            <div className="flex items-center gap-3">
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 10 }}
+                className="relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-50" />
+                <BellRing className="h-8 w-8 text-blue-600 relative" />
+              </motion.div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Notificações
+                </h1>
+                {unreadCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="mt-1"
+                  >
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-600 border-blue-200">
+                      {unreadCount} não lidas
+                    </Badge>
+                  </motion.div>
+                )}
+              </div>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilter('all')}
-              className={filter === 'all' ? 'bg-primary text-primary-foreground' : ''}
-            >
-              Todas
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilter('unread')}
-              className={filter === 'unread' ? 'bg-primary text-primary-foreground' : ''}
-            >
-              Não lidas
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilter('read')}
-              className={filter === 'read' ? 'bg-primary text-primary-foreground' : ''}
-            >
-              Lidas
-            </Button>
-          </div>
-        </div>
+            <div className="flex items-center gap-2">
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilter('all')}
+                  className={`${
+                    filter === 'all' 
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none' 
+                      : 'bg-white/50 backdrop-blur-sm border-blue-200 text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  Todas
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilter('unread')}
+                  className={`${
+                    filter === 'unread' 
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none' 
+                      : 'bg-white/50 backdrop-blur-sm border-blue-200 text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  Não lidas
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilter('read')}
+                  className={`${
+                    filter === 'read' 
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none' 
+                      : 'bg-white/50 backdrop-blur-sm border-blue-200 text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  Lidas
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
 
-        {/* Notifications list */}
-        <div className="space-y-4">
-          {filteredNotifications.map((notification) => (
-            <Card
-              key={notification.id}
-              className={`${getNotificationStyle(notification.type)} ${!notification.read ? 'border-l-4 border-l-primary' : ''}`}
+          {/* Notifications list */}
+          <AnimatePresence mode="wait">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-4"
             >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1">
-                    {getIcon(notification.icon)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">{notification.message}</p>
-                      <span className="text-sm text-gray-500">
-                        {formatNotificationTime(notification.time)}
-                      </span>
-                    </div>
-                    {notification.sender_role && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Enviado por: {notification.sender_role === 'driver' ? 'Motorista' : 'Gestor'}
-                      </p>
-                    )}
-                  </div>
-                  {!notification.read && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => markAsRead(notification.id)}
-                      className="text-primary"
-                    >
-                      Marcar como lida
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              {filteredNotifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Card
+                    className={`${
+                      getNotificationStyle(notification.type)
+                    } ${
+                      !notification.read 
+                        ? 'border-l-4 border-l-blue-500 shadow-lg' 
+                        : 'shadow-md'
+                    } bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300`}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <motion.div 
+                          whileHover={{ scale: 1.1 }}
+                          className="mt-1"
+                        >
+                          {getIcon(notification.icon)}
+                        </motion.div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-gray-800">{notification.message}</p>
+                            <span className="text-sm text-gray-500">
+                              {formatNotificationTime(notification.time)}
+                            </span>
+                          </div>
+                          {notification.sender_role && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              Enviado por: {notification.sender_role === 'driver' ? 'Motorista' : 'Gestor'}
+                            </p>
+                          )}
+                        </div>
+                        {!notification.read && (
+                          <motion.div whileHover={{ scale: 1.05 }}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => markAsRead(notification.id)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              Marcar como lida
+                            </Button>
+                          </motion.div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+
+              {filteredNotifications.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-12 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg"
+                >
+                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">
+                    Nenhuma notificação encontrada
+                  </p>
+                </motion.div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Dialog for sending a new notification */}
       <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="bg-white/90 backdrop-blur-lg border-blue-100">
           <DialogHeader>
-            <DialogTitle>Enviar nova notificação</DialogTitle>
+            <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Enviar Notificação
+            </DialogTitle>
           </DialogHeader>
-
-          <div className="space-y-4 py-4">
+          <div className="space-y-4">
             <Textarea
-              placeholder="Escreva a mensagem da notificação aqui..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              className="min-h-[100px]"
+              placeholder="Digite sua mensagem..."
+              className="bg-white/50 border-blue-200 focus:border-blue-400"
             />
           </div>
-
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowSendDialog(false)}
+              className="border-blue-200 text-blue-600 hover:bg-blue-50"
             >
               Cancelar
             </Button>
             <Button
               onClick={sendNotification}
-              disabled={!newMessage.trim() || isSending}
+              disabled={isSending || !newMessage.trim()}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
-              {isSending ? (
-                <>
-                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent border-white rounded-full"></div>
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-1" />
-                  Enviar
-                </>
-              )}
+              {isSending ? 'Enviando...' : 'Enviar'}
             </Button>
           </DialogFooter>
         </DialogContent>

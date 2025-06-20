@@ -1,8 +1,9 @@
-
 import React from 'react';
 import { Accordion } from '@/components/ui/accordion';
 import { RouteItem } from './RouteItem';
 import { RouteData } from '@/types';
+import { motion } from 'framer-motion';
+import { FiFilter } from 'react-icons/fi';
 
 interface RoutesListProps {
   routes: RouteData[];
@@ -12,17 +13,62 @@ interface RoutesListProps {
 }
 
 export const RoutesList = ({ routes, attendanceStatus, markPresentAtStop, user }: RoutesListProps) => {
+  const [filter, setFilter] = React.useState('all');
+  
+  const filteredRoutes = React.useMemo(() => {
+    switch (filter) {
+      case 'active':
+        return routes.filter(route => route.status === 'active');
+      case 'completed':
+        return routes.filter(route => route.status === 'completed');
+      default:
+        return routes;
+    }
+  }, [routes, filter]);
+
   return (
-    <Accordion type="single" collapsible className="w-full">
-      {routes.map((route) => (
-        <RouteItem 
-          key={route.id} 
-          route={route} 
-          attendanceStatus={attendanceStatus} 
-          markPresentAtStop={markPresentAtStop}
-          user={user}
-        />
-      ))}
-    </Accordion>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <FiFilter className="w-5 h-5 text-gray-500" />
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todas as Rotas</option>
+            <option value="active">Em Andamento</option>
+            <option value="completed">Concluídas</option>
+          </select>
+        </div>
+        <span className="text-sm text-gray-500">
+          {filteredRoutes.length} {filteredRoutes.length === 1 ? 'rota encontrada' : 'rotas encontradas'}
+        </span>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Accordion type="single" collapsible className="w-full space-y-4">
+          {filteredRoutes.map((route, index) => (
+            <motion.div
+              key={route.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <RouteItem 
+                route={route} 
+                attendanceStatus={attendanceStatus} 
+                markPresentAtStop={markPresentAtStop}
+                user={user}
+              />
+            </motion.div>
+          ))}
+        </Accordion>
+      </motion.div>
+    </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, Bus, Clock, AlertCircle } from 'lucide-react';
+import { Bell, Bus, Clock, AlertCircle, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ const RecentNotificationsDialog: React.FC<RecentNotificationsDialogProps> = ({
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
+        .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -68,6 +69,8 @@ const RecentNotificationsDialog: React.FC<RecentNotificationsDialogProps> = ({
         return <Clock className="h-5 w-5 text-yellow-600" />;
       case 'alert':
         return <AlertCircle className="h-5 w-5 text-red-600" />;
+      case 'message':
+        return <MessageSquare className="h-5 w-5 text-green-600" />;
       default:
         return <Bell className="h-5 w-5 text-gray-600" />;
     }

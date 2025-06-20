@@ -6,13 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { UserData } from '@/types';
-import { Users, Bus, UserPlus, User, UserCog, Key, Activity, TrendingUp, AlertCircle, Calendar, Bell } from 'lucide-react';
+import { Users, Bus, UserPlus, User, UserCog, Key, Activity, TrendingUp, AlertCircle, Calendar, Bell, ChevronRight, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Notification, getNotifications, subscribeToNotifications, markAsRead } from '@/services/notificationService';
+import { ActivityLog, getRecentActivities, logActivity } from '@/services/activityService';
+import { motion } from 'framer-motion';
+import { GenerateWordDocument } from '@/components/manager/GenerateWordDocument';
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
@@ -27,6 +30,8 @@ const ManagerDashboard = () => {
   const [growthData, setGrowthData] = useState([]);
   const [userDistribution, setUserDistribution] = useState([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [recentActivities, setRecentActivities] = useState<ActivityLog[]>([]);
+  const [activeTab, setActiveTab] = useState('gerenciamento');
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -41,6 +46,12 @@ const ManagerDashboard = () => {
         await fetchUserDistribution();
         await loadNotifications();
         await setupNotificationsSubscription();
+        await fetchRecentActivities();
+
+        // Adicionar algumas atividades de exemplo
+        await logActivity('Dashboard Inicializado', 'Painel do gestor carregado com sucesso');
+        await logActivity('Estatísticas Atualizadas', `Total de estudantes: ${stats.totalStudents}, Responsáveis: ${stats.totalParents}, Motoristas: ${stats.totalDrivers}`);
+        await logActivity('Relatórios Gerados', 'Relatórios de crescimento e distribuição de usuários atualizados');
       } catch (err) {
         console.error('Erro ao inicializar dashboard:', err);
         setError('Erro ao carregar o dashboard');
@@ -205,6 +216,16 @@ const ManagerDashboard = () => {
     }
   };
 
+  const fetchRecentActivities = async () => {
+    try {
+      const activities = await getRecentActivities(5);
+      setRecentActivities(activities);
+    } catch (error) {
+      console.error('Erro ao buscar atividades recentes:', error);
+      toast.error('Erro ao carregar atividades recentes');
+    }
+  };
+
   if (loading) {
     return (
       <Layout title="Painel de Gestor">
@@ -227,73 +248,134 @@ const ManagerDashboard = () => {
 
   return (
     <Layout title="Painel de Gestor">
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="container mx-auto py-6 space-y-6">
-          <div className="flex justify-between items-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <div className="container mx-auto py-8 space-y-8">
+          {/* Header Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-indigo-100"
+          >
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-800">Painel de Gestor</h1>
-              <p className="text-slate-600">Bem-vindo ao seu centro de controle</p>
+              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Painel de Gestor</h1>
+              <p className="text-slate-600 mt-1">Bem-vindo ao seu centro de controle</p>
             </div>
-            <div className="flex items-center gap-4">
-              <Badge variant="outline" className="px-4 py-2 bg-white border-slate-200 text-slate-600">
-                <Calendar className="w-4 h-4 mr-2 text-slate-500" />
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+              <Badge variant="outline" className="px-4 py-2 bg-white/80 backdrop-blur-sm border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition-colors">
+                <Calendar className="w-4 h-4 mr-2 text-indigo-500" />
                 {new Date().toLocaleDateString('pt-BR')}
               </Badge>
-              <div className="text-sm text-slate-600">
+              <div className="text-sm text-slate-600 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-indigo-100">
                 {user?.email && (
-                  <span>Conectado como: <strong className="text-slate-800">{user.email}</strong></span>
+                  <span>Conectado como: <strong className="text-indigo-600">{user.email}</strong></span>
                 )}
               </div>
             </div>
+          </motion.div>
+          
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="bg-gradient-to-br from-blue-400 to-blue-600 border-blue-500 hover:shadow-xl transition-all hover:scale-105">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-white">Estudantes</CardTitle>
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Users className="h-4 w-4 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white mb-2">{stats.totalStudents}</div>
+                  <div className="flex items-center gap-2">
+                    <ArrowUpRight className="h-4 w-4 text-emerald-300" />
+                    <span className="text-sm text-emerald-300">+12% este mês</span>
+                  </div>
+                  <Progress value={75} className="mt-4 bg-white/20" />
+                  <p className="text-xs text-white/80 mt-2">75% da capacidade total</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="bg-gradient-to-br from-purple-400 to-purple-600 border-purple-500 hover:shadow-xl transition-all hover:scale-105">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-white">Responsáveis</CardTitle>
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white mb-2">{stats.totalParents}</div>
+                  <div className="flex items-center gap-2">
+                    <ArrowUpRight className="h-4 w-4 text-emerald-300" />
+                    <span className="text-sm text-emerald-300">+8% este mês</span>
+                  </div>
+                  <Progress value={60} className="mt-4 bg-white/20" />
+                  <p className="text-xs text-white/80 mt-2">60% da capacidade total</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="bg-gradient-to-br from-pink-400 to-pink-600 border-pink-500 hover:shadow-xl transition-all hover:scale-105">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-white">Motoristas</CardTitle>
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Bus className="h-4 w-4 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white mb-2">{stats.totalDrivers}</div>
+                  <div className="flex items-center gap-2">
+                    <ArrowDownRight className="h-4 w-4 text-red-300" />
+                    <span className="text-sm text-red-300">-2% este mês</span>
+                  </div>
+                  <Progress value={45} className="mt-4 bg-white/20" />
+                  <p className="text-xs text-white/80 mt-2">45% da capacidade total</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-blue-700">Estudantes</CardTitle>
-                <Users className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-800">{stats.totalStudents}</div>
-                <Progress value={75} className="mt-2 bg-blue-100" />
-                <p className="text-xs text-blue-600 mt-2">75% da capacidade total</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-purple-700">Responsáveis</CardTitle>
-                <User className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-800">{stats.totalParents}</div>
-                <Progress value={60} className="mt-2 bg-purple-100" />
-                <p className="text-xs text-purple-600 mt-2">60% da capacidade total</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-indigo-700">Motoristas</CardTitle>
-                <Bus className="h-4 w-4 text-indigo-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-800">{stats.totalDrivers}</div>
-                <Progress value={45} className="mt-2 bg-indigo-100" />
-                <p className="text-xs text-indigo-600 mt-2">45% da capacidade total</p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <Tabs defaultValue="gerenciamento" className="space-y-4">
-            <TabsList className="bg-white border border-slate-200">
-              <TabsTrigger value="gerenciamento" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">Gerenciamento</TabsTrigger>
-              <TabsTrigger value="atividades" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">Atividades</TabsTrigger>
-              <TabsTrigger value="relatorios" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">Relatórios</TabsTrigger>
-              <TabsTrigger value="notificacoes" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">
+          {/* Main Content */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="bg-white/80 backdrop-blur-sm border border-indigo-100 p-1 rounded-lg">
+              <TabsTrigger 
+                value="gerenciamento" 
+                className="data-[state=active]:bg-indigo-100 data-[state=active]:text-indigo-700 rounded-md px-4 py-2"
+              >
+                Gerenciamento
+              </TabsTrigger>
+              <TabsTrigger 
+                value="atividades" 
+                className="data-[state=active]:bg-indigo-100 data-[state=active]:text-indigo-700 rounded-md px-4 py-2"
+              >
+                Atividades
+              </TabsTrigger>
+              <TabsTrigger 
+                value="relatorios" 
+                className="data-[state=active]:bg-indigo-100 data-[state=active]:text-indigo-700 rounded-md px-4 py-2"
+              >
+                Relatórios
+              </TabsTrigger>
+              <TabsTrigger 
+                value="notificacoes" 
+                className="data-[state=active]:bg-indigo-100 data-[state=active]:text-indigo-700 rounded-md px-4 py-2 relative"
+              >
                 Notificações
                 {notifications.length > 0 && (
-                  <Badge variant="destructive" className="ml-2">
+                  <Badge variant="destructive" className="absolute -top-2 -right-2">
                     {notifications.length}
                   </Badge>
                 )}
@@ -301,71 +383,78 @@ const ManagerDashboard = () => {
             </TabsList>
             
             <TabsContent value="gerenciamento">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-white border-slate-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="bg-white/80 backdrop-blur-sm border-indigo-100 hover:shadow-xl transition-all">
                   <CardHeader>
-                    <CardTitle className="text-slate-800">Gerenciar Usuários</CardTitle>
-                    <CardDescription className="text-slate-600">
+                    <CardTitle className="text-indigo-700">Gerenciar Usuários</CardTitle>
+                    <CardDescription className="text-indigo-600">
                       Registre novos usuários ou gerencie usuários existentes
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Button
                       variant="outline"
-                      className="flex flex-col h-24 items-center justify-center bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700 transition-colors"
+                      className="flex flex-col h-24 items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white border-0 transition-all hover:scale-105"
                       onClick={() => navigate('/manager/register-students')}
                     >
-                      <UserPlus className="h-6 w-6 mb-2 text-blue-600" />
+                      <UserPlus className="h-6 w-6 mb-2 text-white" />
                       <span>Registrar Alunos</span>
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex flex-col h-24 items-center justify-center bg-purple-50 border-purple-200 hover:bg-purple-100 text-purple-700 transition-colors"
+                      className="flex flex-col h-24 items-center justify-center bg-gradient-to-br from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 text-white border-0 transition-all hover:scale-105"
                       onClick={() => navigate('/manager/register-parents')}
                     >
-                      <UserCog className="h-6 w-6 mb-2 text-purple-600" />
+                      <UserCog className="h-6 w-6 mb-2 text-white" />
                       <span>Registrar Responsáveis</span>
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex flex-col h-24 items-center justify-center bg-indigo-50 border-indigo-200 hover:bg-indigo-100 text-indigo-700 transition-colors"
+                      className="flex flex-col h-24 items-center justify-center bg-gradient-to-br from-pink-400 to-pink-600 hover:from-pink-500 hover:to-pink-700 text-white border-0 transition-all hover:scale-105"
                       onClick={() => navigate('/manager/register-drivers')}
                     >
-                      <Bus className="h-6 w-6 mb-2 text-indigo-600" />
+                      <Bus className="h-6 w-6 mb-2 text-white" />
                       <span>Registrar Motoristas</span>
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex flex-col h-24 items-center justify-center bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors"
+                      className="flex flex-col h-24 items-center justify-center bg-gradient-to-br from-indigo-400 to-indigo-600 hover:from-indigo-500 hover:to-indigo-700 text-white border-0 transition-all hover:scale-105"
                       onClick={() => navigate('/manager/invitations')}
                     >
-                      <Key className="h-6 w-6 mb-2 text-slate-600" />
+                      <Key className="h-6 w-6 mb-2 text-white" />
                       <span>Códigos de Convite</span>
                     </Button>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-white border-slate-200">
+                <Card className="bg-white/80 backdrop-blur-sm border-indigo-100 hover:shadow-xl transition-all">
                   <CardHeader>
-                    <CardTitle className="text-slate-800">Alertas e Notificações</CardTitle>
-                    <CardDescription className="text-slate-600">
+                    <CardTitle className="text-indigo-700">Alertas e Notificações</CardTitle>
+                    <CardDescription className="text-indigo-600">
                       Últimas atualizações e alertas importantes
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <AlertCircle className="h-5 w-5 text-yellow-600" />
-                      <div>
-                        <p className="font-medium text-yellow-700">Atualização do Sistema</p>
-                        <p className="text-sm text-yellow-600">Nova versão disponível</p>
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-amber-400 to-amber-600 rounded-lg hover:shadow-lg transition-all cursor-pointer group">
+                      <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
+                        <AlertCircle className="h-5 w-5 text-white" />
                       </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-white">Atualização do Sistema</p>
+                        <p className="text-sm text-white/90">Nova versão disponível</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-white group-hover:translate-x-1 transition-transform" />
                     </div>
-                    <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <Activity className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-blue-700">Atividade Recente</p>
-                        <p className="text-sm text-blue-600">5 novos registros hoje</p>
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg hover:shadow-lg transition-all cursor-pointer group"
+                         onClick={() => setActiveTab('atividades')}>
+                      <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
+                        <Activity className="h-5 w-5 text-white" />
                       </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-white">Atividade Recente</p>
+                        <p className="text-sm text-white/90">5 novos registros hoje</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-white group-hover:translate-x-1 transition-transform" />
                     </div>
                   </CardContent>
                 </Card>
@@ -373,34 +462,45 @@ const ManagerDashboard = () => {
             </TabsContent>
             
             <TabsContent value="atividades">
-              <Card className="bg-white border-slate-200">
+              <Card className="bg-white/80 backdrop-blur-sm border-indigo-100 hover:shadow-xl transition-all">
                 <CardHeader>
-                  <CardTitle className="text-slate-800">Atividades Recentes</CardTitle>
-                  <CardDescription className="text-slate-600">
+                  <CardTitle className="text-indigo-700">Atividades Recentes</CardTitle>
+                  <CardDescription className="text-indigo-600">
                     Acompanhe as últimas atividades do sistema
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {loading ? (
-                      <p className="text-center py-4 text-slate-600">Carregando...</p>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                          <TrendingUp className="h-5 w-5 text-green-600" />
-                          <div>
-                            <p className="font-medium text-green-700">Crescimento do Sistema</p>
-                            <p className="text-sm text-green-600">Aumento de 15% nos registros</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <Users className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <p className="font-medium text-blue-700">Novos Usuários</p>
-                            <p className="text-sm text-blue-600">3 novos estudantes registrados</p>
-                          </div>
-                        </div>
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                       </div>
+                    ) : recentActivities.length === 0 ? (
+                      <div className="text-center py-8 text-indigo-600">
+                        Nenhuma atividade registrada
+                      </div>
+                    ) : (
+                      recentActivities.map((activity, index) => (
+                        <motion.div
+                          key={activity.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-lg hover:shadow-lg transition-all cursor-pointer group"
+                        >
+                          <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
+                            <Activity className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-white">{activity.action}</p>
+                            <p className="text-sm text-white/90">{activity.details}</p>
+                            <p className="text-xs text-white/70 mt-1">
+                              {new Date(activity.timestamp).toLocaleString('pt-BR')}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-white group-hover:translate-x-1 transition-transform" />
+                        </motion.div>
+                      ))
                     )}
                   </div>
                 </CardContent>
@@ -408,32 +508,62 @@ const ManagerDashboard = () => {
             </TabsContent>
             
             <TabsContent value="relatorios">
-              <Card className="bg-white border-slate-200">
+              <Card className="bg-white/80 backdrop-blur-sm border-indigo-100 hover:shadow-xl transition-all">
                 <CardHeader>
-                  <CardTitle className="text-slate-800">Relatórios e Métricas</CardTitle>
-                  <CardDescription className="text-slate-600">
+                  <CardTitle className="text-indigo-700">Relatórios e Métricas</CardTitle>
+                  <CardDescription className="text-indigo-600">
                     Visualize relatórios e métricas importantes
                   </CardDescription>
+                  <div className="mt-4">
+                    <GenerateWordDocument />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 gap-6">
-                    <div className="p-4 bg-white border border-slate-200 rounded-lg">
-                      <h3 className="font-medium mb-4 text-slate-800">Crescimento nos Últimos 7 Dias</h3>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="p-6 bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-lg hover:shadow-xl transition-all"
+                    >
+                      <h3 className="font-medium mb-4 text-indigo-700">Crescimento nos Últimos 7 Dias</h3>
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart
                             data={growthData}
                             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                           >
+                            <defs>
+                              <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                              </linearGradient>
+                              <linearGradient id="colorParents" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
+                              </linearGradient>
+                              <linearGradient id="colorDrivers" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#EC4899" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#EC4899" stopOpacity={0.1}/>
+                              </linearGradient>
+                            </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                            <XAxis dataKey="date" stroke="#64748B" />
-                            <YAxis stroke="#64748B" />
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="#64748B"
+                              tick={{ fill: '#64748B' }}
+                            />
+                            <YAxis 
+                              stroke="#64748B"
+                              tick={{ fill: '#64748B' }}
+                            />
                             <Tooltip 
                               contentStyle={{ 
                                 backgroundColor: '#FFFFFF',
                                 border: '1px solid #E2E8F0',
                                 borderRadius: '0.5rem',
-                                color: '#1E293B'
+                                color: '#1E293B',
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                               }}
                             />
                             <Area
@@ -441,7 +571,8 @@ const ManagerDashboard = () => {
                               dataKey="students"
                               stackId="1"
                               stroke="#3B82F6"
-                              fill="#93C5FD"
+                              fillOpacity={1}
+                              fill="url(#colorStudents)"
                               name="Estudantes"
                             />
                             <Area
@@ -449,7 +580,8 @@ const ManagerDashboard = () => {
                               dataKey="parents"
                               stackId="1"
                               stroke="#8B5CF6"
-                              fill="#C4B5FD"
+                              fillOpacity={1}
+                              fill="url(#colorParents)"
                               name="Responsáveis"
                             />
                             <Area
@@ -457,17 +589,23 @@ const ManagerDashboard = () => {
                               dataKey="drivers"
                               stackId="1"
                               stroke="#EC4899"
-                              fill="#FBCFE8"
+                              fillOpacity={1}
+                              fill="url(#colorDrivers)"
                               name="Motoristas"
                             />
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
-                    </div>
+                    </motion.div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="p-4 bg-white border border-slate-200 rounded-lg">
-                        <h3 className="font-medium mb-4 text-slate-800">Distribuição de Usuários</h3>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="p-6 bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-lg hover:shadow-xl transition-all"
+                      >
+                        <h3 className="font-medium mb-4 text-indigo-700">Distribuição de Usuários</h3>
                         <div className="h-[300px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -482,7 +620,11 @@ const ManagerDashboard = () => {
                                 dataKey="value"
                               >
                                 {userDistribution.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                  <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={COLORS[index % COLORS.length]}
+                                    className="hover:opacity-80 transition-opacity"
+                                  />
                                 ))}
                               </Pie>
                               <Tooltip 
@@ -490,35 +632,41 @@ const ManagerDashboard = () => {
                                   backgroundColor: '#FFFFFF',
                                   border: '1px solid #E2E8F0',
                                   borderRadius: '0.5rem',
-                                  color: '#1E293B'
+                                  color: '#1E293B',
+                                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                                 }}
                               />
                             </PieChart>
                           </ResponsiveContainer>
                         </div>
-                      </div>
+                      </motion.div>
 
-                      <div className="p-4 bg-white border border-slate-200 rounded-lg">
-                        <h3 className="font-medium mb-4 text-slate-800">Resumo de Atividades</h3>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="p-6 bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-lg hover:shadow-xl transition-all"
+                      >
+                        <h3 className="font-medium mb-4 text-indigo-700">Resumo de Atividades</h3>
                         <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-slate-600">Total de Registros Hoje</span>
-                            <span className="font-medium text-slate-800">{growthData[growthData.length - 1]?.total || 0}</span>
+                          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg">
+                            <span className="text-sm text-white/90">Total de Registros Hoje</span>
+                            <span className="font-medium text-white">{growthData[growthData.length - 1]?.total || 0}</span>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-slate-600">Crescimento Semanal</span>
-                            <span className="font-medium text-green-600">
+                          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-lg">
+                            <span className="text-sm text-white/90">Crescimento Semanal</span>
+                            <span className="font-medium text-white">
                               {growthData.length > 0 ? 
                                 `${((growthData[growthData.length - 1].total / growthData[0].total - 1) * 100).toFixed(1)}%` : 
                                 '0%'}
                             </span>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-slate-600">Usuários Ativos</span>
-                            <span className="font-medium text-slate-800">{userDistribution.reduce((acc, curr) => acc + curr.value, 0)}</span>
+                          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-400 to-purple-600 rounded-lg">
+                            <span className="text-sm text-white/90">Usuários Ativos</span>
+                            <span className="font-medium text-white">{userDistribution.reduce((acc, curr) => acc + curr.value, 0)}</span>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 </CardContent>
@@ -526,46 +674,46 @@ const ManagerDashboard = () => {
             </TabsContent>
 
             <TabsContent value="notificacoes">
-              <Card className="bg-white border-slate-200">
+              <Card className="bg-white/80 backdrop-blur-sm border-indigo-100 hover:shadow-xl transition-all">
                 <CardHeader>
-                  <CardTitle className="text-slate-800">Notificações</CardTitle>
-                  <CardDescription className="text-slate-600">
-                    Acompanhe as atualizações do sistema
+                  <CardTitle className="text-indigo-700">Notificações</CardTitle>
+                  <CardDescription className="text-indigo-600">
+                    Gerencie suas notificações
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {notifications.length === 0 ? (
-                      <p className="text-center text-slate-600 py-4">
-                        Nenhuma notificação
-                      </p>
+                      <div className="text-center py-8 text-indigo-600">
+                        Nenhuma notificação no momento
+                      </div>
                     ) : (
-                      notifications.map((notification) => (
-                        <div
+                      notifications.map((notification, index) => (
+                        <motion.div
                           key={notification.id}
-                          className="flex items-start gap-4 p-4 bg-slate-50 border border-slate-200 rounded-lg"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-lg hover:shadow-lg transition-all group"
                         >
-                          <div className="mt-1">
-                            <Bell className="h-5 w-5 text-blue-600" />
+                          <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
+                            <Bell className="h-5 w-5 text-white" />
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium text-slate-800">{notification.type}</p>
-                            <p className="text-sm text-slate-600">
-                              {notification.message}
-                            </p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {new Date(notification.time).toLocaleString('pt-BR')}
+                            <p className="font-medium text-white">{notification.message}</p>
+                            <p className="text-sm text-white/90">
+                              {new Date(notification.created_at).toLocaleString('pt-BR')}
                             </p>
                           </div>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
-                            className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                             onClick={() => handleMarkAsRead(notification.id)}
+                            className="text-white hover:text-white hover:bg-white/20"
                           >
                             Marcar como lida
                           </Button>
-                        </div>
+                        </motion.div>
                       ))
                     )}
                   </div>

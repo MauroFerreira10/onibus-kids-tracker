@@ -48,6 +48,9 @@ export interface RouteData {
     startTime: string;
     endTime: string;
   };
+  status: 'active' | 'completed' | 'pending';
+  passengers: number;
+  total_stops: number;
 }
 
 // Dados do usuário

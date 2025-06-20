@@ -1,73 +1,129 @@
-# Welcome to your Lovable project
+# SafeBus - Sistema de Monitoramento e Gestão de Transporte Escolar
 
-## Project info
+## Visão Geral
 
-**URL**: https://lovable.dev/projects/db8bb4f0-e45c-4505-b889-3c0b4e78eacc
+O SafeBus é um sistema completo para monitoramento, gestão e comunicação no transporte escolar. Ele permite que gestores, motoristas, pais e alunos acompanhem rotas, recebam notificações, gerenciem presença e mantenham uma comunicação eficiente e segura.
 
-## How can I edit this code?
+## Usuários de Teste
 
-There are several ways of editing your application.
+| Tipo de Usuário | E-mail                    | Senha   |
+|----------------|---------------------------|---------|
+| Admin/Gestor   | maurosawilala@gmail.com   | 000000  |
+| Motorista      | asdrubal@gmail.com        | 000000  |
+| Aluno          | laisa@gmail.com           | 000000  |
 
-**Use Lovable**
+> **Obs:** Todos os usuários de teste utilizam a mesma senha: `000000`.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/db8bb4f0-e45c-4505-b889-3c0b4e78eacc) and start prompting.
+## Funcionalidades Principais
 
-Changes made via Lovable will be committed automatically to this repo.
+### 1. Autenticação e Perfis de Usuário
+- Login e logout de usuários
+- Cadastro de novos usuários (motorista, gestor, responsável, aluno)
+- Recuperação de senha
+- Controle de acesso por tipo de usuário
+- Edição de perfil
 
-**Use your preferred IDE**
+### 2. Gestão de Rotas
+- Cadastro, edição e visualização de rotas
+- Definição de paradas
+- Atribuição de motoristas e veículos às rotas
+- Visualização de rotas no mapa
+- Monitoramento em tempo real das rotas
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 3. Painel do Motorista
+- Visualização de rotas atribuídas
+- Registro de início e fim de viagem
+- Controle de presença dos alunos
+- Envio de notificações rápidas (atraso, chegada, alerta)
+- Rastreamento de localização do veículo
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 4. Painel do Gestor
+- Gerenciamento de motoristas, alunos e pais
+- Visualização de relatórios de viagens
+- Gestão de convites para novos usuários
+- Cadastro e atualização de veículos
 
-Follow these steps:
+### 5. Sistema de Notificações
+- Notificações em tempo real para pais, motoristas e gestores
+- Alertas de atraso, chegada e problemas na rota
+- Histórico de notificações
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 6. Chat e Comunicação
+- Chat entre usuários (motorista, gestor, pais)
+- Histórico de conversas
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 7. Relatórios e Histórico
+- Relatórios de viagens realizadas
+- Histórico de presença dos alunos
+- Relatórios de uso do sistema
+- Geração de relatório completo em Word (aba Relatórios do gestor)
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## Como Executar o Projeto Localmente (Passo a Passo Simples)
 
-**Edit a file directly in GitHub**
+1. **Instale as dependências:**
+   ```sh
+   npm install
+   ```
+2. **Inicie o servidor de desenvolvimento:**
+   ```sh
+   npm run dev
+   ```
+3. **Acesse no navegador:**
+   [http://localhost:8080](http://localhost:8080)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## Como Usar as Funcionalidades
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Cadastro e Login
+- Acesse `/auth/register` para criar uma conta.
+- Faça login em `/auth/login`.
+- O tipo de usuário define o painel e permissões.
 
-## What technologies are used for this project?
+### Painel do Gestor
+- Gerencie motoristas, alunos, pais e rotas.
+- Acesse a aba **Relatórios** para visualizar métricas e baixar o relatório completo do sistema em Word.
+- Convide novos usuários e atribua rotas e veículos.
 
-This project is built with:
+### Painel do Motorista
+- Veja suas rotas atribuídas.
+- Inicie e finalize viagens.
+- Marque presença dos alunos.
+- Envie notificações rápidas para pais e gestores.
 
+### Notificações
+- Receba alertas em tempo real sobre atrasos, chegadas e eventos importantes.
+- Veja o histórico de notificações na página de notificações.
+
+### Chat
+- Acesse a página de chat para se comunicar com outros usuários do sistema.
+
+### Relatórios
+- Na aba **Relatórios** do painel do gestor, clique em "Baixar Relatório Completo (Word)" para gerar um documento com todas as funcionalidades do sistema.
+
+---
+
+## Observações para o Professor
+- O sistema pode ser testado com diferentes tipos de usuários para validar todas as funcionalidades.
+- O relatório Word gerado na aba Relatórios do gestor contém um resumo detalhado das funcionalidades e casos de uso do sistema.
+- Caso precise de dados de teste ou contas de acesso, consulte o desenvolvedor.
+
+---
+
+## Tecnologias Utilizadas
+- React + TypeScript
 - Vite
-- TypeScript
-- React
-- shadcn-ui
 - Tailwind CSS
+- Supabase (backend e banco de dados)
+- docx (geração de relatórios Word)
+- file-saver (download de arquivos)
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/db8bb4f0-e45c-4505-b889-3c0b4e78eacc) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Contato
+- Desenvolvedor: Mauro Ferreira
+- GitHub: [MauroFerreira10](https://github.com/MauroFerreira10)
+- Email: [ferreiramauro331@gmail.com]
+- Contacto: 947286767

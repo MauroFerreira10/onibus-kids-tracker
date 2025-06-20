@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RouteData } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -20,7 +19,6 @@ export const useRoutes = () => {
   const [routes, setRoutes] = useState<RouteData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
-  const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -56,11 +54,7 @@ export const useRoutes = () => {
         }
       } catch (error) {
         console.error('Erro ao buscar rotas:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar rotas",
-          variant: "destructive"
-        });
+        toast.error("Erro ao carregar rotas");
       } finally {
         setIsLoading(false);
       }
@@ -71,11 +65,7 @@ export const useRoutes = () => {
     // Configurar subscrição para notificações
     const channel = subscribeToNotifications((notification) => {
       if (notification.type === 'trip_started') {
-        toast({
-          title: "Notificação",
-          description: notification.message,
-          variant: "default"
-        });
+        toast.info(notification.message);
       }
     });
 
@@ -98,11 +88,7 @@ export const useRoutes = () => {
   const markPresentAtStop = async (stopId: string) => {
     try {
       if (!user) {
-        toast({
-          title: "Atenção",
-          description: "Você precisa estar logado para marcar presença.",
-          variant: "default"
-        });
+        toast.warning("Você precisa estar logado para marcar presença.");
         return;
       }
       
@@ -117,11 +103,7 @@ export const useRoutes = () => {
             
       if (stopError || !stopData) {
         console.error('Error fetching stop:', stopError);
-        toast({
-          title: "Erro",
-          description: "Não foi possível obter informações sobre o ponto de embarque.",
-          variant: "destructive"
-        });
+        toast.error("Não foi possível obter informações sobre o ponto de embarque.");
         return;
       }
       
@@ -133,29 +115,17 @@ export const useRoutes = () => {
         [stopId]: 'present_at_stop'
       }));
       
-      toast({
-        title: "Sucesso",
-        description: "Presença confirmada neste ponto de embarque!",
-        variant: "default"
-      });
+      toast.success("Presença confirmada neste ponto de embarque!");
       
     } catch (error: any) {
       console.error('Erro ao marcar presença:', error);
       
       if (error.message === 'DUPLICATE_RECORD') {
-        toast({
-          title: "Informação",
-          description: "Você já confirmou presença neste ponto hoje.",
-          variant: "default"
-        });
+        toast.info("Você já confirmou presença neste ponto hoje.");
         return;
       }
       
-      toast({
-        title: "Erro",
-        description: "Ocorreu um problema ao registrar sua presença. Por favor, tente novamente mais tarde.",
-        variant: "destructive"
-      });
+      toast.error("Ocorreu um problema ao registrar sua presença. Por favor, tente novamente mais tarde.");
     }
   };
 

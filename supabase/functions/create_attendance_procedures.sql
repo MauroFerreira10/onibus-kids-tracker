@@ -1,4 +1,3 @@
-
 -- Function to get user attendance status for a specific date
 CREATE OR REPLACE FUNCTION public.get_user_attendance_status(user_id_param UUID, date_param DATE)
 RETURNS TABLE (stop_id UUID, route_id UUID, status TEXT)
@@ -19,7 +18,7 @@ BEGIN
 END;
 $$;
 
--- Function to record user attendance (with duplicate check)
+-- Function to record user attendance
 CREATE OR REPLACE FUNCTION public.record_user_attendance(
   user_id_param UUID, 
   stop_id_param UUID, 
@@ -31,16 +30,6 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  -- Check if record already exists
-  IF EXISTS (
-    SELECT 1 FROM public.attendance_simple 
-    WHERE user_id = user_id_param 
-    AND stop_id = stop_id_param 
-    AND date = date_param
-  ) THEN
-    RETURN FALSE;
-  END IF;
-  
   -- Insert the new attendance record
   INSERT INTO public.attendance_simple (
     user_id, 
@@ -56,11 +45,13 @@ BEGIN
     'present_at_stop'
   );
   
+  -- Update the route's passenger count
+  UPDATE public.routes
+  SET passengers = COALESCE(passengers, 0) + 1
+  WHERE id = route_id_param;
+  
   RETURN TRUE;
 EXCEPTION
-  WHEN unique_violation THEN
-    -- Handle race condition if another transaction inserted between check and insert
-    RETURN FALSE;
   WHEN OTHERS THEN
     RAISE;
 END;

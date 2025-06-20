@@ -1,4 +1,3 @@
-
 // Define notification types
 
 export interface Notification {
@@ -11,4 +10,5 @@ export interface Notification {
   user_id?: string;
   sender_role?: string;
   created_at?: string;
+  expires_at?: string;
 }

@@ -9,7 +9,7 @@ import { StudentBoardingStatus } from '@/types/student';
 interface Route {
   id: string;
   name: string;
-  total_stops?: number;
+  total_stops: number;
 }
 
 export const useDriverDashboard = () => {

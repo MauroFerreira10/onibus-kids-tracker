@@ -7,9 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Send, MessageSquare, Loader2, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 import logo from '@/assets/logo.svg';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { FiSend, FiPaperclip, FiImage, FiSmile, FiX } from 'react-icons/fi';
 
 interface Message {
   id: string;
@@ -19,6 +23,8 @@ interface Message {
   sender_role: string;
   created_at: string;
   conversation_id: string;
+  is_read: boolean;
+  file_url?: string;
 }
 
 interface Conversation {
@@ -46,7 +52,6 @@ interface UserStatus {
 
 const Chat = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -55,6 +60,12 @@ const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [participants, setParticipants] = useState<User[]>([]);
   const [userStatuses, setUserStatuses] = useState<Record<string, UserStatus>>({});
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Carregar conversas do usuário
   useEffect(() => {
@@ -72,10 +83,8 @@ const Chat = () => {
         setConversations(userConversations as Conversation[]);
       } catch (error) {
         console.error('Erro ao carregar conversas:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar as conversas.",
-          variant: "destructive"
+        toast.error("Não foi possível carregar as conversas.", {
+          description: "Ocorreu um erro ao buscar suas conversas. Tente novamente mais tarde."
         });
       } finally {
         setLoading(false);
@@ -106,10 +115,8 @@ const Chat = () => {
         setMessages(conversationMessages as Message[]);
       } catch (error) {
         console.error('Erro ao carregar mensagens:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar as mensagens.",
-          variant: "destructive"
+        toast.error("Não foi possível carregar as mensagens.", {
+          description: "Houve um problema ao buscar as mensagens desta conversa."
         });
       }
     };
@@ -191,10 +198,8 @@ const Chat = () => {
         setParticipants(formattedParticipants);
       } catch (error) {
         console.error('Erro ao carregar participantes:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os participantes.",
-          variant: "destructive"
+        toast.error("Não foi possível carregar os participantes.", {
+          description: "Não conseguimos obter a lista de usuários para iniciar conversas."
         });
       }
     };
@@ -250,29 +255,6 @@ const Chat = () => {
 
   // Inscrever-se para atualizações de status em tempo real
   useEffect(() => {
-    const channel = supabase.channel('user_status_changes');
-
-    channel
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'user_status'
-      }, (payload) => {
-        const status = payload.new as UserStatus;
-        setUserStatuses(current => ({
-          ...current,
-          [status.user_id]: status
-        }));
-      })
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, []);
-
-  // Carregar status iniciais dos usuários
-  useEffect(() => {
     const fetchUserStatuses = async () => {
       try {
         const { data, error } = await supabase
@@ -281,18 +263,37 @@ const Chat = () => {
 
         if (error) throw error;
 
-        const statusMap = (data || []).reduce((acc, status) => ({
-          ...acc,
-          [status.user_id]: status
-        }), {});
-
-        setUserStatuses(statusMap);
+        const statuses: Record<string, UserStatus> = {};
+        data.forEach(s => statuses[s.user_id] = s);
+        setUserStatuses(statuses);
       } catch (error) {
-        console.error('Erro ao carregar status dos usuários:', error);
+        console.error('Erro ao buscar status de usuários:', error);
       }
     };
 
     fetchUserStatuses();
+
+    const channel = supabase.channel('user_status_changes', {
+      config: { broadcast: { self: true } }
+    });
+
+    channel
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'user_status',
+      }, (payload) => {
+        const newStatus = payload.new as UserStatus;
+        setUserStatuses(prev => ({
+          ...prev,
+          [newStatus.user_id]: newStatus
+        }));
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, []);
 
   // Função para verificar se um usuário está online
@@ -322,285 +323,298 @@ const Chat = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation || !user) return;
+    if (!newMessage.trim() && !selectedFile) return;
 
     try {
-      const messageData = {
-        conversation_id: selectedConversation,
-        content: newMessage.trim(),
-        sender_id: user.id,
-        sender_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Usuário',
-        sender_role: user.user_metadata?.role || 'user'
-      };
+      let fileUrl = null;
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const { data: fileData, error: fileError } = await supabase.storage
+          .from('chat-files')
+          .upload(fileName, selectedFile);
 
-      const { data, error } = await supabase
-        .from('messages')
-        .insert(messageData)
-        .select()
-        .single();
+        if (fileError) throw fileError;
+        fileUrl = fileData?.path;
+      }
+
+      const { error } = await supabase.from('messages').insert([
+        {
+          conversation_id: selectedConversation,
+          content: newMessage,
+          sender_id: user?.id,
+          sender_name: user?.user_metadata?.name || 'Usuário',
+          sender_role: user?.user_metadata?.role || 'user',
+          file_url: fileUrl,
+        },
+      ]).select().single();
 
       if (error) throw error;
 
       // Adicionar a mensagem localmente imediatamente
-      if (data) {
-        setMessages(current => [...current, data]);
-      }
+      if (error) throw error;
 
       setNewMessage('');
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setIsTyping(false);
+      if (typingTimeout) clearTimeout(typingTimeout);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar a mensagem.",
-        variant: "destructive"
+      toast.error("Não foi possível enviar a mensagem.", {
+        description: "Sua mensagem não pôde ser entregue. Verifique sua conexão."
       });
+    }
+  };
+
+  const handleTyping = () => {
+    setIsTyping(true);
+    if (typingTimeout) clearTimeout(typingTimeout);
+    setTypingTimeout(setTimeout(() => setIsTyping(false), 2000));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const startNewConversation = async (participantId: string) => {
     if (!user) return;
 
-    try {
-      // Verificar se já existe uma conversa com este participante
-      const { data: existingConversations, error: searchError } = await supabase
-        .from('conversations')
-        .select('*')
-        .contains('participants', [user.id, participantId]);
+    if (participantId === 'new') {
+      // Permitir que o usuário selecione um participante para iniciar uma nova conversa
+      // Por simplicidade, vamos selecionar o primeiro participante disponível que não seja o usuário atual
+      const availableParticipant = participants.find(p => p.id !== user.id);
+      if (availableParticipant) {
+        const existingConversation = conversations.find(conv =>
+          conv.participants.includes(user.id) && conv.participants.includes(availableParticipant.id)
+        );
 
-      if (searchError) throw searchError;
+        if (existingConversation) {
+          setSelectedConversation(existingConversation.id);
+        } else {
+          try {
+            const { data, error } = await supabase
+              .from('conversations')
+              .insert({
+                participants: [user.id, availableParticipant.id]
+              })
+              .select()
+              .single();
 
-      // Se já existe uma conversa, seleciona ela
-      if (existingConversations && existingConversations.length > 0) {
-        setSelectedConversation(existingConversations[0].id);
-        return;
+            if (error) throw error;
+
+            setConversations(prev => [...prev, data]);
+            setSelectedConversation(data.id);
+          } catch (error) {
+            console.error('Erro ao iniciar nova conversa:', error);
+            toast.error("Não foi possível iniciar uma nova conversa.", {
+              description: "Ocorreu um problema ao criar a nova conversa. Tente novamente."
+            });
+          }
+        }
+      } else {
+        toast.info("Não há outros usuários disponíveis para conversar.", {
+          description: "Você é o único usuário registrado no momento."
+        });
       }
-
-      // Criar nova conversa
-      const { data: newConversation, error: createError } = await supabase
-        .from('conversations')
-        .insert({
-          participants: [user.id, participantId],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (createError) throw createError;
-
-      if (newConversation) {
-        setConversations(current => [...current, newConversation as Conversation]);
-        setSelectedConversation(newConversation.id);
-      }
-    } catch (error) {
-      console.error('Erro ao criar conversa:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar a conversa.",
-        variant: "destructive"
-      });
+    } else {
+      setSelectedConversation(participantId);
     }
   };
 
-  const getParticipantName = (participantId: string) => {
-    const participant = participants.find(p => p.id === participantId);
-    return participant?.user_metadata.full_name || participant?.user_metadata.name || 'Usuário Desconhecido';
+  const getParticipantName = (conversationId: string) => {
+    const conversation = conversations.find(c => c.id === conversationId);
+    if (!conversation) return 'Desconhecido';
+    const otherParticipantId = conversation.participants.find(p => p !== user?.id);
+    const otherParticipant = participants.find(p => p.id === otherParticipantId);
+    return otherParticipant?.user_metadata?.full_name || otherParticipant?.user_metadata?.name || 'Desconhecido';
   };
 
-  const getParticipantRole = (participantId: string) => {
-    const participant = participants.find(p => p.id === participantId);
-    return participant?.user_metadata.role || 'Papel Desconhecido';
+  const getParticipantRole = (conversationId: string) => {
+    const conversation = conversations.find(c => c.id === conversationId);
+    if (!conversation) return 'Desconhecido';
+    const otherParticipantId = conversation.participants.find(p => p !== user?.id);
+    const otherParticipant = participants.find(p => p.id === otherParticipantId);
+    return otherParticipant?.user_metadata?.role || 'Desconhecido';
   };
 
-  // Adicionar um indicador visual de que as mensagens são do dia atual
   const renderMessageDate = (date: string) => {
     const messageDate = new Date(date);
-    const today = new Date();
-    const isToday = 
-      messageDate.getDate() === today.getDate() &&
-      messageDate.getMonth() === today.getMonth() &&
-      messageDate.getFullYear() === today.getFullYear();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
 
-    return (
-      <span className="text-xs opacity-70 mt-1 block">
-        {isToday ? 'Hoje' : messageDate.toLocaleDateString()} às {messageDate.toLocaleTimeString()}
-      </span>
-    );
+    if (messageDay.getTime() === today.getTime()) {
+      return `Hoje às ${messageDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (messageDay.getTime() === yesterday.getTime()) {
+      return `Ontem às ${messageDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    } else {
+      return messageDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
   };
 
-  // Atualizar o renderizador de status nas conversas
-  const renderUserStatus = (userId: string) => {
-    const isOnline = isUserOnline(userId);
-    const status = userStatuses[userId];
+  const renderUserStatus = (conversationId: string) => {
+    const conversation = conversations.find(c => c.id === conversationId);
+    if (!conversation) return 'Offline';
+    const otherParticipantId = conversation.participants.find(p => p !== user?.id);
+    if (!otherParticipantId) return 'Offline';
 
-    return (
-      <div className="flex items-center gap-2">
-        <span className={`inline-block w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${
-          isOnline ? 'bg-green-400' : 'bg-gray-400'
-        }`}></span>
-        <span className="text-xs text-gray-600">
-          {isOnline ? 'Online' : `Visto por último ${formatLastSeen(status?.last_seen || '')}`}
-        </span>
-      </div>
-    );
+    const isOnline = isUserOnline(otherParticipantId);
+    const lastSeenFormatted = formatLastSeen(userStatuses[otherParticipantId]?.last_seen || '');
+
+    return isOnline ? 'Online' : `Visto ${lastSeenFormatted}`;
   };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const messageVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  if (loading) {
+    return (
+      <Layout title="Chat">
+        <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
+          <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+          <p className="ml-3 text-lg text-gray-600">Carregando chat...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Chat">
-      <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        {/* Lista de conversas - Escondida em mobile quando chat está aberto */}
-        <div className={`w-full md:w-1/4 border-r border-blue-100 bg-white/80 backdrop-filter backdrop-blur-lg flex flex-col shadow-2xl ${
-          selectedConversation ? 'hidden md:flex' : 'flex'
-        }`}>
-          {/* Cabeçalho */}
-          <div className="p-4 md:p-6 border-b border-blue-100 bg-white/90 flex items-center gap-3 md:gap-4 shadow-sm">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="relative">
-                <img src={logo} alt="SafeBus" className="h-8 w-8 md:h-10 md:w-10 animate-pulse" />
-                <div className="absolute -top-1 -right-1 h-3 w-3 md:h-4 md:w-4 bg-green-400 rounded-full border-2 border-white"></div>
-              </div>
-              <div>
-                <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-[#1877f2] via-[#33C3F0] to-[#6366f1] bg-clip-text text-transparent">SafeBus Chat</h2>
-                <p className="text-xs text-gray-500">Comunicação em tempo real</p>
-              </div>
-            </div>
+      <div className="flex h-[calc(100vh-80px)] bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl shadow-xl overflow-hidden">
+        {/* Left Pane: Conversations List */}
+        <motion.div
+          initial={{ x: -200, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          className={`w-full md:w-1/3 bg-white/90 backdrop-blur-lg border-r border-gray-100 flex flex-col ${
+            selectedConversation ? 'hidden md:flex' : 'flex'
+          }`}
+        >
+          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-800">Conversas</h2>
+            <Button size="sm" onClick={() => startNewConversation('new')}
+              className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 transition-colors shadow-md"
+            >
+              Nova Conversa
+            </Button>
           </div>
+          <ScrollArea className="flex-1">
+            {conversations.length === 0 ? (
+              <p className="p-4 text-gray-500 text-center mt-8">Nenhuma conversa ainda.</p>
+            ) : (
+              conversations.map(conversation => {
+                const otherParticipant = participants.find(p => p.id !== user?.id && conversation.participants.includes(p.id));
+                if (!otherParticipant) return null;
 
-          {/* Lista de conversas */}
-          <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-3">
-            {conversations.map((conversation) => {
-              const otherParticipantId = conversation.participants.find(id => id !== user?.id);
-              const isSelected = selectedConversation === conversation.id;
-              return (
-                <Card
-                  key={conversation.id}
-                  className={`cursor-pointer transition-all duration-300 border-2 ${
-                    isSelected 
-                      ? 'bg-gradient-to-r from-[#e7f3ff] to-blue-50 border-[#1877f2] shadow-lg scale-[1.02]' 
-                      : 'bg-white/80 hover:bg-blue-50/80 border-blue-100 shadow-sm hover:shadow-md'
-                  }`}
-                  onClick={() => setSelectedConversation(conversation.id)}
-                >
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="relative">
-                        <Avatar className={`h-10 w-10 md:h-14 md:w-14 border-2 ${isSelected ? 'border-[#1877f2] ring-2 ring-[#1877f2]/20' : 'border-blue-100'}`}>
-                          <AvatarImage src={`https://ui-avatars.com/api/?name=${getParticipantName(otherParticipantId || '').replace(/ /g, '+')}&background=1877f2&color=fff`} />
-                          <AvatarFallback className={`bg-gradient-to-br from-[#1877f2] to-[#33C3F0] text-white text-base md:text-lg ${isSelected ? 'ring-2 ring-[#1877f2]' : ''}`}>
-                            {getParticipantName(otherParticipantId || '').charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className={`absolute -bottom-1 -right-1 h-3 w-3 md:h-4 md:w-4 rounded-full border-2 border-white ${
-                          isUserOnline(otherParticipantId || '') ? 'bg-green-400' : 'bg-gray-400'
-                        }`}></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate text-sm md:text-base">
-                          {getParticipantName(otherParticipantId || '')}
-                        </p>
-                        {renderUserStatus(otherParticipantId || '')}
-                      </div>
+                const isOnline = isUserOnline(otherParticipant.id);
+                const lastSeenFormatted = formatLastSeen(userStatuses[otherParticipant.id]?.last_seen || '');
+
+                return (
+                  <div
+                    key={conversation.id}
+                    className={`flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      selectedConversation === conversation.id ? 'bg-indigo-50/70 border-l-4 border-indigo-500' : ''
+                    }`}
+                    onClick={() => setSelectedConversation(conversation.id)}
+                  >
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${otherParticipant.user_metadata.full_name || otherParticipant.user_metadata.name}`} />
+                        <AvatarFallback>{otherParticipant.user_metadata.full_name?.charAt(0) || otherParticipant.user_metadata.name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white ${
+                        isOnline ? 'bg-green-500' : 'bg-gray-400'
+                      }`} />
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          {/* Lista de participantes para nova conversa */}
-          <div className="border-t border-blue-100 bg-white/90 p-4 md:p-6 shadow-inner">
-            <h3 className="text-base md:text-lg font-bold bg-gradient-to-r from-[#1877f2] via-[#33C3F0] to-[#6366f1] bg-clip-text text-transparent mb-3 md:mb-4">Iniciar nova conversa</h3>
-            <div className="space-y-2 md:space-y-3 max-h-[200px] md:max-h-[300px] overflow-y-auto pr-2">
-              {participants.map((participant) => (
-                <Card
-                  key={participant.id}
-                  className="cursor-pointer bg-white/80 hover:bg-blue-50/80 transition-all duration-200 border border-blue-100 shadow-sm hover:shadow-md hover:scale-[1.02]"
-                  onClick={() => startNewConversation(participant.id)}
-                >
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="relative">
-                        <Avatar className="h-10 w-10 md:h-12 md:w-12 border-2 border-blue-100">
-                          <AvatarImage src={`https://ui-avatars.com/api/?name=${(participant.user_metadata.full_name || participant.user_metadata.name || '').replace(/ /g, '+')}&background=1877f2&color=fff&size=40`} />
-                          <AvatarFallback className="bg-gradient-to-br from-[#1877f2] to-[#33C3F0] text-white text-base">
-                            {(participant.user_metadata.full_name?.charAt(0) || participant.user_metadata.name?.charAt(0))}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="absolute -bottom-1 -right-1 h-3 w-3 md:h-4 md:w-4 bg-green-400 rounded-full border-2 border-white"></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate text-sm md:text-base">
-                          {participant.user_metadata.full_name || participant.user_metadata.name}
-                        </p>
-                        <p className="text-xs md:text-sm text-gray-600 truncate flex items-center gap-2">
-                          <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-400"></span>
-                          {participant.user_metadata.role}
-                        </p>
-                      </div>
+                    <div className="ml-3 flex-1">
+                      <p className="font-medium text-gray-800">{otherParticipant.user_metadata.full_name || otherParticipant.user_metadata.name}</p>
+                      <p className="text-sm text-gray-500">{otherParticipant.user_metadata.role}</p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Área de chat */}
-        <div className="flex-1 flex flex-col bg-gradient-to-tl from-blue-50 via-indigo-50 to-purple-50">
-          {selectedConversation ? (
-            <>
-              {/* Cabeçalho do chat */}
-              <div className="p-4 md:p-6 border-b border-blue-100 bg-white/90 flex items-center gap-3 md:gap-4 shadow-md backdrop-filter backdrop-blur-lg">
-                {/* Botão voltar (apenas mobile) */}
-                <button 
-                  onClick={() => setSelectedConversation(null)}
-                  className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-
-                <div className="relative">
-                  <Avatar className="h-10 w-10 md:h-14 md:w-14 border-2 border-[#1877f2] ring-2 ring-[#1877f2]/20">
-                    <AvatarImage src={`https://ui-avatars.com/api/?name=${getParticipantName(conversations.find(conv => conv.id === selectedConversation)?.participants.find(id => id !== user?.id) || '').replace(/ /g, '+')}&background=1877f2&color=fff&size=40`} />
-                    <AvatarFallback className="bg-gradient-to-br from-[#1877f2] to-[#33C3F0] text-white ring-2 ring-[#1877f2]">
-                      {getParticipantName(conversations.find(conv => conv.id === selectedConversation)?.participants.find(id => id !== user?.id) || '').charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -bottom-1 -right-1 h-3 w-3 md:h-4 md:w-4 bg-green-400 rounded-full border-2 border-white"></div>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 text-base md:text-lg">
-                    {getParticipantName(conversations.find(conv => conv.id === selectedConversation)?.participants.find(id => id !== user?.id) || '')}
-                  </p>
-                  {renderUserStatus(conversations.find(conv => conv.id === selectedConversation)?.participants.find(id => id !== user?.id) || '')}
-                </div>
-              </div>
-
-              {/* Área de mensagens */}
-              <div className="flex-1 p-4 md:p-6 overflow-y-auto relative">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
-                  <div className="text-center">
-                    <img 
-                      src={logo} 
-                      alt="SafeBus Logo" 
-                      className="w-48 h-48 md:w-64 md:h-64 mb-2 object-contain"
-                    />
+                    <div className="text-xs text-gray-400">
+                      {isOnline ? 'Online' : lastSeenFormatted}
+                    </div>
                   </div>
+                );
+              })
+            )}
+          </ScrollArea>
+        </motion.div>
+
+        {/* Right Pane: Chat Window */}
+        <motion.div
+          initial={{ x: 200, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          className={`flex-1 flex flex-col bg-white/90 backdrop-blur-lg ${
+            selectedConversation ? 'flex' : 'hidden md:flex'
+          }`}
+        >
+          {selectedConversation ? (
+            <div className="flex-1 flex flex-col">
+              <div className="p-4 border-b border-gray-200 flex items-center bg-white/90 sticky top-0 z-10 shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden mr-2"
+                  onClick={() => setSelectedConversation(null)}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <Avatar className="h-9 w-9 ring-2 ring-indigo-300">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${getParticipantName(selectedConversation)}`} />
+                  <AvatarFallback>{getParticipantName(selectedConversation)?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="ml-3">
+                  <p className="font-semibold text-gray-800">{getParticipantName(selectedConversation)}</p>
+                  <p className="text-sm text-gray-500">
+                    {renderUserStatus(selectedConversation)}
+                  </p>
                 </div>
-                <ScrollArea className="h-full pr-3 md:pr-4">
-                  <div className="space-y-4 md:space-y-6">
+              </div>
+              <ScrollArea className="flex-1 p-4 md:p-6">
+                <div className="space-y-4 md:space-y-6">
+                  <AnimatePresence>
                     {messages.map((message) => (
-                      <div
+                      <motion.div
                         key={message.id}
-                        className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                        className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-3 md:p-4 shadow-lg transition-all duration-200 ${
+                          className={`max-w-[85%] md:max-w-[70%] rounded-3xl p-3 md:p-4 shadow-lg transition-all duration-200 ${
                             message.sender_id === user?.id
-                              ? 'bg-gradient-to-tr from-[#0084ff] to-[#1877f2] text-white rounded-br-none'
-                              : 'bg-white rounded-bl-none border border-blue-100 backdrop-filter backdrop-blur-lg bg-opacity-90'
+                              ? 'bg-gradient-to-tr from-blue-600 to-indigo-700 text-white rounded-br-none'
+                              : 'bg-white rounded-bl-none border border-gray-200 shadow-md backdrop-filter backdrop-blur-lg bg-opacity-90'
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1 md:mb-2">
@@ -610,52 +624,92 @@ const Chat = () => {
                             <span className={`text-xs px-2 py-0.5 md:py-1 rounded-full ${
                               message.sender_id === user?.id
                                 ? 'bg-white/20 text-white'
-                                : 'bg-blue-100 text-blue-600'
+                                : 'bg-gray-100 text-gray-600'
                             }`}>
                               {message.sender_role}
                             </span>
                           </div>
-                          <p className="text-xs md:text-sm leading-relaxed">{message.content}</p>
+                          <p className="text-sm md:text-base leading-relaxed">{message.content}</p>
                           <div className={`mt-1 md:mt-2 text-xs ${message.sender_id === user?.id ? 'text-white/80' : 'text-gray-500'}`}>
                             {renderMessageDate(message.created_at)}
                           </div>
+                          {message.file_url && (
+                            <div className="mt-2 rounded-lg overflow-hidden">
+                              <img
+                                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/chat-files/${message.file_url}`}
+                                alt="Arquivo anexado"
+                                className="max-w-full h-auto rounded-lg"
+                              />
+                            </div>
+                          )}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </ScrollArea>
-              </div>
-
-              {/* Área de input */}
-              <div className="border-t border-blue-100 bg-white/90 p-4 md:p-6 shadow-lg backdrop-filter backdrop-blur-lg">
-                <form onSubmit={handleSendMessage} className="flex gap-3 md:gap-4">
-                  <Input
+                  </AnimatePresence>
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+              <form onSubmit={handleSendMessage} className="p-4 md:p-6 border-t border-gray-200 bg-white/80 backdrop-blur-md flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <textarea
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      handleTyping();
+                    }}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(e);
+                      }
+                    }}
                     placeholder="Digite sua mensagem..."
-                    className="flex-1 rounded-full bg-gray-50/80 border-blue-100 focus:border-[#1877f2] focus:ring-[#1877f2] transition-all duration-200 pl-4 md:pl-6 pr-4 md:pr-6 text-sm md:text-base"
+                    className="w-full bg-white/50 backdrop-blur-sm border border-indigo-100 rounded-xl p-3 pr-10 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none min-h-[60px] max-h-[120px] transition-all duration-300"
+                    rows={1}
                   />
-                  <Button 
-                    type="submit" 
-                    disabled={!newMessage.trim()}
-                    className="rounded-full bg-gradient-to-r from-[#1877f2] to-[#33C3F0] hover:from-[#166fe5] hover:to-[#2eaae0] text-white shadow-md transition-all duration-200 h-10 w-10 md:h-12 md:w-12 p-0"
-                  >
-                    <Send className="h-4 w-4 md:h-5 md:w-5" />
-                  </Button>
-                </form>
-              </div>
-            </>
+                  <div className="absolute right-2 bottom-2 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                    >
+                      <FiPaperclip className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                    >
+                      <FiSmile className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="submit"
+                  disabled={!newMessage.trim() && !selectedFile}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-3 rounded-xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  <FiSend className="w-5 h-5" />
+                </motion.button>
+              </form>
+            </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-600">
-              <div className="text-center opacity-80">
-                <img src={logo} alt="SafeBus" className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4 md:mb-6 object-contain animate-pulse" />
-                <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-3 bg-gradient-to-r from-[#1877f2] via-[#33C3F0] to-[#6366f1] bg-clip-text text-transparent">Bem-vindo ao Chat SafeBus</h2>
-                <p className="text-sm md:text-base text-gray-500">Selecione uma conversa para começar a interagir</p>
-              </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-lg p-4">
+              <MessageSquare className="h-16 w-16 text-indigo-300 mb-4" />
+              <p className="text-xl font-semibold text-gray-700">Bem-vindo ao Chat!</p>
+              <p className="text-md text-gray-500 mt-2 text-center">Selecione uma conversa ao lado ou inicie uma nova para começar a interagir.</p>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </Layout>
   );

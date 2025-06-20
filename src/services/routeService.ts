@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { RouteData, StopData } from '@/types';
 
@@ -36,30 +35,25 @@ export const fetchStopsForRoutes = async (routeIds: string[]) => {
 /**
  * Maps raw route and stop data to the RouteData format
  */
-export const mapRoutesToDataFormat = (routesData: any[], stopsData: any[]): RouteData[] => {
-  return routesData.map(route => {
-    // Find stops for this route
-    const routeStops = stopsData?.filter(stop => stop.route_id === route.id) || [];
-    
-    return {
-      id: route.id,
-      name: route.name,
-      description: route.description || 'Rota escolar',
-      buses: [route.vehicle_id].filter(Boolean) as string[],
-      stops: routeStops.map(stop => ({
-        id: stop.id,
-        name: stop.name,
-        address: stop.address,
-        latitude: stop.latitude || 0,
-        longitude: stop.longitude || 0,
-        scheduledTime: stop.estimated_time || '08:00',
-        estimatedTime: stop.estimated_time || '08:00'
-      })),
-      schedule: {
-        weekdays: ['segunda', 'terça', 'quarta', 'quinta', 'sexta'],
-        startTime: '07:30',
-        endTime: '07:50'
-      }
-    };
-  });
+export const mapRoutesToDataFormat = (routes: any[], stops: any[]): RouteData[] => {
+  // Create a map of routeId to its stops for quick lookup
+  const stopsByRouteId = stops.reduce((acc, stop) => {
+    if (!acc[stop.route_id]) {
+      acc[stop.route_id] = [];
+    }
+    acc[stop.route_id].push(stop);
+    return acc;
+  }, {});
+
+  return routes.map(route => ({
+    id: route.id,
+    name: route.name,
+    description: route.description,
+    status: route.status,
+    schedule: route.schedule || null, // Ensure schedule is not undefined
+    stops: stopsByRouteId[route.id] || [], // Assign stops from the fetched data
+    passengers: route.passengers || 0,
+    total_stops: route.total_stops || 0,
+    buses: route.buses || []
+  }));
 };

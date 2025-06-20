@@ -67,6 +67,7 @@ export interface Database {
           sender_name: string
           sender_role: string
           created_at: string
+          file_url: string | null
         }
         Insert: {
           id?: string
@@ -76,6 +77,7 @@ export interface Database {
           sender_name: string
           sender_role: string
           created_at?: string
+          file_url?: string | null
         }
         Update: {
           id?: string
@@ -85,6 +87,7 @@ export interface Database {
           sender_name?: string
           sender_role?: string
           created_at?: string
+          file_url?: string | null
         }
       }
       trip_history: {

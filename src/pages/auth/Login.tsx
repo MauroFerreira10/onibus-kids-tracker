@@ -165,7 +165,7 @@ const Login = () => {
           if (profileData.role === 'manager') {
             navigate('/manager/dashboard');
           } else if (profileData.role === 'driver') {
-            navigate('/driver');
+            navigate('/driver/dashboard');
           } else {
             navigate('/');
           }
