@@ -11,7 +11,8 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoidGhlbWF1cmEiLCJhIjoiY205c2ZseHp1MDA2ZzJscjl2MDhuZThqOCJ9.oY8tNNZXXS5azwRemSrocw';
+// Tenta obter o token do Mapbox da variável de ambiente, caso contrário usa um token padrão
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 // Coordenadas do Lubango, Angola
 const LUBANGO_CENTER = {
@@ -47,7 +48,8 @@ const MapView: React.FC<MapViewProps> = ({
     isLoading,
     setIsLoading,
     saveMapboxToken,
-    resetToken
+    resetToken,
+    clearInvalidToken
   } = useMapboxToken(MAPBOX_TOKEN);
 
   const clearCurrentMap = () => {
@@ -207,7 +209,14 @@ const MapView: React.FC<MapViewProps> = ({
       
       newMap.on('error', (e) => {
         console.error("❌ Erro no mapa:", e);
-        toast.error('Erro ao carregar o mapa: ' + e.error?.message || 'Erro desconhecido');
+        const errorMessage = e.error?.message || 'Erro desconhecido';
+        
+        // Verifica se é um erro de token inválido
+        if (errorMessage.includes('invalid') || errorMessage.includes('token') || errorMessage.includes('access token')) {
+          clearInvalidToken();
+        } else {
+          toast.error('Erro ao carregar o mapa: ' + errorMessage);
+        }
         setIsLoading(false);
       });
       

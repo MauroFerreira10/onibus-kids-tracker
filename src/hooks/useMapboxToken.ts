@@ -26,17 +26,28 @@ export const useMapboxToken = (initialToken: string = '') => {
       return;
     }
     
-    if (!mapboxTokenInput.startsWith('pk.')) {
+    // Remove espaços em branco
+    const trimmedToken = mapboxTokenInput.trim();
+    
+    if (!trimmedToken.startsWith('pk.')) {
       setTokenError("Use um token público do Mapbox (começa com pk.)");
       return;
     }
 
-    console.log('Salvando novo token:', mapboxTokenInput.substring(0, 5) + '...');
+    console.log('Salvando novo token:', trimmedToken.substring(0, 5) + '...');
     setIsLoading(true);
-    localStorage.setItem('mapboxToken', mapboxTokenInput);
-    setMapboxToken(mapboxTokenInput);
+    localStorage.setItem('mapboxToken', trimmedToken);
+    setMapboxToken(trimmedToken);
     setTokenError(null);
     toast.success('Token do Mapbox salvo! Inicializando mapa...');
+  };
+
+  // Função para limpar token inválido (pode ser chamada externamente)
+  const clearInvalidToken = () => {
+    setMapboxToken('');
+    localStorage.removeItem('mapboxToken');
+    setTokenError('Token inválido. Por favor, configure um novo token.');
+    toast.error('Token do Mapbox inválido. Configure um novo token.');
   };
 
   const resetToken = () => {
@@ -57,5 +68,6 @@ export const useMapboxToken = (initialToken: string = '') => {
     setIsLoading,
     saveMapboxToken,
     resetToken,
+    clearInvalidToken,
   };
 };
