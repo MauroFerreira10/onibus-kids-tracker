@@ -324,6 +324,7 @@ const Schedule = () => {
             </div>
           )}
         </motion.section>
+        </div>
       </div>
     </Layout>
   );
