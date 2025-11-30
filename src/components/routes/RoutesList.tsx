@@ -34,7 +34,7 @@ export const RoutesList = ({ routes, attendanceStatus, markPresentAtStop, user }
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-white/60 backdrop-blur-md border border-white/40 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm text-gray-700 font-medium"
           >
             <option value="all">Todas as Rotas</option>
             <option value="active">Em Andamento</option>

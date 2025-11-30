@@ -29,7 +29,7 @@ export const StopsList: React.FC<StopsListProps> = ({
       
       <div className="relative">
         {/* Linha do tempo vertical */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500" />
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-400/40 to-purple-400/40 backdrop-blur-sm" />
         
         {stops.map((stop, index) => (
           <motion.div
@@ -42,19 +42,19 @@ export const StopsList: React.FC<StopsListProps> = ({
             <div className="flex items-start">
               {/* Ícone da parada */}
               <div className="relative z-10 flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <MapPin className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-2xl bg-white/80 backdrop-blur-md flex items-center justify-center shadow-sm border border-white/40">
+                  <MapPin className="h-6 w-6 text-blue-600" />
                 </div>
                 {index < stops.length - 1 && (
-                  <div className="absolute left-1/2 -bottom-8 w-0.5 h-8 bg-gradient-to-b from-purple-500 to-blue-500" />
+                  <div className="absolute left-1/2 -bottom-8 w-0.5 h-8 bg-gradient-to-b from-blue-400/50 to-purple-400/50" />
                 )}
               </div>
               
               {/* Conteúdo da parada */}
               <div className="ml-6 flex-1">
                 <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all"
+                  whileHover={{ scale: 1.01 }}
+                  className="bg-white/70 backdrop-blur-xl rounded-3xl border border-white/40 p-5 shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -66,7 +66,7 @@ export const StopsList: React.FC<StopsListProps> = ({
                       </div>
                       <p className="text-sm text-gray-500 mt-1">{stop.address}</p>
                     </div>
-                    <div className="flex items-center text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                    <div className="flex items-center text-sm font-medium text-blue-700 bg-blue-100/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-blue-200/50 shadow-sm">
                       <Clock className="h-4 w-4 mr-1" />
                       {stop.estimatedTime}
                     </div>
@@ -82,7 +82,7 @@ export const StopsList: React.FC<StopsListProps> = ({
                   {user && (
                     <div className="mt-4 pt-4 border-t border-gray-100">
                       {attendanceStatus[stop.id] === 'present' ? (
-                        <div className="flex items-center text-green-600 bg-green-50 px-4 py-2 rounded-lg">
+                        <div className="flex items-center text-green-700 bg-green-100/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-green-200/50 shadow-sm">
                           <CheckCircle2 className="h-5 w-5 mr-2" />
                           <span className="font-medium">Presença confirmada</span>
                         </div>
@@ -90,7 +90,7 @@ export const StopsList: React.FC<StopsListProps> = ({
                         <Button
                           onClick={() => markPresentAtStop(stop.id)}
                           variant="outline"
-                          className="w-full border-dashed hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                          className="w-full border-dashed bg-white/60 backdrop-blur-md hover:bg-blue-100/80 hover:text-blue-700 hover:border-blue-300/50 rounded-2xl shadow-sm active:scale-95 transition-all"
                         >
                           <AlertCircle className="h-4 w-4 mr-2" />
                           Confirmar presença

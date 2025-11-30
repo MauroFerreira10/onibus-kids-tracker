@@ -5,6 +5,7 @@ import { StopsList } from './StopsList';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, Users, Bus, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface RouteItemProps {
   route: RouteData;
@@ -24,17 +25,20 @@ export const RouteItem = ({ route, attendanceStatus, markPresentAtStop, user }: 
     <AccordionItem 
       key={route.id} 
       value={route.id}
-      className="border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-all"
+      className="border border-white/40 rounded-3xl overflow-hidden bg-white/60 backdrop-blur-md hover:bg-white/70 transition-all shadow-sm mb-4"
     >
-      <AccordionTrigger className="hover:bg-gray-50 px-6 py-4">
+      <AccordionTrigger className="hover:bg-white/40 px-6 py-5">
         <div className="flex items-center w-full">
-          <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mr-4 shadow-lg">
-            <Bus className="w-6 h-6 text-white" />
+          <div className="p-3 bg-white/80 backdrop-blur-sm rounded-2xl mr-4 shadow-sm border border-white/40">
+            <Bus className="w-6 h-6 text-blue-600" />
           </div>
           <div className="flex-1 text-left">
             <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold">{route.name}</h3>
-              <Badge className={statusColors[route.status]}>
+              <h3 className="text-lg font-semibold text-gray-900">{route.name}</h3>
+              <Badge className={cn(
+                "backdrop-blur-md border shadow-sm",
+                statusColors[route.status]
+              )}>
                 {route.status === 'active' ? 'Em Andamento' : 
                  route.status === 'completed' ? 'Concluída' : 'Pendente'}
               </Badge>
@@ -58,7 +62,7 @@ export const RouteItem = ({ route, attendanceStatus, markPresentAtStop, user }: 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="px-6 py-4 bg-gray-50"
+          className="px-6 py-4 bg-white/40 backdrop-blur-sm"
         >
           <RouteSchedule schedule={route.schedule} />
           <StopsList 
@@ -76,9 +80,9 @@ export const RouteItem = ({ route, attendanceStatus, markPresentAtStop, user }: 
 const RouteSchedule = ({ schedule }: { schedule: RouteData['schedule'] }) => {
   if (!schedule) {
     return (
-      <div className="mb-6 bg-white rounded-lg p-4 shadow-sm">
-        <h4 className="font-semibold mb-3 flex items-center">
-          <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+      <div className="mb-6 bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm">
+        <h4 className="font-semibold mb-3 flex items-center text-gray-900">
+          <Calendar className="w-4 h-4 mr-2 text-blue-600" />
           Horários e Dias
         </h4>
         <p className="text-gray-500">Horários não disponíveis</p>
@@ -87,19 +91,19 @@ const RouteSchedule = ({ schedule }: { schedule: RouteData['schedule'] }) => {
   }
 
   return (
-    <div className="mb-6 bg-white rounded-lg p-4 shadow-sm">
-      <h4 className="font-semibold mb-3 flex items-center">
-        <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+    <div className="mb-6 bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm">
+      <h4 className="font-semibold mb-3 flex items-center text-gray-900">
+        <Calendar className="w-4 h-4 mr-2 text-blue-600" />
         Horários e Dias
       </h4>
       <div className="space-y-2">
-        <div className="flex items-center text-gray-600">
-          <Clock className="w-4 h-4 mr-2 text-blue-500" />
-          <span className="font-medium">{schedule.startTime} - {schedule.endTime}</span>
+        <div className="flex items-center text-gray-700">
+          <Clock className="w-4 h-4 mr-2 text-blue-600" />
+          <span className="font-semibold">{schedule.startTime} - {schedule.endTime}</span>
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           {schedule.weekdays.map(day => (
-            <Badge key={day} variant="secondary" className="bg-gray-100">
+            <Badge key={day} variant="secondary" className="bg-white/80 backdrop-blur-sm border border-white/40 text-gray-700 shadow-sm">
               {day.charAt(0).toUpperCase() + day.slice(1)}
             </Badge>
           ))}
