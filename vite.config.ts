@@ -20,4 +20,19 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separa o Mapbox em um chunk separado para melhor cache
+          'mapbox': ['mapbox-gl'],
+          // Separa bibliotecas grandes
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+    // Otimizações de build
+    chunkSizeWarningLimit: 1000,
+    minify: 'esbuild',
+  },
 }));

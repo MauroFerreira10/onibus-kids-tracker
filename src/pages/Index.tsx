@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Layout from '@/components/Layout';
-import MapView from '@/components/MapView';
+const MapView = lazy(() => import('@/components/MapView'));
 import BusList from '@/components/BusList';
 import { useBusData } from '@/hooks/useBusData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -230,11 +230,20 @@ const Index = () => {
                     </div>
                   </div>
                 ) : (
-                  <MapView 
-                    buses={buses} 
-                    selectedBusId={selectedBusId}
-                    onSelectBus={handleSelectBus}
-                  />
+                  <Suspense fallback={
+                    <div className="w-full h-[calc(100vh-14rem)] bg-gray-50 rounded-lg flex items-center justify-center">
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="h-10 w-10 animate-spin text-busapp-primary" />
+                        <p className="mt-4 text-busapp-primary font-medium">Carregando mapa...</p>
+                      </div>
+                    </div>
+                  }>
+                    <MapView 
+                      buses={buses} 
+                      selectedBusId={selectedBusId}
+                      onSelectBus={handleSelectBus}
+                    />
+                  </Suspense>
                 )}
               </div>
             </TabsContent>

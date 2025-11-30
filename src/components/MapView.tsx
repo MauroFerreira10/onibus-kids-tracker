@@ -192,19 +192,22 @@ const MapView: React.FC<MapViewProps> = ({
         center: [LUBANGO_CENTER.lng, LUBANGO_CENTER.lat],
         zoom: 13,
         failIfMajorPerformanceCaveat: false,
-        attributionControl: false
+        attributionControl: false,
+        // Otimizações de performance
+        antialias: false, // Desabilita antialiasing para melhor performance
+        preserveDrawingBuffer: false, // Melhora performance
+        refreshExpiredTiles: false, // Evita recarregar tiles expirados
+        maxTileCacheSize: 50, // Limita cache de tiles
+        fadeDuration: 0, // Remove fade para carregamento mais rápido
       });
       
       newMap.addControl(new mapboxgl.AttributionControl({ compact: true }));
       
       newMap.on('load', () => {
         setMapLoaded(true);
+        setMapReady(true);
         setIsLoading(false);
-        
-        setTimeout(() => {
-          setMapReady(true);
-          toast.success('Mapa carregado com sucesso!');
-        }, 500);
+        // Removido toast para não interromper o fluxo
       });
       
       newMap.on('error', (e) => {
