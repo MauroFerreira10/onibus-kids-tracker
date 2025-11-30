@@ -12,7 +12,7 @@ import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Tenta obter o token do Mapbox da variável de ambiente, caso contrário usa um token padrão
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoidGhlbWF1cmEyMDAyIiwiYSI6ImNtaWl4MG9jaTB1bXkzZHM4enpqOTM3MzUifQ.R38sMigucCZavEJI8wRojw';
 
 // Coordenadas do Lubango, Angola
 const LUBANGO_CENTER = {
