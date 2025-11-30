@@ -66,34 +66,12 @@ O SafeBus é um sistema completo para monitoramento, gestão e comunicação no 
    ```sh
    npm install
    ```
-
-2. **Configure o token do Mapbox (opcional):**
-   - Crie um arquivo `.env` na raiz do projeto
-   - Adicione: `VITE_MAPBOX_TOKEN=pk.seu_token_aqui`
-   - Obtenha seu token em: https://account.mapbox.com/access-tokens/
-   - **Nota:** Se não configurar, você poderá inserir o token diretamente na interface quando o mapa for carregado
-
-3. **Inicie o servidor de desenvolvimento:**
+2. **Inicie o servidor de desenvolvimento:**
    ```sh
    npm run dev
    ```
-4. **Acesse no navegador:**
+3. **Acesse no navegador:**
    [http://localhost:8080](http://localhost:8080)
-
-### Configuração do Mapbox
-
-O sistema usa o Mapbox para exibir mapas. Você pode configurar o token de duas formas:
-
-1. **Variável de ambiente (recomendado para produção):**
-   - Crie um arquivo `.env` na raiz do projeto
-   - Adicione: `VITE_MAPBOX_TOKEN=pk.seu_token_aqui`
-
-2. **Interface do usuário:**
-   - Quando o mapa for carregado pela primeira vez, um formulário aparecerá
-   - Insira seu token do Mapbox (deve começar com `pk.`)
-   - O token será salvo no navegador para uso futuro
-
-**Importante:** Se você receber um erro de "token inválido", o sistema automaticamente limpará o token inválido e pedirá um novo.
 
 ---
 
