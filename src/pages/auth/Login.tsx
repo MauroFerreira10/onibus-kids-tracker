@@ -184,7 +184,7 @@ const Login = () => {
       <div 
         className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative"
         style={{
-          backgroundImage: 'url("/src/assets/images/lubango_bus.jpeg")', // Substitua esta URL pelo caminho para sua imagem de Lubango (ex: '/src/assets/images/sua_imagem_lubango.jpg')
+          backgroundImage: 'url("/lubango_bus.jpeg")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
