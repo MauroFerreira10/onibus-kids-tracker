@@ -31,6 +31,11 @@ export const BusArrivalNotification: React.FC<BusArrivalNotificationProps> = ({
 
     loadArrivals();
 
+    // Limpar chegadas expiradas periodicamente e recarregar
+    const cleanupInterval = setInterval(async () => {
+      await loadArrivals();
+    }, 60000); // A cada minuto
+
     // Inscrever-se para receber novas notificações
     const subscription = stopService.subscribeToArrivals((payload) => {
       const newArrival = payload.new as StopArrival;
@@ -39,7 +44,8 @@ export const BusArrivalNotification: React.FC<BusArrivalNotificationProps> = ({
       if ((stopId && newArrival.stop_id === stopId) || 
           (vehicleId && newArrival.vehicle_id === vehicleId)) {
         
-        setArrivals(prev => [newArrival, ...prev].slice(0, 10));
+        // Recarregar chegadas para garantir que apenas não expiradas apareçam
+        loadArrivals();
 
         // Mostrar toast de notificação
         if (newArrival.status === 'arrived') {
@@ -68,6 +74,7 @@ export const BusArrivalNotification: React.FC<BusArrivalNotificationProps> = ({
 
     return () => {
       subscription.unsubscribe();
+      clearInterval(cleanupInterval);
     };
   }, [stopId, vehicleId]);
 

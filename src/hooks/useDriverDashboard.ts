@@ -374,75 +374,151 @@ export const useDriverDashboard = () => {
   };
   
   const endTrip = async () => {
-    // Mark all 'waiting' students as 'absent'
-    if (students.length > 0) {
+    try {
       const today = new Date().toISOString().split('T')[0];
       
-      for (const student of students) {
-        if (student.status === 'waiting') {
-          await supabase
-            .from('student_attendance')
-            .update({ status: 'absent' })
-            .eq('student_id', student.id)
-            .eq('trip_date', today);
+      // Marcar alunos 'waiting' como 'absent'
+      if (students.length > 0) {
+        for (const student of students) {
+          if (student.status === 'waiting') {
+            await supabase
+              .from('student_attendance')
+              .update({ status: 'absent' })
+              .eq('student_id', student.id)
+              .eq('trip_date', today);
+          }
         }
       }
-    }
-    
-    setTripStatus('completed');
-    setShowEndDialog(false);
-    toast.success('Viagem finalizada com sucesso!');
-    
-    // Disable tracking when trip ends
-    setIsTracking(false);
-    
-    // Reset after a few seconds
-    setTimeout(() => {
-      setTripStatus('idle');
-      // Reload students to get fresh status
+
+      // Remover todos os alunos marcados como 'boarded' ao finalizar viagem
       if (routeId) {
-        loadStudents(routeId);
+        // Remover de student_attendance
+        await supabase
+          .from('student_attendance')
+          .delete()
+          .eq('route_id', routeId)
+          .eq('trip_date', today)
+          .eq('status', 'boarded');
+
+        // Remover de attendance_simple
+        await supabase
+          .from('attendance_simple')
+          .delete()
+          .eq('route_id', routeId)
+          .eq('date', today)
+          .eq('status', 'boarded');
       }
-    }, 5000);
+      
+      setTripStatus('completed');
+      setShowEndDialog(false);
+      toast.success('Viagem finalizada com sucesso! Alunos embarcados foram removidos.');
+      
+      // Disable tracking when trip ends
+      setIsTracking(false);
+      
+      // Reset after a few seconds
+      setTimeout(() => {
+        setTripStatus('idle');
+        // Reload students to get fresh status
+        if (routeId) {
+          loadStudents(routeId);
+        }
+      }, 5000);
+    } catch (error) {
+      console.error('Erro ao finalizar viagem:', error);
+      toast.error('Erro ao finalizar viagem');
+    }
   };
   
   const markStudentAsBoarded = async (studentId: string) => {
     try {
+      if (!routeId) {
+        toast.error('Nenhuma rota selecionada');
+        return;
+      }
+
       const today = new Date().toISOString().split('T')[0];
       
-      // Update both attendance tables
-      const [recordsResult, simpleResult] = await Promise.all([
-        supabase
+      // Verificar se já existe registro de presença
+      const { data: existingAttendance } = await supabase
+        .from('student_attendance')
+        .select('id')
+        .eq('student_id', studentId)
+        .eq('trip_date', today)
+        .maybeSingle();
+
+      // Criar ou atualizar registro em student_attendance
+      if (existingAttendance) {
+        const { error: updateError } = await supabase
           .from('student_attendance')
           .update({ 
             status: 'boarded',
             marked_at: new Date().toISOString(),
-            marked_by: user?.id
+            marked_by: user?.id,
+            route_id: routeId
           })
-          .eq('student_id', studentId)
-          .eq('trip_date', today),
-        supabase
+          .eq('id', existingAttendance.id);
+        
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('student_attendance')
+          .insert({
+            student_id: studentId,
+            trip_date: today,
+            status: 'boarded',
+            marked_at: new Date().toISOString(),
+            marked_by: user?.id,
+            route_id: routeId
+          });
+        
+        if (insertError) throw insertError;
+      }
+
+      // Verificar se existe em attendance_simple e atualizar ou criar
+      const { data: existingSimple } = await supabase
+        .from('attendance_simple')
+        .select('id')
+        .eq('user_id', studentId)
+        .eq('date', today)
+        .maybeSingle();
+
+      if (existingSimple) {
+        const { error: updateSimpleError } = await supabase
           .from('attendance_simple')
           .update({ 
             status: 'boarded',
             created_at: new Date().toISOString()
           })
-          .eq('user_id', studentId)
-          .eq('date', today)
-      ]);
-      
-      if (recordsResult.error) {
-        throw recordsResult.error;
-      }
+          .eq('id', existingSimple.id);
+        
+        if (updateSimpleError) throw updateSimpleError;
+      } else {
+        // Buscar stop_id do aluno
+        const { data: studentData } = await supabase
+          .from('students')
+          .select('stop_id')
+          .eq('id', studentId)
+          .single();
 
-      if (simpleResult.error) {
-        throw simpleResult.error;
+        if (studentData?.stop_id) {
+          const { error: insertSimpleError } = await supabase
+            .from('attendance_simple')
+            .insert({
+              user_id: studentId,
+              stop_id: studentData.stop_id,
+              route_id: routeId,
+              date: today,
+              status: 'boarded',
+              created_at: new Date().toISOString()
+            });
+          
+          if (insertSimpleError) throw insertSimpleError;
+        }
       }
       
-      // Update local state
-      setStudents(students.map(student => 
-        student.id === studentId ? { ...student, status: 'boarded' } : student
-      ));
+      // Atualizar estado local - remover da lista (já que filtramos boarded)
+      setStudents(students.filter(student => student.id !== studentId));
       
       toast.success('Aluno marcado como embarcado!');
     } catch (error) {

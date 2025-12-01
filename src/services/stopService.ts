@@ -41,19 +41,34 @@ export const stopService = {
         console.error('Erro ao buscar informações do veículo:', vehicleError);
       }
 
-      // Agora registra a chegada
-      const { data, error } = await supabase
-        .from('stop_arrivals')
-        .insert({
-          stop_id: stopId,
-          vehicle_id: vehicleId,
-          route_id: stopData.route_id,
-          status: 'arrived',
-          arrival_time: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas a partir de agora
-        })
-        .select()
-        .single();
+      // Agora registra a chegada usando a função que define expires_at como 10 minutos
+      const { data: arrivalData, error: rpcError } = await supabase
+        .rpc('register_stop_arrival_with_expiration', {
+          p_stop_id: stopId,
+          p_vehicle_id: vehicleId,
+          p_route_id: stopData.route_id,
+          p_status: 'arrived'
+        });
+
+      if (rpcError) {
+        // Fallback para inserção direta se a função RPC falhar
+        const { data, error } = await supabase
+          .from('stop_arrivals')
+          .insert({
+            stop_id: stopId,
+            vehicle_id: vehicleId,
+            route_id: stopData.route_id,
+            status: 'arrived',
+            arrival_time: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutos a partir de agora
+          })
+          .select()
+          .single();
+
+        if (error) {
+          throw error;
+        }
+      }
 
       if (error) {
         console.error('Erro ao registrar chegada:', error);
@@ -113,19 +128,34 @@ export const stopService = {
         console.error('Erro ao buscar informações do veículo:', vehicleError);
       }
 
-      // Registra a saída
-      const { data, error } = await supabase
-        .from('stop_arrivals')
-        .insert({
-          stop_id: stopId,
-          vehicle_id: vehicleId,
-          route_id: stopData.route_id,
-          status: 'departed',
-          arrival_time: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas a partir de agora
-        })
-        .select()
-        .single();
+      // Registra a saída usando a função que define expires_at como 10 minutos
+      const { data: departureData, error: rpcError } = await supabase
+        .rpc('register_stop_arrival_with_expiration', {
+          p_stop_id: stopId,
+          p_vehicle_id: vehicleId,
+          p_route_id: stopData.route_id,
+          p_status: 'departed'
+        });
+
+      if (rpcError) {
+        // Fallback para inserção direta se a função RPC falhar
+        const { data, error } = await supabase
+          .from('stop_arrivals')
+          .insert({
+            stop_id: stopId,
+            vehicle_id: vehicleId,
+            route_id: stopData.route_id,
+            status: 'departed',
+            arrival_time: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutos a partir de agora
+          })
+          .select()
+          .single();
+
+        if (error) {
+          throw error;
+        }
+      }
 
       if (error) {
         console.error('Erro ao registrar saída:', error);
@@ -157,13 +187,17 @@ export const stopService = {
     }
   },
 
-  // Buscar últimas chegadas de um ônibus específico
+  // Buscar últimas chegadas de um ônibus específico (apenas não expiradas)
   async getVehicleArrivals(vehicleId: string): Promise<StopArrival[]> {
     try {
+      // Limpar chegadas expiradas primeiro
+      await supabase.rpc('cleanup_expired_arrivals');
+      
       const { data, error } = await supabase
         .from('stop_arrivals')
         .select('*')
         .eq('vehicle_id', vehicleId)
+        .gt('expires_at', new Date().toISOString()) // Apenas não expiradas
         .order('arrival_time', { ascending: false })
         .limit(10);
 
@@ -176,13 +210,17 @@ export const stopService = {
     }
   },
 
-  // Buscar últimas chegadas em uma parada específica
+  // Buscar últimas chegadas em uma parada específica (apenas não expiradas)
   async getStopArrivals(stopId: string): Promise<StopArrival[]> {
     try {
+      // Limpar chegadas expiradas primeiro
+      await supabase.rpc('cleanup_expired_arrivals');
+      
       const { data, error } = await supabase
         .from('stop_arrivals')
         .select('*')
         .eq('stop_id', stopId)
+        .gt('expires_at', new Date().toISOString()) // Apenas não expiradas
         .order('arrival_time', { ascending: false })
         .limit(10);
 
