@@ -90,8 +90,24 @@ const StudentsList: React.FC<StudentsListProps> = ({
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => onMarkAsBoarded(student.id)}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Botão clicado para aluno:', student.id, 'Trip status:', tripStatus);
+                          try {
+                            if (tripStatus === 'in_progress') {
+                              await onMarkAsBoarded(student.id);
+                            } else {
+                              console.warn('Viagem não está em progresso. Status:', tripStatus);
+                              // Mostrar mensagem informativa
+                              alert('Por favor, inicie a viagem antes de marcar alunos como embarcados.');
+                            }
+                          } catch (error) {
+                            console.error('Erro ao chamar onMarkAsBoarded:', error);
+                          }
+                        }}
                         disabled={tripStatus !== 'in_progress'}
+                        className={tripStatus !== 'in_progress' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                       >
                         Marcar como embarcado
                       </Button>
@@ -107,9 +123,23 @@ const StudentsList: React.FC<StudentsListProps> = ({
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          onClick={() => onMarkAsBoarded(student.id)}
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Botão Confirmar embarque clicado para aluno:', student.id, 'Trip status:', tripStatus);
+                            try {
+                              if (tripStatus === 'in_progress') {
+                                await onMarkAsBoarded(student.id);
+                              } else {
+                                console.warn('Viagem não está em progresso. Status:', tripStatus);
+                                alert('Por favor, inicie a viagem antes de confirmar o embarque.');
+                              }
+                            } catch (error) {
+                              console.error('Erro ao chamar onMarkAsBoarded:', error);
+                            }
+                          }}
                           disabled={tripStatus !== 'in_progress'}
-                          className="text-xs"
+                          className={`text-xs ${tripStatus !== 'in_progress' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           Confirmar embarque
                         </Button>

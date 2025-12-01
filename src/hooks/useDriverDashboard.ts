@@ -432,12 +432,22 @@ export const useDriverDashboard = () => {
   
   const markStudentAsBoarded = async (studentId: string) => {
     try {
+      console.log('markStudentAsBoarded chamado para aluno:', studentId);
+      
       if (!routeId) {
+        console.error('Erro: Nenhuma rota selecionada');
         toast.error('Nenhuma rota selecionada');
         return;
       }
 
+      if (!user?.id) {
+        console.error('Erro: Usuário não autenticado');
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
       const today = new Date().toISOString().split('T')[0];
+      console.log('Data de hoje:', today, 'Route ID:', routeId);
       
       // Verificar se já existe registro de presença
       const { data: existingAttendance } = await supabase
@@ -513,17 +523,26 @@ export const useDriverDashboard = () => {
               created_at: new Date().toISOString()
             });
           
-          if (insertSimpleError) throw insertSimpleError;
+          if (insertSimpleError) {
+            console.error('Erro ao inserir em attendance_simple:', insertSimpleError);
+            // Não lançar erro aqui, apenas logar
+          }
+        } else {
+          console.warn('Aluno sem stop_id, não foi possível criar registro em attendance_simple');
         }
       }
       
-      // Atualizar estado local - remover da lista (já que filtramos boarded)
-      setStudents(students.filter(student => student.id !== studentId));
+      // Recarregar lista de alunos para atualizar o estado
+      if (routeId) {
+        await loadStudents(routeId);
+      }
       
       toast.success('Aluno marcado como embarcado!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao marcar aluno como embarcado:', error);
-      toast.error('Erro ao atualizar status do aluno');
+      const errorMessage = error?.message || 'Erro desconhecido';
+      console.error('Detalhes do erro:', errorMessage);
+      toast.error(`Erro ao atualizar status do aluno: ${errorMessage}`);
     }
   };
   
