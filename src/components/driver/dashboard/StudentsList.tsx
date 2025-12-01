@@ -94,20 +94,25 @@ const StudentsList: React.FC<StudentsListProps> = ({
                           e.preventDefault();
                           e.stopPropagation();
                           console.log('Botão clicado para aluno:', student.id, 'Trip status:', tripStatus);
+                          
+                          if (tripStatus !== 'in_progress') {
+                            console.warn('Viagem não está em progresso. Status:', tripStatus);
+                            alert('Por favor, inicie a viagem clicando no botão "Iniciar Viagem" antes de marcar alunos como embarcados.');
+                            return;
+                          }
+                          
                           try {
-                            if (tripStatus === 'in_progress') {
-                              await onMarkAsBoarded(student.id);
-                            } else {
-                              console.warn('Viagem não está em progresso. Status:', tripStatus);
-                              // Mostrar mensagem informativa
-                              alert('Por favor, inicie a viagem antes de marcar alunos como embarcados.');
-                            }
+                            console.log('Chamando onMarkAsBoarded...');
+                            await onMarkAsBoarded(student.id);
+                            console.log('onMarkAsBoarded concluído com sucesso');
                           } catch (error) {
                             console.error('Erro ao chamar onMarkAsBoarded:', error);
+                            alert('Erro ao marcar aluno como embarcado. Verifique o console para mais detalhes.');
                           }
                         }}
                         disabled={tripStatus !== 'in_progress'}
-                        className={tripStatus !== 'in_progress' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                        className={tripStatus !== 'in_progress' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'}
+                        title={tripStatus !== 'in_progress' ? 'Inicie a viagem primeiro' : 'Marcar aluno como embarcado'}
                       >
                         Marcar como embarcado
                       </Button>
@@ -127,19 +132,25 @@ const StudentsList: React.FC<StudentsListProps> = ({
                             e.preventDefault();
                             e.stopPropagation();
                             console.log('Botão Confirmar embarque clicado para aluno:', student.id, 'Trip status:', tripStatus);
+                            
+                            if (tripStatus !== 'in_progress') {
+                              console.warn('Viagem não está em progresso. Status:', tripStatus);
+                              alert('Por favor, inicie a viagem clicando no botão "Iniciar Viagem" antes de confirmar o embarque.');
+                              return;
+                            }
+                            
                             try {
-                              if (tripStatus === 'in_progress') {
-                                await onMarkAsBoarded(student.id);
-                              } else {
-                                console.warn('Viagem não está em progresso. Status:', tripStatus);
-                                alert('Por favor, inicie a viagem antes de confirmar o embarque.');
-                              }
+                              console.log('Chamando onMarkAsBoarded...');
+                              await onMarkAsBoarded(student.id);
+                              console.log('onMarkAsBoarded concluído com sucesso');
                             } catch (error) {
                               console.error('Erro ao chamar onMarkAsBoarded:', error);
+                              alert('Erro ao confirmar embarque. Verifique o console para mais detalhes.');
                             }
                           }}
                           disabled={tripStatus !== 'in_progress'}
-                          className={`text-xs ${tripStatus !== 'in_progress' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          className={`text-xs ${tripStatus !== 'in_progress' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-50'}`}
+                          title={tripStatus !== 'in_progress' ? 'Inicie a viagem primeiro' : 'Confirmar embarque do aluno'}
                         >
                           Confirmar embarque
                         </Button>
