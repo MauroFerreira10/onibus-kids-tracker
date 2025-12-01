@@ -18,17 +18,18 @@ const StudentsList: React.FC<StudentsListProps> = ({
   tripStatus, 
   onMarkAsBoarded 
 }) => {
+  // Filtrar alunos com status 'boarded' para não aparecerem
+  const filteredStudents = students.filter(s => s.status !== 'boarded');
+  
   // Separar estudantes por status para destaque
-  const waitingStudents = students.filter(s => s.status === 'waiting');
-  const presentAtStopStudents = students.filter(s => s.status === 'present_at_stop');
-  const boardedStudents = students.filter(s => s.status === 'boarded');
-  const absentStudents = students.filter(s => s.status === 'absent');
+  const waitingStudents = filteredStudents.filter(s => s.status === 'waiting');
+  const presentAtStopStudents = filteredStudents.filter(s => s.status === 'present_at_stop');
+  const absentStudents = filteredStudents.filter(s => s.status === 'absent');
   
   // Ordenar estudantes para exibição
   const sortedStudents = [
     ...presentAtStopStudents,
     ...waitingStudents,
-    ...boardedStudents,
     ...absentStudents
   ];
   
@@ -94,13 +95,6 @@ const StudentsList: React.FC<StudentsListProps> = ({
                       >
                         Marcar como embarcado
                       </Button>
-                    )}
-                    
-                    {student.status === 'boarded' && (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Embarcado
-                      </Badge>
                     )}
                     
                     {student.status === 'present_at_stop' && (

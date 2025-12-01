@@ -194,19 +194,22 @@ export const useDriverDashboard = () => {
         }))
       ];
 
-      const studentsWithStatus: StudentWithStatus[] = studentsData.map(student => {
-        const attendance = allAttendanceData.find(a => a.student_id === student.id);
-        const status = (attendance?.status as StudentBoardingStatus) || 'waiting';
-        return {
-          id: student.id,
-          name: student.name,
-          grade: student.grade || 'N/A',
-          classroom: student.classroom || 'N/A',
-          pickupAddress: student.pickup_address || 'Endereço não registrado',
-          stopId: student.stop_id,
-          status
-        };
-      });
+      const studentsWithStatus: StudentWithStatus[] = studentsData
+        .map(student => {
+          const attendance = allAttendanceData.find(a => a.student_id === student.id);
+          const status = (attendance?.status as StudentBoardingStatus) || 'waiting';
+          return {
+            id: student.id,
+            name: student.name,
+            grade: student.grade || 'N/A',
+            classroom: student.classroom || 'N/A',
+            pickupAddress: student.pickup_address || 'Endereço não registrado',
+            stopId: student.stop_id,
+            status
+          };
+        })
+        // Filtrar alunos com status 'boarded' para não aparecerem na lista
+        .filter(student => student.status !== 'boarded');
       
       setStudents(studentsWithStatus);
 
