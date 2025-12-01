@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { fetchStopsWithStatus } from '@/services/scheduleService';
 
 const Schedule = () => {
   const [stops, setStops] = useState<StopData[]>([]);
@@ -35,35 +36,9 @@ const Schedule = () => {
         return;
       }
       
-      // Fetch stops from database
-      const { data: stopsData, error } = await supabase
-        .from('stops')
-        .select('*')
-        .order('sequence_number', { ascending: true });
-      
-      if (error) {
-        console.error("Erro ao buscar paradas:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar as paradas.",
-          variant: "destructive"
-        });
-        setStops([]);
-        return;
-      }
-      
-      // Add the specific time schedules for the stops
-      const formattedStops = stopsData.map(stop => ({
-        id: stop.id,
-        name: stop.name,
-        address: stop.address,
-        latitude: stop.latitude || 0,
-        longitude: stop.longitude || 0,
-        scheduledTime: getScheduledTimeForStop(stop.name),
-        estimatedTime: getEstimatedTimeForStop(stop.name)
-      }));
-      
-      setStops(formattedStops);
+      // Buscar paradas com verificação de status de horário
+      const stopsWithStatus = await fetchStopsWithStatus();
+      setStops(stopsWithStatus);
     } catch (error) {
       console.error("Erro:", error);
       toast({
@@ -71,28 +46,24 @@ const Schedule = () => {
         description: "Ocorreu um problema ao carregar os horários.",
         variant: "destructive"
       });
+      setStops([]);
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Helper function to get scheduled time based on stop name
-  const getScheduledTimeForStop = (stopName: string): string => {
-    if (stopName.toLowerCase().includes('reitoria') || 
-        stopName.toLowerCase().includes('mandume')) {
-      return '07:30';
-    } else if (stopName.toLowerCase().includes('tchioco')) {
-      return '07:50';
-    } else {
-      return '07:40'; // Default time for other stops
-    }
-  };
-  
-  // Helper function to get estimated time (could be different from scheduled in real app)
-  const getEstimatedTimeForStop = (stopName: string): string => {
-    // For now, return the same time as scheduled
-    return getScheduledTimeForStop(stopName);
-  };
+  // Limpar confirmações expiradas periodicamente
+  useEffect(() => {
+    const cleanupInterval = setInterval(async () => {
+      try {
+        await supabase.rpc('cleanup_expired_attendance');
+      } catch (error) {
+        console.error('Erro ao limpar confirmações expiradas:', error);
+      }
+    }, 60000); // A cada minuto
+    
+    return () => clearInterval(cleanupInterval);
+  }, []);
   
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
@@ -200,10 +171,29 @@ const Schedule = () => {
             
             <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm">
               <h4 className="font-semibold mb-3 text-gray-900">Status do Serviço</h4>
-              <div className="flex items-center space-x-2 text-green-700">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="font-medium">Serviço em operação normal</span>
-              </div>
+              {stops.length > 0 ? (
+                <div className="space-y-2">
+                  {stops.some(s => s.scheduledTime === s.estimatedTime) ? (
+                    <div className="flex items-center space-x-2 text-green-700">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="font-medium">Serviço no horário</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-yellow-700">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                      <span className="font-medium">Serviço com atrasos</span>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-600 mt-2">
+                    Status baseado na localização e horário atual do motorista
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2 text-gray-500">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  <span className="font-medium">Sem dados disponíveis</span>
+                </div>
+              )}
             </div>
           </div>
         </motion.section>

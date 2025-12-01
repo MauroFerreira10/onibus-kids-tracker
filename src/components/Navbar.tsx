@@ -2,44 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bus, Map, User, Calendar, LogOut, BellRing, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Button } from './ui/button';
-import { supabase } from '@/integrations/supabase/client';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { isDriver, isManager } = useUserProfile();
   const [isVisible, setIsVisible] = useState(true);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   
   // Simular 3 notificações não lidas
   const unreadNotifications = 3;
-  
-  // Verificar o papel do usuário atual
-  useEffect(() => {
-    const checkUserRole = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user?.id)
-          .single();
-        
-        if (!error && data) {
-          setUserRole(data.role);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar perfil:', error);
-      }
-    };
-    
-    if (user?.id) {
-      checkUserRole();
-    }
-  }, [user]);
   
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -120,7 +97,7 @@ const Navbar: React.FC = () => {
         })}
         
         {/* Botão de Motorista */}
-        {userRole === 'driver' && (
+        {isDriver && (
           <li>
             <Link 
               to="/driver/dashboard" 
@@ -142,7 +119,7 @@ const Navbar: React.FC = () => {
         )}
         
         {/* Botão de Gestor */}
-        {userRole === 'manager' && (
+        {isManager && (
           <li>
             <Link 
               to="/manager/dashboard" 

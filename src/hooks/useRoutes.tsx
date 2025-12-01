@@ -14,12 +14,14 @@ import {
   markUserPresenceAtStop 
 } from '@/services/attendanceService';
 import { subscribeToNotifications } from '@/services/notificationService';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export const useRoutes = () => {
   const [routes, setRoutes] = useState<RouteData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
   const { user } = useAuth();
+  const { profile, isStudent } = useUserProfile();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -91,6 +93,12 @@ export const useRoutes = () => {
         toast.warning("Você precisa estar logado para marcar presença.");
         return;
       }
+
+      // Verificar se o usuário é um aluno
+      if (!isStudent) {
+        toast.error("Apenas alunos podem confirmar presença nas rotas.");
+        return;
+      }
       
       console.log(`Marcando presença no ponto ${stopId} para o usuário ${user.id}`);
       
@@ -122,6 +130,16 @@ export const useRoutes = () => {
       
       if (error.message === 'DUPLICATE_RECORD') {
         toast.info("Você já confirmou presença neste ponto hoje.");
+        return;
+      }
+
+      if (error.message === 'INVALID_ROLE' || error.message?.includes('Apenas alunos podem confirmar')) {
+        toast.error("Apenas alunos podem confirmar presença nas rotas.");
+        return;
+      }
+
+      if (error.message?.includes('10 minutos')) {
+        toast.warning("Você só pode confirmar presença novamente após 10 minutos da última confirmação.");
         return;
       }
       

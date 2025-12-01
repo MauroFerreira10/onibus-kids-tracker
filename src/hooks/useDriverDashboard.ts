@@ -309,44 +309,64 @@ export const useDriverDashboard = () => {
       return;
     }
     
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Create attendance records for all students who don't have one yet
-    for (const student of students) {
-      const { data: existing } = await supabase
-        .from('student_attendance')
-        .select('id')
-        .eq('student_id', student.id)
-        .eq('trip_date', today)
-        .maybeSingle();
+    try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      const startTime = new Date();
       
-      if (!existing) {
-        // Create a new attendance record
-        await supabase
-          .from('student_attendance')
-          .insert({
-            student_id: student.id,
-            trip_date: today,
-            status: 'waiting',
-            marked_by: user?.id,
-            stop_id: student.stopId
-          });
+      // Criar registro no histórico automaticamente
+      const { data: tripHistoryData, error: historyError } = await supabase
+        .rpc('create_trip_history_on_start', {
+          p_route_id: routeId,
+          p_vehicle_id: vehicle.id,
+          p_start_time: startTime.toISOString()
+        });
+      
+      if (historyError) {
+        console.error('Erro ao criar histórico de viagem:', historyError);
+        // Não bloqueia o início da viagem, apenas loga o erro
       }
-    }
-    
-    setTripStatus('in_progress');
-    toast.success('Viagem iniciada com sucesso!');
-    
-    // If vehicle allows tracking, ask if they want to start
-    if (vehicle.trackingEnabled && !isTracking) {
-      toast.info('Não se esqueça de ativar o rastreamento de localização para que os pais possam acompanhar a viagem', {
-        duration: 5000,
-        action: {
-          label: 'Ativar',
-          onClick: () => setIsTracking(true)
+      
+      // Create attendance records for all students who don't have one yet
+      for (const student of students) {
+        const { data: existing } = await supabase
+          .from('student_attendance')
+          .select('id')
+          .eq('student_id', student.id)
+          .eq('trip_date', today)
+          .maybeSingle();
+        
+        if (!existing) {
+          // Create a new attendance record
+          await supabase
+            .from('student_attendance')
+            .insert({
+              student_id: student.id,
+              trip_date: today,
+              status: 'waiting',
+              marked_by: user?.id,
+              stop_id: student.stopId,
+              route_id: routeId
+            });
         }
-      });
+      }
+      
+      setTripStatus('in_progress');
+      toast.success('Viagem iniciada com sucesso!');
+      
+      // If vehicle allows tracking, ask if they want to start
+      if (vehicle.trackingEnabled && !isTracking) {
+        toast.info('Não se esqueça de ativar o rastreamento de localização para que os pais possam acompanhar a viagem', {
+          duration: 5000,
+          action: {
+            label: 'Ativar',
+            onClick: () => setIsTracking(true)
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar viagem:', error);
+      toast.error('Erro ao iniciar viagem');
     }
   };
   

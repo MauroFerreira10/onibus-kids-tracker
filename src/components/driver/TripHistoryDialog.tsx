@@ -41,9 +41,30 @@ export function TripHistoryDialog() {
     }
   }, [open]);
 
+  // Limpar viagens expiradas periodicamente
+  useEffect(() => {
+    const cleanupInterval = setInterval(async () => {
+      try {
+        await supabase.rpc('cleanup_expired_trips');
+        // Recarregar histórico se o diálogo estiver aberto
+        if (open) {
+          fetchTripHistory();
+        }
+      } catch (error) {
+        console.error('Erro ao limpar viagens expiradas:', error);
+      }
+    }, 300000); // A cada 5 minutos
+    
+    return () => clearInterval(cleanupInterval);
+  }, [open]);
+
   const fetchTripHistory = async () => {
     try {
       setLoading(true);
+      
+      // Limpar viagens expiradas antes de buscar
+      await supabase.rpc('cleanup_expired_trips');
+      
       const { data, error } = await supabase
         .from('trip_history')
         .select(`
@@ -54,6 +75,7 @@ export function TripHistoryDialog() {
           end_time,
           completed_stops,
           total_stops,
+          status,
           routes!inner (
             name
           ),
@@ -62,6 +84,7 @@ export function TripHistoryDialog() {
             model
           )
         `)
+        .gt('expires_at', new Date().toISOString()) // Apenas viagens não expiradas
         .order('start_time', { ascending: false })
         .limit(10);
 
@@ -112,9 +135,23 @@ export function TripHistoryDialog() {
                 </div>
                 <div className="text-sm">
                   <p>Rota: {trip.routes?.name || 'N/A'}</p>
-                  <p>Início: {new Date(trip.start_time).toLocaleString()}</p>
-                  <p>Fim: {new Date(trip.end_time).toLocaleString()}</p>
+                  <p>Início: {new Date(trip.start_time).toLocaleString('pt-BR')}</p>
+                  {trip.end_time && (
+                    <p>Fim: {new Date(trip.end_time).toLocaleString('pt-BR')}</p>
+                  )}
                   <p>Paradas: {trip.completed_stops} de {trip.total_stops}</p>
+                  <p className="mt-2">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      trip.status === 'in_progress' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : trip.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {trip.status === 'in_progress' ? 'Em andamento' : 
+                       trip.status === 'completed' ? 'Concluída' : 'Finalizada'}
+                    </span>
+                  </p>
                 </div>
               </div>
             ))

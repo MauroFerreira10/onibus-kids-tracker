@@ -68,6 +68,11 @@ export const markUserPresenceAtStop = async (userId: string, stopId: string, sto
       throw new Error('DUPLICATE_RECORD');
     }
     
+    // Check if it's a role validation error
+    if (insertError.message.includes('Apenas alunos podem confirmar presença')) {
+      throw new Error('INVALID_ROLE');
+    }
+    
     throw insertError;
   }
 

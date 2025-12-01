@@ -6,6 +6,7 @@ import { ArrivalNotification } from '@/components/notifications/ArrivalNotificat
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface StopsListProps {
   stops: StopData[];
@@ -20,6 +21,8 @@ export const StopsList: React.FC<StopsListProps> = ({
   markPresentAtStop,
   user
 }) => {
+  const { isStudent } = useUserProfile();
+
   return (
     <div className="space-y-6 mt-6">
       <h4 className="font-semibold text-lg flex items-center">
@@ -78,10 +81,10 @@ export const StopsList: React.FC<StopsListProps> = ({
                     <ArrivalNotification stopId={stop.id} />
                   </div>
 
-                  {/* Status de presença */}
-                  {user && (
+                  {/* Status de presença - apenas para alunos */}
+                  {user && isStudent && (
                     <div className="mt-4 pt-4 border-t border-gray-100">
-                      {attendanceStatus[stop.id] === 'present' ? (
+                      {attendanceStatus[stop.id] === 'present' || attendanceStatus[stop.id] === 'present_at_stop' ? (
                         <div className="flex items-center text-green-700 bg-green-100/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-green-200/50 shadow-sm">
                           <CheckCircle2 className="h-5 w-5 mr-2" />
                           <span className="font-medium">Presença confirmada</span>

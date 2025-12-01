@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import DriverRoute from "./components/DriverRoute";
 
 // Páginas
 import Index from "./pages/Index";
@@ -71,38 +73,38 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              {/* Driver routes */}
+              {/* Driver routes - apenas para motoristas */}
               <Route path="/driver/dashboard" element={
-                <ProtectedRoute>
+                <DriverRoute>
                   <DriverDashboard />
-                </ProtectedRoute>
+                </DriverRoute>
               } />
               
-              {/* Manager routes */}
+              {/* Manager routes - apenas para gestores */}
               <Route path="/manager/invitations" element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <Invitations />
-                </ProtectedRoute>
+                </AdminRoute>
               } />
               <Route path="/manager/dashboard" element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <ManagerDashboard />
-                </ProtectedRoute>
+                </AdminRoute>
               } />
               <Route path="/manager/register-students" element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <RegisterStudents />
-                </ProtectedRoute>
+                </AdminRoute>
               } />
               <Route path="/manager/register-parents" element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <RegisterParents />
-                </ProtectedRoute>
+                </AdminRoute>
               } />
               <Route path="/manager/register-drivers" element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <RegisterDrivers />
-                </ProtectedRoute>
+                </AdminRoute>
               } />
               
               <Route path="*" element={<NotFound />} />
