@@ -62,15 +62,16 @@ const StudentsList: React.FC<StudentsListProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-busapp-primary"></div>
           </div>
         ) : (
-          {tripStatus !== 'in_progress' && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                <strong>⚠️ Atenção:</strong> Você precisa iniciar a viagem antes de marcar alunos como embarcados. 
-                Clique no botão "Iniciar Viagem" no topo da página.
-              </p>
-            </div>
-          )}
-          <div className="space-y-3 overflow-y-auto max-h-96">
+          <>
+            {tripStatus !== 'in_progress' && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>⚠️ Atenção:</strong> Você precisa iniciar a viagem antes de marcar alunos como embarcados. 
+                  Clique no botão "Iniciar Viagem" no topo da página.
+                </p>
+              </div>
+            )}
+            <div className="space-y-3 overflow-y-auto max-h-96">
             {sortedStudents.length > 0 ? (
               sortedStudents.map(student => (
                 <div 
@@ -178,7 +179,8 @@ const StudentsList: React.FC<StudentsListProps> = ({
                 Nenhum aluno registrado para esta rota.
               </div>
             )}
-          </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
