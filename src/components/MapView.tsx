@@ -74,7 +74,7 @@ const MapView: React.FC<MapViewProps> = ({
     if (navigator.geolocation) {
       let retryCount = 0;
       const maxRetries = 3;
-      const timeout = 10000;
+      const timeout = 60000;
 
       const getLocation = () => {
         navigator.geolocation.getCurrentPosition(
@@ -123,8 +123,8 @@ const MapView: React.FC<MapViewProps> = ({
                 handleLocationError(error);
               },
               {
-                enableHighAccuracy: true,
-                maximumAge: 10000,
+            enableHighAccuracy: false,
+            maximumAge: 300000,
                 timeout: timeout
               }
             );
@@ -141,9 +141,9 @@ const MapView: React.FC<MapViewProps> = ({
             handleLocationError(error);
           },
           {
-            enableHighAccuracy: true,
+            enableHighAccuracy: false,
             timeout: timeout,
-            maximumAge: 0
+            maximumAge: 300000
           }
         );
       };
