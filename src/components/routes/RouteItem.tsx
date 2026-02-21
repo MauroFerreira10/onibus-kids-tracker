@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { RouteData } from '@/types';
 import { StopsList } from './StopsList';
@@ -14,43 +14,49 @@ interface RouteItemProps {
   user: any | null;
 }
 
-export const RouteItem = ({ route, attendanceStatus, markPresentAtStop, user }: RouteItemProps) => {
-  const statusColors = {
-    active: 'bg-green-100 text-green-800',
-    completed: 'bg-blue-100 text-blue-800',
-    pending: 'bg-yellow-100 text-yellow-800'
-  };
+// Design tokens - cores profissionais
+const statusColors = {
+  active: 'bg-green-100 text-green-800 border-green-200',
+  completed: 'bg-blue-100 text-blue-800 border-blue-200',
+  pending: 'bg-amber-100 text-amber-800 border-amber-200'
+};
+
+export const RouteItem = memo(({ route, attendanceStatus, markPresentAtStop, user }: RouteItemProps) => {
+  const statusLabel = route.status === 'active' ? 'Em Andamento' : 
+                      route.status === 'completed' ? 'Concluída' : 'Pendente';
 
   return (
     <AccordionItem 
       key={route.id} 
       value={route.id}
-      className="border border-white/40 rounded-3xl overflow-hidden bg-white/60 backdrop-blur-md hover:bg-white/70 transition-all shadow-sm mb-4"
+      className="border border-gray-200 rounded-xl overflow-hidden bg-white hover:bg-gray-50/30 transition-colors shadow-sm"
     >
-      <AccordionTrigger className="hover:bg-white/40 px-6 py-5">
+      <AccordionTrigger 
+        className="hover:bg-gray-50/50 px-6 py-5 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-xl"
+        aria-label={`Rota ${route.name}, status: ${statusLabel}`}
+      >
         <div className="flex items-center w-full">
-          <div className="p-3 bg-white/80 backdrop-blur-sm rounded-2xl mr-4 shadow-sm border border-white/40">
-            <Bus className="w-6 h-6 text-blue-600" />
+          <div className="p-3 bg-gray-100 rounded-lg mr-4 border border-gray-200">
+            <Bus className="w-6 h-6 text-gray-700" aria-hidden="true" />
           </div>
           <div className="flex-1 text-left">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h3 className="text-lg font-semibold text-gray-900">{route.name}</h3>
               <Badge className={cn(
-                "backdrop-blur-md border shadow-sm",
+                "border font-medium",
                 statusColors[route.status]
               )}>
-                {route.status === 'active' ? 'Em Andamento' : 
-                 route.status === 'completed' ? 'Concluída' : 'Pendente'}
+                {statusLabel}
               </Badge>
             </div>
             <p className="text-gray-600 text-sm mt-1">{route.description}</p>
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
               <div className="flex items-center">
-                <Users className="w-4 h-4 mr-1" />
+                <Users className="w-4 h-4 mr-1" aria-hidden="true" />
                 {route.passengers || 0} passageiros
               </div>
               <div className="flex items-center">
-                <MapPin className="w-4 h-4 mr-1" />
+                <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
                 {route.stops?.length || 0} paradas
               </div>
             </div>
@@ -59,10 +65,10 @@ export const RouteItem = ({ route, attendanceStatus, markPresentAtStop, user }: 
       </AccordionTrigger>
       <AccordionContent>
         <motion.div 
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="px-6 py-4 bg-white/40 backdrop-blur-sm"
+          className="px-6 py-4 bg-gray-50/30 border-t border-gray-200"
         >
           <RouteSchedule schedule={route.schedule} />
           <StopsList 
@@ -75,35 +81,43 @@ export const RouteItem = ({ route, attendanceStatus, markPresentAtStop, user }: 
       </AccordionContent>
     </AccordionItem>
   );
-};
+});
+
+RouteItem.displayName = 'RouteItem';
+
+// Componente de animação do accordion
+const accordionContentStyle = {
+  animationDuration: '0.2s',
+  animationTimingFunction: 'ease-out'
+} as const;
 
 const RouteSchedule = ({ schedule }: { schedule: RouteData['schedule'] }) => {
   if (!schedule) {
     return (
-      <div className="mb-6 bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm">
+      <div className="mb-6 bg-white rounded-xl p-5 border border-gray-200">
         <h4 className="font-semibold mb-3 flex items-center text-gray-900">
-          <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+          <Calendar className="w-4 h-4 mr-2 text-gray-600" aria-hidden="true" />
           Horários e Dias
         </h4>
-        <p className="text-gray-500">Horários não disponíveis</p>
+        <p className="text-gray-600">Horários não disponíveis</p>
       </div>
     );
   }
 
   return (
-    <div className="mb-6 bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm">
+    <div className="mb-6 bg-white rounded-xl p-5 border border-gray-200">
       <h4 className="font-semibold mb-3 flex items-center text-gray-900">
-        <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+        <Calendar className="w-4 h-4 mr-2 text-gray-600" aria-hidden="true" />
         Horários e Dias
       </h4>
       <div className="space-y-2">
-        <div className="flex items-center text-gray-700">
-          <Clock className="w-4 h-4 mr-2 text-blue-600" />
+        <div className="flex items-center text-gray-800">
+          <Clock className="w-4 h-4 mr-2 text-gray-600" aria-hidden="true" />
           <span className="font-semibold">{schedule.startTime} - {schedule.endTime}</span>
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           {schedule.weekdays.map(day => (
-            <Badge key={day} variant="secondary" className="bg-white/80 backdrop-blur-sm border border-white/40 text-gray-700 shadow-sm">
+            <Badge key={day} variant="secondary" className="bg-white border border-gray-200 text-gray-700">
               {day.charAt(0).toUpperCase() + day.slice(1)}
             </Badge>
           ))}

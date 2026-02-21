@@ -276,7 +276,7 @@ const Profile = () => {
   
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 space-y-8">
           {isLoading ? (
             <motion.div 
@@ -295,19 +295,19 @@ const Profile = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12 bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl"
+              className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200"
             >
-              <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-900">
                 Você não está conectado
               </h2>
               <p className="mb-8 text-gray-600">
                 Faça login para acessar seu perfil e gerenciar suas configurações
               </p>
               <div className="space-x-4">
-                <Button asChild variant="default" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Button asChild variant="default" className="bg-blue-600 hover:bg-blue-700">
                   <Link to="/auth/login">Login</Link>
                 </Button>
-                <Button asChild variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                <Button asChild variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
                   <Link to="/auth/register">Criar conta</Link>
                 </Button>
               </div>
@@ -322,43 +322,36 @@ const Profile = () => {
                   exit={{ opacity: 0, y: -20 }}
                   className="space-y-8"
                 >
-                  {/* Header com Avatar e Nome */}
+                  {/* Header com Avatar e Nome - design profissional */}
                   <motion.div 
-                    initial={{ scale: 0.9 }}
+                    initial={{ scale: 0.95 }}
                     animate={{ scale: 1 }}
-                    className="relative bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl overflow-hidden"
+                    className="relative bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10" />
-                    <div className="relative flex items-center space-x-6">
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="relative"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-50" />
-                        <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+                    <div className="flex items-center space-x-6">
+                      <div className="relative">
+                        <Avatar className="w-20 h-20 border-2 border-gray-200">
                           <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                          <AvatarFallback className="text-2xl bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                          <AvatarFallback className="text-xl bg-gray-100 text-gray-700 border border-gray-200">
                             {profileData.name?.charAt(0).toUpperCase() || '?'}
                           </AvatarFallback>
                         </Avatar>
-                      </motion.div>
+                      </div>
                       <div>
-                        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        <h2 className="text-2xl font-semibold text-gray-900">
                           {profileData.name || 'Nome não informado'}
                         </h2>
-                        <p className="text-lg text-gray-600 mt-1">
+                        <p className="text-gray-600 mt-1">
                           {profileData.role ? profileData.role.charAt(0).toUpperCase() + profileData.role.slice(1) : 'Papel não informado'}
                         </p>
-                        <motion.div whileHover={{ scale: 1.02 }} className="mt-4">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setIsEditing(true)}
-                            className="bg-white/50 backdrop-blur-sm border-blue-200 text-blue-600 hover:bg-blue-50"
-                          >
-                            Editar perfil
-                          </Button>
-                        </motion.div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setIsEditing(true)}
+                          className="mt-4 border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          Editar perfil
+                        </Button>
                       </div>
                     </div>
                   </motion.div>
@@ -366,28 +359,26 @@ const Profile = () => {
                   {/* Seção de Estudantes Vinculados */}
                   {profileData.role === 'parent' && (
                     <motion.section 
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
+                      transition={{ delay: 0.1 }}
                       className="space-y-4"
                     >
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        <h3 className="text-xl font-semibold text-gray-900">
                           Estudantes vinculados
                         </h3>
-                        <motion.div whileHover={{ scale: 1.05 }}>
-                          <Button 
-                            variant="secondary" 
-                            size="sm"
-                            onClick={() => {
-                              childForm.reset({name: '', student_number: ''});
-                              setIsAddingChild(true);
-                            }}
-                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600"
-                          >
-                            Adicionar estudante
-                          </Button>
-                        </motion.div>
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => {
+                            childForm.reset({name: '', student_number: ''});
+                            setIsAddingChild(true);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Adicionar estudante
+                        </Button>
                       </div>
 
                       {/* Lista de Estudantes */}
@@ -396,14 +387,13 @@ const Profile = () => {
                           profileData.children.map((child, index) => (
                             <motion.div
                               key={child.id}
-                              initial={{ opacity: 0, y: 20 }}
+                              initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                              whileHover={{ scale: 1.02 }}
+                              transition={{ delay: index * 0.05 }}
                             >
-                              <Card className="bg-white/80 backdrop-blur-sm border-blue-100 hover:border-blue-200 transition-colors">
+                              <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow rounded-xl">
                                 <CardHeader className="pb-2">
-                                  <CardTitle className="text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                  <CardTitle className="text-lg text-gray-900">
                                     {child.name}
                                   </CardTitle>
                                   <CardDescription>Estudante</CardDescription>
@@ -412,7 +402,7 @@ const Profile = () => {
                                   <div className="space-y-2 text-sm">
                                     {child.student_number && (
                                       <div className="flex items-center">
-                                        <UserCheck size={16} className="mr-2 text-blue-500" />
+                                        <UserCheck size={16} className="mr-2 text-gray-500" />
                                         <span>Número: {child.student_number}</span>
                                       </div>
                                     )}
@@ -423,7 +413,7 @@ const Profile = () => {
                                     variant="outline" 
                                     size="sm"
                                     onClick={() => handleEditChild(child)}
-                                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
                                   >
                                     Editar
                                   </Button>
@@ -431,7 +421,7 @@ const Profile = () => {
                                     variant="destructive" 
                                     size="sm"
                                     onClick={() => handleDeleteChild(child.id)}
-                                    className="bg-red-500 hover:bg-red-600"
+                                    className="bg-red-600 hover:bg-red-700"
                                   >
                                     Remover
                                   </Button>
@@ -443,7 +433,7 @@ const Profile = () => {
                           <motion.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="col-span-2 text-center p-8 border rounded-xl bg-white/50 backdrop-blur-sm"
+                            className="col-span-2 text-center p-8 border rounded-xl bg-white border-gray-200"
                           >
                             <p className="text-gray-500">Nenhum estudante cadastrado</p>
                           </motion.div>
@@ -454,46 +444,37 @@ const Profile = () => {
 
                   {/* Informações de Contato */}
                   <motion.section
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: 0.2 }}
                   >
-                    <h3 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-900">
                       Informações de contato
                     </h3>
-                    <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+                    <Card className="bg-white border border-gray-200 shadow-sm rounded-xl">
                       <CardContent className="pt-6">
                         <div className="space-y-4">
-                          <motion.div 
-                            whileHover={{ scale: 1.02 }}
-                            className="flex items-center justify-between p-3 rounded-lg hover:bg-blue-50/50 transition-colors"
-                          >
+                          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
                             <div className="flex items-center">
-                              <Mail size={18} className="mr-3 text-blue-500" />
+                              <Mail size={18} className="mr-3 text-gray-600" />
                               <span className="text-gray-600">Email</span>
                             </div>
                             <span className="font-medium">{profileData.email}</span>
-                          </motion.div>
-                          <motion.div 
-                            whileHover={{ scale: 1.02 }}
-                            className="flex items-center justify-between p-3 rounded-lg hover:bg-blue-50/50 transition-colors"
-                          >
+                          </div>
+                          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
                             <div className="flex items-center">
-                              <Phone size={18} className="mr-3 text-blue-500" />
+                              <Phone size={18} className="mr-3 text-gray-600" />
                               <span className="text-gray-600">Telefone</span>
                             </div>
                             <span className="font-medium">{profileData.contact_number || 'Não informado'}</span>
-                          </motion.div>
-                          <motion.div 
-                            whileHover={{ scale: 1.02 }}
-                            className="flex items-center justify-between p-3 rounded-lg hover:bg-blue-50/50 transition-colors"
-                          >
+                          </div>
+                          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
                             <div className="flex items-center">
-                              <Home size={18} className="mr-3 text-blue-500" />
+                              <Home size={18} className="mr-3 text-gray-600" />
                               <span className="text-gray-600">Endereço</span>
                             </div>
                             <span className="font-medium text-right">{profileData.address || 'Não informado'}</span>
-                          </motion.div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -503,12 +484,12 @@ const Profile = () => {
                   <motion.section
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.3 }}
                     className="pt-4"
                   >
                     <Button 
                       variant="destructive" 
-                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                      className="w-full bg-red-600 hover:bg-red-700"
                       onClick={signOut}
                     >
                       Sair
@@ -522,9 +503,9 @@ const Profile = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                 >
-                  <Card className="bg-white/80 backdrop-blur-lg border-blue-100">
+                  <Card className="bg-white border border-gray-200 shadow-sm rounded-xl">
                     <CardHeader>
-                      <CardTitle className="text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      <CardTitle className="text-2xl text-gray-900">
                         Editar Perfil
                       </CardTitle>
                       <CardDescription>Atualize suas informações pessoais</CardDescription>
@@ -539,7 +520,7 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Nome completo</FormLabel>
                                 <FormControl>
-                                  <Input {...field} className="bg-white/50" />
+                                  <Input {...field} className="border-gray-300 focus:border-blue-500" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -553,7 +534,7 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Telefone</FormLabel>
                                 <FormControl>
-                                  <Input {...field} className="bg-white/50" />
+                                  <Input {...field} className="border-gray-300 focus:border-blue-500" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -567,17 +548,17 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Endereço</FormLabel>
                                 <FormControl>
-                                  <Textarea {...field} className="bg-white/50" />
+                                  <Textarea {...field} className="border-gray-300 focus:border-blue-500" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                           
-                          <div className="p-4 rounded-lg bg-blue-50/50">
-                            <p className="text-sm font-medium text-blue-600">Tipo de usuário</p>
-                            <p className="text-blue-800">{profileData.role === 'parent' ? 'Responsável' : 'Aluno'}</p>
-                            <p className="text-xs text-blue-500 mt-1">Este campo não pode ser alterado</p>
+                          <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                            <p className="text-sm font-medium text-gray-700">Tipo de usuário</p>
+                            <p className="text-gray-900">{profileData.role === 'parent' ? 'Responsável' : 'Aluno'}</p>
+                            <p className="text-xs text-gray-500 mt-1">Este campo não pode ser alterado</p>
                           </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
@@ -585,13 +566,13 @@ const Profile = () => {
                             type="button" 
                             variant="outline"
                             onClick={() => setIsEditing(false)}
-                            className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
                           >
                             Cancelar
                           </Button>
                           <Button 
                             type="submit"
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                            className="bg-blue-600 hover:bg-blue-700"
                           >
                             Salvar alterações
                           </Button>

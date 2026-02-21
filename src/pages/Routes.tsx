@@ -21,38 +21,45 @@ const Routes = () => {
   
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+      <div className="min-h-screen bg-gray-50">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }}
           className="max-w-7xl mx-auto px-4 py-8 space-y-6"
         >
-          {/* Header com glassmorphism */}
+          {/* Header section - design clean e profissional */}
           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 shadow-lg border border-white/20"
+            className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
           >
-            <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Rotas Ativas em Lubango
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="mb-6">
+              <h1 className="text-2xl font-semibold text-gray-900">Gestão de Rotas</h1>
+              <p className="text-gray-600 mt-1">Monitoramento e controle das rotas de transporte escolar</p>
+            </div>
+            
+            {/* Stats grid - layout profissional */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm hover:shadow-md transition-all hover:scale-[1.02]"
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-gray-50 rounded-xl p-5 border border-gray-200"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="p-2.5 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
-                      <stat.icon className="w-5 h-5 text-blue-600" />
+                    <div className="p-2 bg-white rounded-lg border border-gray-200">
+                      <stat.icon className="w-5 h-5 text-gray-700" aria-hidden="true" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-600 mb-1">{stat.label}</p>
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{stat.label}</p>
+                      {isLoading ? (
+                        <div className="h-6 w-12 bg-gray-200 animate-pulse rounded mt-1" />
+                      ) : (
+                        <p className="text-xl font-semibold text-gray-900 mt-1">{stat.value}</p>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -60,12 +67,13 @@ const Routes = () => {
             </div>
           </motion.div>
         
-          {/* Lista de rotas com glassmorphism */}
+          {/* Routes list section */}
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-lg p-6 border border-white/20"
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200"
+            aria-label="Lista de rotas"
           >
             {isLoading ? (
               <RoutesLoading />

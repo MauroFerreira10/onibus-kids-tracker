@@ -160,27 +160,27 @@ const Notifications = () => {
   const getIcon = (iconType: string) => {
     switch (iconType) {
       case 'bus':
-        return <Bus className="h-5 w-5 text-blue-500" />;
+        return <Bus className="h-5 w-5 text-blue-600" />;
       case 'clock':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
+        return <Clock className="h-5 w-5 text-amber-600" />;
       case 'alert':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-red-600" />;
       case 'message':
-        return <MessageSquare className="h-5 w-5 text-green-500" />;
+        return <MessageSquare className="h-5 w-5 text-green-600" />;
       case 'user':
-        return <svg className="h-5 w-5 text-green-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        return <svg className="h-5 w-5 text-green-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 15C15.3137 15 18 12.3137 18 9C18 5.68629 15.3137 3 12 3C8.68629 3 6 5.68629 6 9C6 12.3137 8.68629 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M2.90625 20.2491C3.82775 18.6531 5.1537 17.3278 6.75 16.4064C8.3463 15.485 10.1547 15 12 15C13.8453 15 15.6537 15.4851 17.25 16.4065C18.8463 17.3279 20.1722 18.6533 21.0938 20.2493" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>;
       default:
-        return <AlertCircle className="h-5 w-5 text-gray-500" />;
+        return <AlertCircle className="h-5 w-5 text-gray-600" />;
     }
   };
 
   const getNotificationStyle = (type: string) => {
     switch (type) {
       case 'delay':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-amber-50 border-amber-200';
       case 'arrival':
         return 'bg-blue-50 border-blue-200';
       case 'alert':
@@ -269,33 +269,27 @@ const Notifications = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 space-y-8">
-          {/* Header */}
+          {/* Header - design profissional */}
           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl"
+            className="flex items-center justify-between bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
           >
             <div className="flex items-center gap-3">
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 10 }}
-                className="relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-50" />
-                <BellRing className="h-8 w-8 text-blue-600 relative" />
-              </motion.div>
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <BellRing className="h-6 w-6 text-gray-700" />
+              </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Notificações
-                </h1>
+                <h1 className="text-2xl font-semibold text-gray-900">Notificações</h1>
                 {unreadCount > 0 && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className="mt-1"
                   >
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-600 border-blue-200">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
                       {unreadCount} não lidas
                     </Badge>
                   </motion.div>
@@ -304,48 +298,42 @@ const Notifications = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <motion.div whileHover={{ scale: 1.05 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFilter('all')}
-                  className={`${
-                    filter === 'all' 
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none' 
-                      : 'bg-white/50 backdrop-blur-sm border-blue-200 text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  Todas
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFilter('unread')}
-                  className={`${
-                    filter === 'unread' 
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none' 
-                      : 'bg-white/50 backdrop-blur-sm border-blue-200 text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  Não lidas
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFilter('read')}
-                  className={`${
-                    filter === 'read' 
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-none' 
-                      : 'bg-white/50 backdrop-blur-sm border-blue-200 text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  Lidas
-                </Button>
-              </motion.div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter('all')}
+                className={`${
+                  filter === 'all' 
+                    ? 'bg-blue-600 text-white border-blue-600' 
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Todas
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter('unread')}
+                className={`${
+                  filter === 'unread' 
+                    ? 'bg-blue-600 text-white border-blue-600' 
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Não lidas
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter('read')}
+                className={`${
+                  filter === 'read' 
+                    ? 'bg-blue-600 text-white border-blue-600' 
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Lidas
+              </Button>
             </div>
           </motion.div>
 
@@ -359,28 +347,24 @@ const Notifications = () => {
               {filteredNotifications.map((notification, index) => (
                 <motion.div
                   key={notification.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
+                  transition={{ delay: index * 0.03 }}
                 >
                   <Card
                     className={`${
                       getNotificationStyle(notification.type)
                     } ${
                       !notification.read 
-                        ? 'border-l-4 border-l-blue-500 shadow-lg' 
-                        : 'shadow-md'
-                    } bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300`}
+                        ? 'border-l-4 border-l-blue-500 shadow-sm' 
+                        : 'shadow-sm'
+                    } bg-white border border-gray-200 hover:shadow-md transition-shadow rounded-xl`}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
-                        <motion.div 
-                          whileHover={{ scale: 1.1 }}
-                          className="mt-1"
-                        >
+                        <div className="mt-1">
                           {getIcon(notification.icon)}
-                        </motion.div>
+                        </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <p className="font-medium text-gray-800">{notification.message}</p>
@@ -395,16 +379,14 @@ const Notifications = () => {
                           )}
                         </div>
                         {!notification.read && (
-                          <motion.div whileHover={{ scale: 1.05 }}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => markAsRead(notification.id)}
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            >
-                              Marcar como lida
-                            </Button>
-                          </motion.div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => markAsRead(notification.id)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            Marcar como lida
+                          </Button>
                         )}
                       </div>
                     </CardContent>
@@ -416,7 +398,7 @@ const Notifications = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-12 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg"
+                  className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200"
                 >
                   <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500 text-lg">
@@ -431,9 +413,9 @@ const Notifications = () => {
 
       {/* Dialog for sending a new notification */}
       <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
-        <DialogContent className="bg-white/90 backdrop-blur-lg border-blue-100">
+        <DialogContent className="bg-white border border-gray-200 rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-xl font-semibold text-gray-900">
               Enviar Notificação
             </DialogTitle>
           </DialogHeader>
@@ -442,21 +424,21 @@ const Notifications = () => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="bg-white/50 border-blue-200 focus:border-blue-400"
+              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowSendDialog(false)}
-              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               Cancelar
             </Button>
             <Button
               onClick={sendNotification}
               disabled={isSending || !newMessage.trim()}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isSending ? 'Enviando...' : 'Enviar'}
             </Button>

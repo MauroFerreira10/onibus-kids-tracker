@@ -89,43 +89,43 @@ const Schedule = () => {
   
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-          {/* Header Section com glassmorphism */}
+          {/* Header Section - design profissional */}
           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 shadow-lg border border-white/20"
+            className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
           >
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Horários do Ônibus
-            </h1>
-            <p className="text-gray-600">Acompanhe em tempo real a localização e horários das paradas</p>
+            <div className="mb-2">
+              <h1 className="text-2xl font-semibold text-gray-900">Horários do Transporte</h1>
+              <p className="text-gray-600 mt-1">Acompanhe em tempo real a localização e horários das paradas</p>
+            </div>
           </motion.div>
 
-          {/* Date Selector com glassmorphism */}
+          {/* Date Selector */}
           <motion.section 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-lg p-6 border border-white/20"
+            className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200"
           >
             <div className="flex items-center justify-between">
               <button 
                 onClick={() => changeDate(-1)}
-                className="p-3.5 rounded-2xl bg-white/60 backdrop-blur-md hover:bg-white/80 transition-all shadow-sm border border-white/40 active:scale-95"
+                className="p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors border border-gray-200"
               >
                 <ChevronLeft className="w-5 h-5 text-gray-700" />
               </button>
               
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2 mb-2">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <Calendar className="w-5 h-5 text-gray-600" />
                   <span className="text-xl font-semibold capitalize text-gray-900">
                     {formatDate(selectedDate)}
                   </span>
                 </div>
                 {selectedDate.toDateString() === new Date().toDateString() && (
-                  <span className="inline-block text-xs font-medium bg-blue-100/80 backdrop-blur-sm text-blue-700 px-3 py-1.5 rounded-full border border-blue-200/50">
+                  <span className="inline-block text-xs font-medium bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full">
                     Hoje
                   </span>
                 )}
@@ -133,29 +133,29 @@ const Schedule = () => {
               
               <button 
                 onClick={() => changeDate(1)}
-                className="p-3.5 rounded-2xl bg-white/60 backdrop-blur-md hover:bg-white/80 transition-all shadow-sm border border-white/40 active:scale-95"
+                className="p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors border border-gray-200"
               >
                 <ChevronRight className="w-5 h-5 text-gray-700" />
               </button>
             </div>
           </motion.section>
 
-        {/* Schedule Information com glassmorphism */}
+        {/* Schedule Information */}
         <motion.section 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-lg p-6 border border-white/20"
+          transition={{ delay: 0.05 }}
+          className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200"
         >
           <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-white/80 backdrop-blur-sm rounded-xl">
-              <Bus className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <Bus className="w-5 h-5 text-gray-700" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900">Informações de Horário</h3>
           </div>
           
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm">
+            <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
               <h4 className="font-semibold mb-3 text-gray-900">Horários Principais</h4>
               <ul className="space-y-3">
                 <li className="flex items-center space-x-3">
@@ -169,7 +169,7 @@ const Schedule = () => {
               </ul>
             </div>
             
-            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/40 shadow-sm">
+            <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
               <h4 className="font-semibold mb-3 text-gray-900">Status do Serviço</h4>
               {stops.length > 0 ? (
                 <div className="space-y-2">
@@ -179,8 +179,8 @@ const Schedule = () => {
                       <span className="font-medium">Serviço no horário</span>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-2 text-yellow-700">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                    <div className="flex items-center space-x-2 text-amber-700">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
                       <span className="font-medium">Serviço com atrasos</span>
                     </div>
                   )}
@@ -198,16 +198,16 @@ const Schedule = () => {
           </div>
         </motion.section>
 
-        {/* Stops List com glassmorphism */}
+        {/* Stops List */}
         <motion.section 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-gray-900">Horários para {formatDate(selectedDate)}</h2>
+          <h2 className="text-xl font-semibold mb-6 text-gray-900">Horários para {formatDate(selectedDate)}</h2>
           
           {isWeekend && (
-            <Alert className="mb-6 border-red-200/50 bg-red-50/80 backdrop-blur-md rounded-2xl border">
+            <Alert className="mb-6 border-red-200 bg-red-50 rounded-xl">
               <AlertCircle className="h-4 w-4 text-red-600" />
               <AlertTitle className="text-red-800">Sem serviço</AlertTitle>
               <AlertDescription className="text-red-700">
@@ -219,7 +219,7 @@ const Schedule = () => {
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="w-full h-32 rounded-2xl" />
+                <Skeleton key={i} className="w-full h-32 rounded-xl" />
               ))}
             </div>
           ) : (
@@ -228,49 +228,49 @@ const Schedule = () => {
                 {stops.map((stop, index) => (
                   <motion.div
                     key={stop.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-lg p-6 border border-white/20 hover:shadow-xl hover:scale-[1.01] transition-all"
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ delay: index * 0.03 }}
+                    className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between">
                       <div className="space-y-4">
                         <div>
-                          <h3 className="text-xl font-semibold">{stop.name}</h3>
+                          <h3 className="text-lg font-semibold">{stop.name}</h3>
                           <p className="text-gray-600 flex items-center mt-1">
-                            <MapPin className="w-4 h-4 mr-1 text-busapp-primary" />
+                            <MapPin className="w-4 h-4 mr-1 text-gray-500" />
                             {stop.address}
                           </p>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-white/40 shadow-sm">
+                          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                             <div className="text-xs font-medium text-gray-500 mb-2">Horário Previsto</div>
                             <div className="flex items-center">
-                              <Clock className="w-4 h-4 text-blue-600 mr-2" />
+                              <Clock className="w-4 h-4 text-gray-600 mr-2" />
                               <span className="font-semibold text-gray-900">{formatTime(stop.scheduledTime || '')}</span>
                             </div>
                           </div>
                           
                           <div className={cn(
-                            "rounded-2xl p-4 border shadow-sm backdrop-blur-md",
+                            "rounded-lg p-4 border",
                             stop.scheduledTime !== stop.estimatedTime
-                              ? "bg-yellow-50/80 border-yellow-200/50"
-                              : "bg-green-50/80 border-green-200/50"
+                              ? "bg-amber-50 border-amber-200"
+                              : "bg-green-50 border-green-200"
                           )}>
                             <div className="text-xs font-medium text-gray-500 mb-2">Horário Estimado</div>
                             <div className="flex items-center">
                               <Clock className={cn(
                                 "w-4 h-4 mr-2",
                                 stop.scheduledTime !== stop.estimatedTime
-                                  ? "text-yellow-600"
+                                  ? "text-amber-600"
                                   : "text-green-600"
                               )} />
                               <span className={cn(
                                 "font-semibold",
                                 stop.scheduledTime !== stop.estimatedTime
-                                  ? "text-yellow-700"
+                                  ? "text-amber-700"
                                   : "text-green-700"
                               )}>
                                 {formatTime(stop.estimatedTime || '')}
@@ -281,15 +281,15 @@ const Schedule = () => {
                       </div>
                       
                       <div className={cn(
-                        "px-4 py-2.5 rounded-2xl text-sm font-medium flex items-center space-x-2 backdrop-blur-md border shadow-sm",
+                        "px-4 py-2.5 rounded-lg text-sm font-medium flex items-center space-x-2 border",
                         stop.scheduledTime !== stop.estimatedTime
-                          ? "bg-yellow-100/80 text-yellow-800 border-yellow-200/50"
-                          : "bg-green-100/80 text-green-800 border-green-200/50"
+                          ? "bg-amber-100 text-amber-800 border-amber-200"
+                          : "bg-green-100 text-green-800 border-green-200"
                       )}>
                         <div className={cn(
                           "w-2 h-2 rounded-full",
                           stop.scheduledTime !== stop.estimatedTime
-                            ? "bg-yellow-600"
+                            ? "bg-amber-600"
                             : "bg-green-600"
                         )} />
                         <span>
@@ -305,7 +305,7 @@ const Schedule = () => {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-12 bg-white/60 backdrop-blur-md rounded-3xl border border-white/40 shadow-sm"
+                  className="text-center py-12 bg-white rounded-2xl border border-gray-200 shadow-sm"
                 >
                   <Bus className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500 text-lg">Nenhum horário disponível para esta data.</p>

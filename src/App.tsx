@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { QuotaProvider } from "./contexts/QuotaContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import DriverRoute from "./components/DriverRoute";
@@ -23,6 +24,7 @@ import RegisterStudents from "./pages/manager/RegisterStudents";
 import RegisterParents from "./pages/manager/RegisterParents";
 import RegisterDrivers from "./pages/manager/RegisterDrivers";
 import Chat from "./pages/Chat";
+import Pricing from "./pages/Pricing";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -32,9 +34,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <RouterRoutes>
+          <QuotaProvider>
+            <TooltipProvider>
+              <Toaster />
+              <RouterRoutes>
               {/* Public routes */}
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/register" element={<Register />} />
@@ -107,9 +110,12 @@ function App() {
                 </AdminRoute>
               } />
               
+              <Route path="/pricing" element={<Pricing />} />
+              
               <Route path="*" element={<NotFound />} />
-            </RouterRoutes>
-          </TooltipProvider>
+              </RouterRoutes>
+            </TooltipProvider>
+          </QuotaProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

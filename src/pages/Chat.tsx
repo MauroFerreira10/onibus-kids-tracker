@@ -498,7 +498,7 @@ const Chat = () => {
     return (
       <Layout title="Chat">
         <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
-          <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
           <p className="ml-3 text-lg text-gray-600">Carregando chat...</p>
         </div>
       </Layout>
@@ -507,20 +507,20 @@ const Chat = () => {
 
   return (
     <Layout title="Chat">
-      <div className="flex h-[calc(100vh-80px)] bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl shadow-xl overflow-hidden">
-        {/* Left Pane: Conversations List */}
+      <div className="flex h-[calc(100vh-80px)] bg-gray-50 rounded-xl shadow-sm overflow-hidden border border-gray-200">
+        {/* Left Pane: Conversations List - design profissional */}
         <motion.div
-          initial={{ x: -200, opacity: 0 }}
+          initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className={`w-full md:w-1/3 bg-white/90 backdrop-blur-lg border-r border-gray-100 flex flex-col ${
+          transition={{ duration: 0.3 }}
+          className={`w-full md:w-1/3 bg-white flex flex-col ${
             selectedConversation ? 'hidden md:flex' : 'flex'
           }`}
         >
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-800">Conversas</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Conversas</h2>
             <Button size="sm" onClick={() => startNewConversation('new')}
-              className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 transition-colors shadow-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Nova Conversa
             </Button>
@@ -540,14 +540,16 @@ const Chat = () => {
                   <div
                     key={conversation.id}
                     className={`flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      selectedConversation === conversation.id ? 'bg-indigo-50/70 border-l-4 border-indigo-500' : ''
+                      selectedConversation === conversation.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
                     }`}
                     onClick={() => setSelectedConversation(conversation.id)}
                   >
                     <div className="relative">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${otherParticipant.user_metadata.full_name || otherParticipant.user_metadata.name}`} />
-                        <AvatarFallback>{otherParticipant.user_metadata.full_name?.charAt(0) || otherParticipant.user_metadata.name?.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="bg-gray-100 text-gray-700">
+                          {otherParticipant.user_metadata.full_name?.charAt(0) || otherParticipant.user_metadata.name?.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white ${
                         isOnline ? 'bg-green-500' : 'bg-gray-400'
@@ -567,29 +569,31 @@ const Chat = () => {
           </ScrollArea>
         </motion.div>
 
-        {/* Right Pane: Chat Window */}
+        {/* Right Pane: Chat Window - design profissional */}
         <motion.div
-          initial={{ x: 200, opacity: 0 }}
+          initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className={`flex-1 flex flex-col bg-white/90 backdrop-blur-lg ${
+          transition={{ duration: 0.3 }}
+          className={`flex-1 flex flex-col bg-white ${
             selectedConversation ? 'flex' : 'hidden md:flex'
           }`}
         >
           {selectedConversation ? (
             <div className="flex-1 flex flex-col">
-              <div className="p-4 border-b border-gray-200 flex items-center bg-white/90 sticky top-0 z-10 shadow-sm">
+              <div className="p-4 border-b border-gray-200 flex items-center bg-white sticky top-0 z-10 shadow-sm">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="md:hidden mr-2"
+                  className="md:hidden mr-2 text-gray-600 hover:bg-gray-100"
                   onClick={() => setSelectedConversation(null)}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <Avatar className="h-9 w-9 ring-2 ring-indigo-300">
+                <Avatar className="h-9 w-9 ring-2 ring-blue-300">
                   <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${getParticipantName(selectedConversation)}`} />
-                  <AvatarFallback>{getParticipantName(selectedConversation)?.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="bg-gray-100 text-gray-700">
+                    {getParticipantName(selectedConversation)?.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="ml-3">
                   <p className="font-semibold text-gray-800">{getParticipantName(selectedConversation)}</p>
@@ -604,17 +608,17 @@ const Chat = () => {
                     {messages.map((message) => (
                       <motion.div
                         key={message.id}
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
                         className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[85%] md:max-w-[70%] rounded-3xl p-3 md:p-4 shadow-lg transition-all duration-200 ${
+                          className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-3 md:p-4 shadow-sm transition-all ${
                             message.sender_id === user?.id
-                              ? 'bg-gradient-to-tr from-blue-600 to-indigo-700 text-white rounded-br-none'
-                              : 'bg-white rounded-bl-none border border-gray-200 shadow-md backdrop-filter backdrop-blur-lg bg-opacity-90'
+                              ? 'bg-blue-600 text-white rounded-br-md'
+                              : 'bg-white rounded-bl-md border border-gray-200'
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1 md:mb-2">
@@ -634,7 +638,7 @@ const Chat = () => {
                             {renderMessageDate(message.created_at)}
                           </div>
                           {message.file_url && (
-                            <div className="mt-2 rounded-lg overflow-hidden">
+                            <div className="mt-2 rounded-lg overflow-hidden border border-gray-200">
                               <img
                                 src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/chat-files/${message.file_url}`}
                                 alt="Arquivo anexado"
@@ -649,7 +653,7 @@ const Chat = () => {
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
-              <form onSubmit={handleSendMessage} className="p-4 md:p-6 border-t border-gray-200 bg-white/80 backdrop-blur-md flex items-center gap-2">
+              <form onSubmit={handleSendMessage} className="p-4 md:p-6 border-t border-gray-200 bg-white flex items-center gap-2">
                 <div className="flex-1 relative">
                   <textarea
                     value={newMessage}
@@ -664,21 +668,21 @@ const Chat = () => {
                       }
                     }}
                     placeholder="Digite sua mensagem..."
-                    className="w-full bg-white/50 backdrop-blur-sm border border-indigo-100 rounded-xl p-3 pr-10 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none min-h-[60px] max-h-[120px] transition-all duration-300"
+                    className="w-full bg-white border border-gray-300 rounded-xl p-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[60px] max-h-[120px] transition-all"
                     rows={1}
                   />
                   <div className="absolute right-2 bottom-2 flex gap-1">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <FiPaperclip className="w-5 h-5" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <FiSmile className="w-5 h-5" />
                     </button>
@@ -696,7 +700,7 @@ const Chat = () => {
                   whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={!newMessage.trim() && !selectedFile}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-3 rounded-xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
                 >
                   <FiSend className="w-5 h-5" />
                 </motion.button>
@@ -704,7 +708,7 @@ const Chat = () => {
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-lg p-4">
-              <MessageSquare className="h-16 w-16 text-indigo-300 mb-4" />
+              <MessageSquare className="h-16 w-16 text-gray-300 mb-4" />
               <p className="text-xl font-semibold text-gray-700">Bem-vindo ao Chat!</p>
               <p className="text-md text-gray-500 mt-2 text-center">Selecione uma conversa ao lado ou inicie uma nova para começar a interagir.</p>
             </div>
