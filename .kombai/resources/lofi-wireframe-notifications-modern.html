@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBus - Notificações (Wireframe Moderno)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .wireframe-header {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            color: #fff;
+            padding: 32px 24px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .wireframe-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .wireframe-header p {
+            color: #b0b0b0;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        /* Header */
+        .page-header {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .header-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ebebeb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: -0.6px;
+            margin-bottom: 4px;
+        }
+        
+        .unread-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #2d2d2d;
+            color: #fff;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Filter Buttons */
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .filter-btn.active {
+            background: #2d2d2d;
+            color: #fff;
+            border-color: #2d2d2d;
+        }
+        
+        /* Notifications List */
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .notification-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-left-width: 4px;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: all 0.2s;
+            display: flex;
+            gap: 16px;
+        }
+        
+        .notification-card:hover {
+            border-color: #d0d0d0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        
+        .notification-card.unread {
+            border-left-color: #2d2d2d;
+            background: #fafafa;
+        }
+        
+        .notification-card.read {
+            border-left-color: #e5e5e5;
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .notification-icon.arrival {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .notification-icon.delay {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .notification-icon.system {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .notification-message {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+        
+        .notification-time {
+            font-size: 13px;
+            color: #999;
+            white-space: nowrap;
+            margin-left: 16px;
+        }
+        
+        .notification-meta {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .notification-actions {
+            margin-top: 12px;
+        }
+        
+        .mark-read-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #2d2d2d;
+        }
+        
+        .mark-read-btn:hover {
+            background: #2d2d2d;
+            color: #fff;
+            border-color: #2d2d2d;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+        }
+        
+        .empty-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .empty-description {
+            font-size: 15px;
+            color: #666;
+        }
+        
+        /* Badges */
+        .reuse-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .new-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #FF9800;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+            
+            .notification-card {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-header">
+        <h1>SafeBus — Notificações</h1>
+        <p>Wireframe profissional com sistema de filtros e gestão de notificações</p>
+    </div>
+    
+    <div class="container">
+        <!-- REUSABLE: Layout from src/components/Layout.tsx -->
+        <div style="position: relative;">
+            <span class="reuse-badge" title="src/components/Layout.tsx">Reuse Layout</span>
+            
+            <!-- Header -->
+            <div class="page-header" style="position: relative;">
+                <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                <div class="header-left">
+                    <div class="header-icon">🔔</div>
+                    <div>
+                        <h1 class="header-title">Notificações</h1>
+                        <span class="unread-badge">3 Não Lidas</span>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                        <button class="filter-btn active" aria-pressed="true">Todas</button>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                        <button class="filter-btn" aria-pressed="false">Não Lidas</button>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                        <button class="filter-btn" aria-pressed="false">Lidas</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications List -->
+            <div class="notifications-list">
+                <!-- Notification 1 - Unread, Arrival -->
+                <div class="notification-card unread" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                    <div class="notification-icon arrival">🚌</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-message">
+                                O autocarro está a 5 minutos da parada "Praça da Independência"
+                            </div>
+                            <span class="notification-time">Hoje às 07:25</span>
+                        </div>
+                        <div class="notification-meta">
+                            Enviado por: Motorista
+                        </div>
+                        <div class="notification-actions">
+                            <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                            <div style="position: relative; display: inline-block;">
+                                <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                                <button class="mark-read-btn">Marcar como lida</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification 2 - Unread, Delay -->
+                <div class="notification-card unread">
+                    <div class="notification-icon delay">⏰</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-message">
+                                Atraso de 10 minutos na rota "Centro - Lubango" devido a tráfego intenso
+                            </div>
+                            <span class="notification-time">Hoje às 07:15</span>
+                        </div>
+                        <div class="notification-meta">
+                            Enviado por: Motorista
+                        </div>
+                        <div class="notification-actions">
+                            <button class="mark-read-btn">Marcar como lida</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification 3 - Unread, System -->
+                <div class="notification-card unread">
+                    <div class="notification-icon system">⚠️</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-message">
+                                Mudança temporária de rota devido a obras na Avenida 4 de Abril
+                            </div>
+                            <span class="notification-time">Hoje às 06:45</span>
+                        </div>
+                        <div class="notification-meta">
+                            Enviado por: Gestor
+                        </div>
+                        <div class="notification-actions">
+                            <button class="mark-read-btn">Marcar como lida</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification 4 - Read, Arrival -->
+                <div class="notification-card read">
+                    <div class="notification-icon arrival">🚌</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-message">
+                                Autocarro chegou à parada "Terminal da Lage"
+                            </div>
+                            <span class="notification-time">Ontem às 18:10</span>
+                        </div>
+                        <div class="notification-meta">
+                            Enviado por: Motorista
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification 5 - Read, System -->
+                <div class="notification-card read">
+                    <div class="notification-icon system">⚠️</div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-message">
+                                Atualização do sistema: Nova funcionalidade de chat disponível
+                            </div>
+                            <span class="notification-time">13/02 às 14:30</span>
+                        </div>
+                        <div class="notification-meta">
+                            Enviado por: Gestor
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <br><br>
+            
+            <!-- Empty State (Hidden) -->
+            <div class="empty-state" style="display: none;">
+                <div class="empty-icon">🔔</div>
+                <h3 class="empty-title">Nenhuma notificação encontrada</h3>
+                <p class="empty-description">Não existem notificações para mostrar com os filtros atuais.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%); border: 1px solid #e0e0e0; border-radius: 12px; padding: 32px; margin: 32px 24px; max-width: 900px; margin-left: auto; margin-right: auto;">
+        <h3 style="margin-bottom: 20px; font-size: 20px; font-weight: 600; color: #1a1a1a;">💡 Principais Melhorias no Design</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">🔔 Header Informativo</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Ícone grande, título claro e badge com contador de notificações não lidas para visibilidade imediata.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">🏷️ Filtros Rápidos</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Botões de filtro acessíveis para alternar entre Todas, Não Lidas e Lidas com estado visual claro.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">🎨 Categorização Visual</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Ícones e cores diferentes por tipo (chegada=azul, atraso=laranja, sistema=vermelho) com border lateral de 4px para notificações não lidas.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">📱 Ações Contextuais</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Botão "Marcar como lida" em cada notificação não lida para gestão individual.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">👤 Metadados Claros</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Informação sobre quem enviou (Motorista/Gestor) e timestamp formatado humanamente.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

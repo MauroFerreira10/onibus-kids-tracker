@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBus - Página de Rotas (Wireframe Moderno)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .wireframe-header {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            color: #fff;
+            padding: 32px 24px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .wireframe-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .wireframe-header p {
+            color: #b0b0b0;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        /* Container principal */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        /* Header da página */
+        .page-header {
+            margin-bottom: 32px;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.8px;
+        }
+        
+        .page-subtitle {
+            font-size: 16px;
+            color: #666;
+            font-weight: 400;
+        }
+        
+        /* Barra de controles */
+        .controls-bar {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            height: 48px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+            padding: 0 16px 0 48px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #2d2d2d;
+            background: #fff;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+        }
+        
+        .filters-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .filter-chip {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #4a4a4a;
+        }
+        
+        .filter-chip:hover {
+            background: #ebebeb;
+            border-color: #d0d0d0;
+        }
+        
+        .filter-chip.active {
+            background: #2d2d2d;
+            color: #fff;
+            border-color: #2d2d2d;
+        }
+        
+        .filter-chip .count {
+            opacity: 0.7;
+            margin-left: 4px;
+        }
+        
+        /* Grid de estatísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border-color: #d0d0d0;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4a4a4a, #2d2d2d);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: -1px;
+        }
+        
+        /* Lista de rotas */
+        .routes-section {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .section-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .results-count {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .routes-list {
+            padding: 16px;
+        }
+        
+        .route-card {
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        
+        .route-card:hover {
+            border-color: #d0d0d0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .route-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+        }
+        
+        .route-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+        
+        .route-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ebebeb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .route-details {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .route-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+        
+        .route-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .route-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .status-badge.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        
+        .status-badge.pending {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffe0b2;
+        }
+        
+        .status-badge.completed {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+        
+        .expand-icon {
+            font-size: 20px;
+            color: #999;
+            transition: transform 0.2s;
+        }
+        
+        .route-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* Conteúdo expandível */
+        .route-content {
+            padding: 0;
+            background: #fafafa;
+            border-top: 1px solid #e5e5e5;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .route-card.expanded .route-content {
+            max-height: 2000px;
+        }
+        
+        /* Tabs */
+        .tabs-nav {
+            display: flex;
+            gap: 0;
+            background: #f5f5f5;
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .tab-btn:hover {
+            background: #ebebeb;
+            color: #2d2d2d;
+        }
+        
+        .tab-btn.active {
+            background: #fff;
+            color: #1a1a1a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .tab-content {
+            padding: 24px;
+        }
+        
+        /* Timeline de paradas */
+        .stops-timeline {
+            position: relative;
+        }
+        
+        .timeline-header {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stop-item {
+            position: relative;
+            padding-left: 48px;
+            margin-bottom: 24px;
+        }
+        
+        .stop-item::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            bottom: -24px;
+            width: 2px;
+            background: #e0e0e0;
+        }
+        
+        .stop-item:last-child::before {
+            display: none;
+        }
+        
+        .stop-marker {
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        
+        .stop-marker.current {
+            background: #2d2d2d;
+            border-color: #2d2d2d;
+        }
+        
+        .stop-marker.current::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        
+        .stop-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        
+        .stop-card:hover {
+            border-color: #d0d0d0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .stop-card.current {
+            border-color: #2d2d2d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .stop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .stop-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .stop-address {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .stop-time {
+            text-align: right;
+        }
+        
+        .time-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        
+        .time-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .stop-status {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stop-status.arriving {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .stop-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .btn-primary {
+            background: #2d2d2d;
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            background: #1a1a1a;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #4a4a4a;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .btn-secondary:hover {
+            background: #ebebeb;
+            border-color: #d0d0d0;
+        }
+        
+        /* Estado vazio */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+        }
+        
+        .empty-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ebebeb 100%);
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .empty-description {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 24px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Badges de componentes */
+        .reuse-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .new-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #FF9800;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Divisor com texto */
+        .more-stops {
+            text-align: center;
+            padding: 16px 0;
+            color: #999;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .more-stops::before,
+        .more-stops::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #e0e0e0;
+        }
+        
+        .more-stops::before {
+            left: 0;
+        }
+        
+        .more-stops::after {
+            right: 0;
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+            
+            .page-title {
+                font-size: 24px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .route-meta {
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            .tabs-nav {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tab-btn {
+                flex: none;
+                white-space: nowrap;
+            }
+        }
+        
+        /* Scrollbar customizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b0b0b0;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-header">
+        <h1>SafeBus — Página de Rotas</h1>
+        <p>Wireframe profissional de baixa fidelidade com foco em UX moderna e acessível</p>
+    </div>
+    
+    <div class="container">
+        <!-- REUSABLE: Layout from src/components/Layout.tsx -->
+        <div style="position: relative;">
+            <span class="reuse-badge" title="src/components/Layout.tsx">Reuse Layout</span>
+            
+            <!-- Header da página -->
+            <div class="page-header">
+                <h1 class="page-title">Rotas Ativas</h1>
+                <p class="page-subtitle">Gestão e acompanhamento das rotas escolares em Lubango</p>
+            </div>
+            
+            <!-- Barra de controles -->
+            <!-- NEW COMPONENT: SearchFilterBar -->
+            <div class="controls-bar" style="position: relative;">
+                <span class="new-badge" title="To be created at src/components/routes/SearchFilterBar.tsx">New SearchFilterBar</span>
+                
+                <!-- REUSABLE: Input from src/components/ui/input.tsx -->
+                <div class="search-wrapper" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/input.tsx">Reuse Input</span>
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        placeholder="Pesquisar por rota, parada ou motorista..."
+                        aria-label="Pesquisar rotas"
+                    >
+                </div>
+                
+                <div class="filters-row">
+                    <span class="filter-label">Filtrar:</span>
+                    <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">Reuse Badge</span>
+                        <button class="filter-chip active" aria-pressed="true">
+                            Todas<span class="count">(12)</span>
+                        </button>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">Reuse Badge</span>
+                        <button class="filter-chip" aria-pressed="false">
+                            Em Andamento<span class="count">(8)</span>
+                        </button>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">Reuse Badge</span>
+                        <button class="filter-chip" aria-pressed="false">
+                            Concluídas<span class="count">(4)</span>
+                        </button>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">Reuse Badge</span>
+                        <button class="filter-chip" aria-pressed="false">
+                            As Minhas Rotas<span class="count">(2)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grid de estatísticas -->
+            <div class="stats-grid">
+                <!-- NEW COMPONENT: StatCard -->
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">New StatCard</span>
+                    <div class="stat-header">
+                        <div class="stat-icon">🗺️</div>
+                    </div>
+                    <div class="stat-label">Rotas Ativas</div>
+                    <div class="stat-value">12</div>
+                </div>
+                
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">New StatCard</span>
+                    <div class="stat-header">
+                        <div class="stat-icon">⏰</div>
+                    </div>
+                    <div class="stat-label">Em Andamento</div>
+                    <div class="stat-value">8</div>
+                </div>
+                
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">New StatCard</span>
+                    <div class="stat-header">
+                        <div class="stat-icon">👥</div>
+                    </div>
+                    <div class="stat-label">Passageiros Hoje</div>
+                    <div class="stat-value">247</div>
+                </div>
+                
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">New StatCard</span>
+                    <div class="stat-header">
+                        <div class="stat-icon">📍</div>
+                    </div>
+                    <div class="stat-label">Total de Paradas</div>
+                    <div class="stat-value">45</div>
+                </div>
+            </div>
+            
+            <!-- Seção de rotas -->
+            <!-- REUSABLE: RoutesList from src/components/routes/RoutesList.tsx -->
+            <div class="routes-section" style="position: relative;">
+                <span class="reuse-badge" title="src/components/routes/RoutesList.tsx">Reuse RoutesList</span>
+                
+                <div class="section-header">
+                    <h2 class="section-title">Lista de Rotas</h2>
+                    <span class="results-count">12 rotas encontradas</span>
+                </div>
+                
+                <div class="routes-list">
+                    <!-- Rota 1 - Expandida -->
+                    <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                    <div class="route-card expanded" style="position: relative;">
+                        <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                        
+                        <div class="route-header">
+                            <div class="route-info">
+                                <div class="route-icon-wrapper">🚌</div>
+                                <div class="route-details">
+                                    <div class="route-name">Rota Centro — Lubango</div>
+                                    <div class="route-meta">
+                                        <span class="meta-item">👥 45 passageiros</span>
+                                        <span class="meta-item">📍 8 paradas</span>
+                                        <span class="meta-item">⏱️ 07:00 — 18:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="route-actions">
+                                <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                                <div style="position: relative; display: inline-block;">
+                                    <span class="reuse-badge" title="src/components/ui/badge.tsx">Reuse Badge</span>
+                                    <span class="status-badge active">Em Andamento</span>
+                                </div>
+                                <span class="expand-icon">▼</span>
+                            </div>
+                        </div>
+                        
+                        <div class="route-content">
+                            <!-- REUSABLE: Tabs from src/components/ui/tabs.tsx -->
+                            <div style="position: relative;">
+                                <span class="reuse-badge" title="src/components/ui/tabs.tsx">Reuse Tabs</span>
+                                <div class="tabs-nav">
+                                    <button class="tab-btn active" aria-selected="true">Paradas</button>
+                                    <button class="tab-btn" aria-selected="false">Horários</button>
+                                    <button class="tab-btn" aria-selected="false">Motorista</button>
+                                    <button class="tab-btn" aria-selected="false">Mapa</button>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-content">
+                                <!-- REUSABLE: StopsList from src/components/routes/StopsList.tsx -->
+                                <div class="stops-timeline" style="position: relative;">
+                                    <span class="reuse-badge" title="src/components/routes/StopsList.tsx">Reuse StopsList</span>
+                                    
+                                    <div class="timeline-header">
+                                        📍 Paradas da Rota
+                                    </div>
+                                    
+                                    <!-- Parada 1 - Atual -->
+                                    <div class="stop-item">
+                                        <div class="stop-marker current"></div>
+                                        <div class="stop-card current">
+                                            <div class="stop-header">
+                                                <div>
+                                                    <div class="stop-name">Praça da Independência</div>
+                                                    <div class="stop-address">Centro de Lubango</div>
+                                                </div>
+                                                <div class="stop-time">
+                                                    <div class="time-label">Chegada</div>
+                                                    <div class="time-value">07:30</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="stop-status arriving">
+                                                <span>🚌</span>
+                                                <span><strong>Ónibus a caminho</strong> — Chegada em 2 min (400m)</span>
+                                            </div>
+                                            
+                                            <div class="stop-actions">
+                                                <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                                                <div style="position: relative; display: inline-block; flex: 1;">
+                                                    <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                                                    <button class="btn btn-primary" aria-label="Confirmar presença na Praça da Independência">
+                                                        ✓ Confirmar Presença
+                                                    </button>
+                                                </div>
+                                                <div style="position: relative; display: inline-block; flex: 1;">
+                                                    <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                                                    <button class="btn btn-secondary" aria-label="Ver localização da Praça da Independência">
+                                                        📍 Ver no Mapa
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Parada 2 -->
+                                    <div class="stop-item">
+                                        <div class="stop-marker"></div>
+                                        <div class="stop-card">
+                                            <div class="stop-header">
+                                                <div>
+                                                    <div class="stop-name">Avenida 4 de Abril</div>
+                                                    <div class="stop-address">Bairro Comercial</div>
+                                                </div>
+                                                <div class="stop-time">
+                                                    <div class="time-label">Estimada</div>
+                                                    <div class="time-value">07:45</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="stop-status">
+                                                <span>👥</span>
+                                                <span>12 passageiros aguardando</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Parada 3 -->
+                                    <div class="stop-item">
+                                        <div class="stop-marker"></div>
+                                        <div class="stop-card">
+                                            <div class="stop-header">
+                                                <div>
+                                                    <div class="stop-name">Terminal da Lage</div>
+                                                    <div class="stop-address">Zona Industrial</div>
+                                                </div>
+                                                <div class="stop-time">
+                                                    <div class="time-label">Estimada</div>
+                                                    <div class="time-value">08:00</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="stop-status">
+                                                <span>👥</span>
+                                                <span>8 passageiros aguardando</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="more-stops">mais 5 paradas</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rota 2 -->
+                    <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                    <div class="route-card" style="position: relative;">
+                        <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                        
+                        <div class="route-header">
+                            <div class="route-info">
+                                <div class="route-icon-wrapper">🚌</div>
+                                <div class="route-details">
+                                    <div class="route-name">Rota Norte — Humpata</div>
+                                    <div class="route-meta">
+                                        <span class="meta-item">👥 32 passageiros</span>
+                                        <span class="meta-item">📍 6 paradas</span>
+                                        <span class="meta-item">⏱️ 07:30 — 17:30</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="route-actions">
+                                <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                                <div style="position: relative; display: inline-block;">
+                                    <span class="reuse-badge" title="src/components/ui/badge.tsx">Reuse Badge</span>
+                                    <span class="status-badge pending">Pendente</span>
+                                </div>
+                                <span class="expand-icon">▼</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rota 3 -->
+                    <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                    <div class="route-card" style="position: relative;">
+                        <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                        
+                        <div class="route-header">
+                            <div class="route-info">
+                                <div class="route-icon-wrapper">🚌</div>
+                                <div class="route-details">
+                                    <div class="route-name">Rota Sul — Chibia</div>
+                                    <div class="route-meta">
+                                        <span class="meta-item">👥 28 passageiros</span>
+                                        <span class="meta-item">📍 10 paradas</span>
+                                        <span class="meta-item">⏱️ 06:00 — 19:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="route-actions">
+                                <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                                <div style="position: relative; display: inline-block;">
+                                    <span class="reuse-badge" title="src/components/ui/badge.tsx">Reuse Badge</span>
+                                    <span class="status-badge active">Em Andamento</span>
+                                </div>
+                                <span class="expand-icon">▼</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <br><br>
+            
+            <!-- Estado vazio -->
+            <!-- REUSABLE: EmptyRoutes from src/components/routes/EmptyRoutes.tsx -->
+            <div class="routes-section" style="position: relative; display: none;">
+                <span class="reuse-badge" title="src/components/routes/EmptyRoutes.tsx">Reuse EmptyRoutes</span>
+                <div class="empty-state">
+                    <div class="empty-icon">🚌</div>
+                    <h3 class="empty-title">Nenhuma rota encontrada</h3>
+                    <p class="empty-description">Não há rotas ativas no momento ou a sua pesquisa não retornou resultados. Tente ajustar os filtros.</p>
+                    <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                        <button class="btn btn-primary">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <br><br>
+    
+    <div style="background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%); border: 1px solid #e0e0e0; border-radius: 12px; padding: 32px; margin: 32px 24px; max-width: 1400px; margin-left: auto; margin-right: auto;">
+        <h3 style="margin-bottom: 20px; font-size: 20px; font-weight: 600; color: #1a1a1a;">💡 Principais Melhorias no Design</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">🔍 Pesquisa Avançada</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Campo de pesquisa dedicado para filtrar por rotas, paradas ou motoristas com feedback visual instantâneo.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">🏷️ Filtros Inteligentes</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Chips clicáveis com contadores em tempo real, incluindo filtro "As Minhas Rotas" para personalização.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">📊 Estatísticas Visuais</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Cards de estatísticas com design profissional e indicador visual de categoria no topo.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">📑 Organização em Tabs</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Conteúdo da rota dividido em abas (Paradas, Horários, Motorista, Mapa) para melhor navegação.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">🚦 Timeline Melhorada</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Indicação clara da parada atual com status em tempo real e distância estimada do autocarro.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">♿ Acessibilidade Total</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Todos os elementos interativos com aria-labels, estados de foco visíveis e contraste WCAG AA.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

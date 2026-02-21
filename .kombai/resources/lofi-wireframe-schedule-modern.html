@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBus - Horários (Wireframe Moderno)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .wireframe-header {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            color: #fff;
+            padding: 32px 24px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .wireframe-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .wireframe-header p {
+            color: #b0b0b0;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.8px;
+        }
+        
+        .page-subtitle {
+            font-size: 16px;
+            color: #666;
+            font-weight: 400;
+        }
+        
+        /* Date Navigator */
+        .date-navigator {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn:hover {
+            background: #ebebeb;
+            border-color: #d0d0d0;
+        }
+        
+        .date-display {
+            text-align: center;
+        }
+        
+        .date-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .date-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .today-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #2d2d2d;
+            color: #fff;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .info-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .info-card h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+        
+        .info-list {
+            list-style: none;
+        }
+        
+        .info-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2d2d2d;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .status-indicator.on-time {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-indicator.delayed {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Stop List */
+        .section-header {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: -0.5px;
+        }
+        
+        .stops-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .stop-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .stop-card:hover {
+            border-color: #d0d0d0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        
+        .stop-info {
+            flex: 1;
+        }
+        
+        .stop-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+        
+        .stop-address {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .time-box {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e5e5;
+        }
+        
+        .time-box.scheduled {
+            background: #fafafa;
+        }
+        
+        .time-box.on-time {
+            background: #e8f5e9;
+            border-color: #c8e6c9;
+        }
+        
+        .time-box.delayed {
+            background: #fff3e0;
+            border-color: #ffe0b2;
+        }
+        
+        .time-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .time-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .stop-status {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .stop-status.on-time {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        
+        .stop-status.delayed {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffe0b2;
+        }
+        
+        /* Weekend Alert */
+        .alert {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .alert-icon {
+            flex-shrink: 0;
+            color: #d32f2f;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #c62828;
+            margin-bottom: 4px;
+        }
+        
+        .alert-description {
+            font-size: 14px;
+            color: #b71c1c;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+        }
+        
+        .empty-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .empty-description {
+            font-size: 15px;
+            color: #666;
+        }
+        
+        /* Badges */
+        .reuse-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .new-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #FF9800;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        @media (max-width: 768px) {
+            .time-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stop-card {
+                flex-direction: column;
+            }
+            
+            .stop-status {
+                margin-top: 16px;
+                align-self: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-header">
+        <h1>SafeBus — Página de Horários</h1>
+        <p>Wireframe profissional de baixa fidelidade com navegação de datas e status em tempo real</p>
+    </div>
+    
+    <div class="container">
+        <!-- REUSABLE: Layout from src/components/Layout.tsx -->
+        <div style="position: relative;">
+            <span class="reuse-badge" title="src/components/Layout.tsx">Reuse Layout</span>
+            
+            <div class="page-header">
+                <h1 class="page-title">Horários dos Autocarros</h1>
+                <p class="page-subtitle">Acompanhe em tempo real os horários das paradas</p>
+            </div>
+            
+            <!-- Date Navigator -->
+            <div class="date-navigator" style="position: relative;">
+                <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                <button class="nav-btn" aria-label="Dia anterior">◀</button>
+                <div class="date-display">
+                    <div class="date-label">Data Selecionada</div>
+                    <div class="date-value">Segunda-feira, 14 de Fevereiro</div>
+                    <span class="today-badge">Hoje</span>
+                </div>
+                <button class="nav-btn" aria-label="Próximo dia">▶</button>
+            </div>
+            
+            <!-- Info Grid -->
+            <div class="info-grid">
+                <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                <div class="info-card" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                    <h3>⏰ Horários Principais</h3>
+                    <ul class="info-list">
+                        <li>
+                            <span class="dot"></span>
+                            <span>Reitoria da Mandume: <strong>07:30</strong></span>
+                        </li>
+                        <li>
+                            <span class="dot"></span>
+                            <span>Bairro do Tchioco: <strong>07:50</strong></span>
+                        </li>
+                        <li>
+                            <span class="dot"></span>
+                            <span>Terminal Central: <strong>08:10</strong></span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                <div class="info-card" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                    <h3>📊 Status do Serviço</h3>
+                    <div class="status-indicator on-time">
+                        <div class="pulse-dot" style="background: #2e7d32;"></div>
+                        <span>Serviço no horário</span>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 12px;">
+                        Status baseado na localização e horário atual do motorista
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Section Header -->
+            <div class="section-header">
+                <h2 class="section-title">Horários para Segunda-feira, 14 de Fevereiro</h2>
+            </div>
+            
+            <!-- Stops List -->
+            <div class="stops-list" style="position: relative;">
+                <span class="reuse-badge" title="src/components/routes/StopsList.tsx">Reuse StopsList</span>
+                
+                <!-- Stop 1 - On Time -->
+                <div class="stop-card" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                    <div class="stop-info">
+                        <div class="stop-name">Praça da Independência</div>
+                        <div class="stop-address">
+                            <span>📍</span>
+                            <span>Centro de Lubango</span>
+                        </div>
+                        
+                        <div class="time-grid">
+                            <div class="time-box scheduled">
+                                <div class="time-label">Horário Previsto</div>
+                                <div class="time-value">⏰ 07:30</div>
+                            </div>
+                            <div class="time-box on-time">
+                                <div class="time-label">Horário Estimado</div>
+                                <div class="time-value">⏰ 07:30</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stop-status on-time">No Horário</div>
+                </div>
+                
+                <!-- Stop 2 - Delayed -->
+                <div class="stop-card">
+                    <div class="stop-info">
+                        <div class="stop-name">Avenida 4 de Abril</div>
+                        <div class="stop-address">
+                            <span>📍</span>
+                            <span>Bairro Comercial</span>
+                        </div>
+                        
+                        <div class="time-grid">
+                            <div class="time-box scheduled">
+                                <div class="time-label">Horário Previsto</div>
+                                <div class="time-value">⏰ 07:45</div>
+                            </div>
+                            <div class="time-box delayed">
+                                <div class="time-label">Horário Estimado</div>
+                                <div class="time-value">⏰ 07:52</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stop-status delayed">Atrasado</div>
+                </div>
+                
+                <!-- Stop 3 -->
+                <div class="stop-card">
+                    <div class="stop-info">
+                        <div class="stop-name">Terminal da Lage</div>
+                        <div class="stop-address">
+                            <span>📍</span>
+                            <span>Zona Industrial</span>
+                        </div>
+                        
+                        <div class="time-grid">
+                            <div class="time-box scheduled">
+                                <div class="time-label">Horário Previsto</div>
+                                <div class="time-value">⏰ 08:00</div>
+                            </div>
+                            <div class="time-box on-time">
+                                <div class="time-label">Horário Estimado</div>
+                                <div class="time-value">⏰ 08:00</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stop-status on-time">No Horário</div>
+                </div>
+            </div>
+            
+            <br><br>
+            
+            <!-- Weekend Alert (Hidden by default) -->
+            <div class="alert" style="display: none;">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <div class="alert-title">Sem Serviço</div>
+                    <div class="alert-description">
+                        Os autocarros não operam aos fins de semana. Por favor, selecione um dia útil.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty State (Hidden) -->
+            <div class="empty-state" style="display: none;">
+                <div class="empty-icon">🚌</div>
+                <h3 class="empty-title">Nenhum horário disponível</h3>
+                <p class="empty-description">Não há horários registados para esta data.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%); border: 1px solid #e0e0e0; border-radius: 12px; padding: 32px; margin: 32px 24px; max-width: 1200px; margin-left: auto; margin-right: auto;">
+        <h3 style="margin-bottom: 20px; font-size: 20px; font-weight: 600; color: #1a1a1a;">💡 Principais Melhorias no Design</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">📅 Navegação de Datas</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Controles intuitivos para navegar entre dias com indicação clara da data selecionada e badge "Hoje".</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">📊 Status em Tempo Real</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Indicadores visuais claros de status do serviço com animação de pulso para chamar atenção.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">⏰ Comparação de Horários</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Grid lado a lado mostrando horário previsto vs. estimado com codificação de cores (verde=pontual, laranja=atrasado).</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">⚠️ Alertas Contextuais</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Alertas visuais para fins de semana e outros casos especiais com cores apropriadas.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBus - Página de Rotas (Redesign Wireframe)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: #fff;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .wireframe-header {
+            background: #f5f5f5;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .wireframe-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .wireframe-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Container principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Barra de busca e filtros */
+        .search-filter-bar {
+            position: relative;
+            background: #fff;
+            border: 3px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            height: 50px;
+            border: 2px dashed #666;
+            border-radius: 8px;
+            background: #f9f9f9;
+            padding: 0 15px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .filter-chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .chip {
+            background: #e0e0e0;
+            border: 2px solid #999;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .chip.active {
+            background: #333;
+            color: #fff;
+        }
+        
+        /* Grid de estatísticas */
+        .stats-grid {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #fff;
+            border: 3px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #666;
+            border-radius: 8px;
+            background: #f0f0f0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        /* Lista de rotas */
+        .routes-list {
+            position: relative;
+        }
+        
+        .route-card {
+            background: #fff;
+            border: 3px solid #333;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .route-header {
+            padding: 20px;
+            border-bottom: 2px dashed #ccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .route-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+        
+        .route-icon {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #666;
+            border-radius: 10px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .route-details {
+            flex: 1;
+        }
+        
+        .route-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .route-meta {
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .status-badge {
+            background: #e0e0e0;
+            border: 2px solid #999;
+            border-radius: 15px;
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+        
+        .status-badge.active {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        
+        /* Conteúdo expandível da rota */
+        .route-content {
+            padding: 20px;
+            background: #fafafa;
+            display: none;
+        }
+        
+        .route-content.expanded {
+            display: block;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ccc;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            border: 2px solid #ccc;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background: #fff;
+            border-color: #333;
+            border-bottom-color: #fff;
+            margin-bottom: -2px;
+        }
+        
+        /* Timeline de paradas */
+        .stops-timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .timeline-line {
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #ccc;
+        }
+        
+        .stop-item {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .stop-marker {
+            position: absolute;
+            left: -40px;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #333;
+            border-radius: 50%;
+            background: #fff;
+        }
+        
+        .stop-marker.current {
+            background: #333;
+        }
+        
+        .stop-content {
+            background: #fff;
+            border: 2px solid #666;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .stop-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stop-time {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stop-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: 2px solid #333;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #333;
+            color: #fff;
+        }
+        
+        /* Badge de componente reutilizável */
+        .reuse-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .new-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #FF9800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f9f9f9;
+            border: 3px dashed #ccc;
+            border-radius: 12px;
+        }
+        
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #999;
+            border-radius: 50%;
+            background: #f0f0f0;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #999;
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .route-meta {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-header">
+        <h1>🚌 SafeBus - Página de Rotas (Redesign)</h1>
+        <p>Wireframe de baixa fidelidade - Proposta de melhoria com foco em usabilidade e acessibilidade</p>
+    </div>
+    
+    <div class="container">
+        <!-- REUSABLE: Layout from src/components/Layout.tsx -->
+        <div style="position: relative;">
+            <span class="reuse-badge" title="src/components/Layout.tsx">[REUSE] Layout</span>
+            
+            <!-- Barra de busca e filtros -->
+            <!-- NEW COMPONENT: SearchFilterBar (to be created at src/components/routes/SearchFilterBar.tsx) -->
+            <div class="search-filter-bar" style="position: relative;">
+                <span class="new-badge" title="To be created at src/components/routes/SearchFilterBar.tsx">[NEW] SearchFilterBar</span>
+                
+                <!-- REUSABLE: Input from src/components/ui/input.tsx -->
+                <div style="position: relative; display: inline-block; width: 100%;">
+                    <span class="reuse-badge" title="src/components/ui/input.tsx">[REUSE] Input</span>
+                    <input type="text" class="search-input" placeholder="🔍 Pesquisar rotas, paradas ou motoristas..." aria-label="Pesquisar rotas">
+                </div>
+                
+                <div class="filter-chips">
+                    <span style="font-size: 14px; color: #666; margin-right: 10px;">Filtrar:</span>
+                    <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">[REUSE] Badge</span>
+                        <div class="chip active">Todas (12)</div>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">[REUSE] Badge</span>
+                        <div class="chip">Em Andamento (8)</div>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">[REUSE] Badge</span>
+                        <div class="chip">Concluídas (4)</div>
+                    </div>
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/badge.tsx">[REUSE] Badge</span>
+                        <div class="chip">As minhas rotas (2)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grid de estatísticas -->
+            <div class="stats-grid">
+                <!-- NEW COMPONENT: StatCard (to be created at src/components/routes/StatCard.tsx) -->
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">[NEW] StatCard</span>
+                    <div class="stat-icon">[🗺️]</div>
+                    <div class="stat-label">Rotas Ativas</div>
+                    <div class="stat-value">12</div>
+                </div>
+                
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">[NEW] StatCard</span>
+                    <div class="stat-icon">[⏰]</div>
+                    <div class="stat-label">Em Andamento</div>
+                    <div class="stat-value">8</div>
+                </div>
+                
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">[NEW] StatCard</span>
+                    <div class="stat-icon">[👥]</div>
+                    <div class="stat-label">Passageiros Hoje</div>
+                    <div class="stat-value">247</div>
+                </div>
+                
+                <div class="stat-card" style="position: relative;">
+                    <span class="new-badge" title="To be created at src/components/routes/StatCard.tsx">[NEW] StatCard</span>
+                    <div class="stat-icon">[📍]</div>
+                    <div class="stat-label">Total de Paradas</div>
+                    <div class="stat-value">45</div>
+                </div>
+            </div>
+            
+            <!-- Lista de rotas -->
+            <!-- REUSABLE: RoutesList from src/components/routes/RoutesList.tsx -->
+            <div class="routes-list" style="position: relative;">
+                <span class="reuse-badge" title="src/components/routes/RoutesList.tsx">[REUSE] RoutesList</span>
+                
+                <!-- Rota 1 - Expandida -->
+                <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                <div class="route-card" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">[REUSE] Card</span>
+                    
+                    <div class="route-header">
+                        <div class="route-info">
+                            <div class="route-icon">[🚌]</div>
+                            <div class="route-details">
+                                <div class="route-title">Rota Centro - Lubango</div>
+                                <div class="route-meta">
+                                    <span>👥 45 passageiros</span>
+                                    <span>📍 8 paradas</span>
+                                    <span>⏱️ 07:00 - 18:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                            <div style="position: relative; display: inline-block;">
+                                <span class="reuse-badge" title="src/components/ui/badge.tsx">[REUSE] Badge</span>
+                                <div class="status-badge active">Em Andamento</div>
+                            </div>
+                            <span style="font-size: 24px;">▼</span>
+                        </div>
+                    </div>
+                    
+                    <div class="route-content expanded">
+                        <!-- Tabs -->
+                        <!-- REUSABLE: Tabs from src/components/ui/tabs.tsx -->
+                        <div style="position: relative;">
+                            <span class="reuse-badge" title="src/components/ui/tabs.tsx">[REUSE] Tabs</span>
+                            <div class="tabs">
+                                <div class="tab active">Paradas</div>
+                                <div class="tab">Horários</div>
+                                <div class="tab">Motorista</div>
+                                <div class="tab">Mapa</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Timeline de paradas -->
+                        <!-- REUSABLE: StopsList from src/components/routes/StopsList.tsx -->
+                        <div class="stops-timeline" style="position: relative;">
+                            <span class="reuse-badge" title="src/components/routes/StopsList.tsx">[REUSE] StopsList</span>
+                            <div class="timeline-line"></div>
+                            
+                            <!-- Parada 1 - Atual -->
+                            <div class="stop-item">
+                                <div class="stop-marker current"></div>
+                                <div class="stop-content">
+                                    <div class="stop-name">📍 Praça da Independência</div>
+                                    <div class="stop-time">⏰ 07:30 • Chegada estimada: 2 min</div>
+                                    <div style="font-size: 12px; color: #28a745; margin-top: 5px;">
+                                        ✓ Ónibus a caminho - 400m de distância
+                                    </div>
+                                    <div class="stop-actions">
+                                        <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                                        <div style="position: relative; display: inline-block;">
+                                            <span class="reuse-badge" title="src/components/ui/button.tsx">[REUSE] Button</span>
+                                            <button class="btn btn-primary" aria-label="Confirmar presença na Praça da Independência">✓ Confirmar Presença</button>
+                                        </div>
+                                        <div style="position: relative; display: inline-block;">
+                                            <span class="reuse-badge" title="src/components/ui/button.tsx">[REUSE] Button</span>
+                                            <button class="btn" aria-label="Ver localização da Praça da Independência">📍 Ver no Mapa</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Parada 2 -->
+                            <div class="stop-item">
+                                <div class="stop-marker"></div>
+                                <div class="stop-content">
+                                    <div class="stop-name">📍 Avenida 4 de Abril</div>
+                                    <div class="stop-time">⏰ 07:45 • Chegada estimada: 17 min</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                        👥 12 passageiros aguardando
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Parada 3 -->
+                            <div class="stop-item">
+                                <div class="stop-marker"></div>
+                                <div class="stop-content">
+                                    <div class="stop-name">📍 Terminal da Lage</div>
+                                    <div class="stop-time">⏰ 08:00 • Chegada estimada: 32 min</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                        👥 8 passageiros aguardando
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Mais paradas (indicador) -->
+                            <div style="text-align: center; padding: 10px; color: #666;">
+                                ... mais 5 paradas
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rota 2 - Collapsed -->
+                <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                <div class="route-card" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">[REUSE] Card</span>
+                    
+                    <div class="route-header">
+                        <div class="route-info">
+                            <div class="route-icon">[🚌]</div>
+                            <div class="route-details">
+                                <div class="route-title">Rota Norte - Humpata</div>
+                                <div class="route-meta">
+                                    <span>👥 32 passageiros</span>
+                                    <span>📍 6 paradas</span>
+                                    <span>⏱️ 07:30 - 17:30</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                            <div style="position: relative; display: inline-block;">
+                                <span class="reuse-badge" title="src/components/ui/badge.tsx">[REUSE] Badge</span>
+                                <div class="status-badge">Pendente</div>
+                            </div>
+                            <span style="font-size: 24px;">►</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rota 3 - Collapsed -->
+                <!-- REUSABLE: Card from src/components/ui/card.tsx -->
+                <div class="route-card" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">[REUSE] Card</span>
+                    
+                    <div class="route-header">
+                        <div class="route-info">
+                            <div class="route-icon">[🚌]</div>
+                            <div class="route-details">
+                                <div class="route-title">Rota Sul - Chibia</div>
+                                <div class="route-meta">
+                                    <span>👥 28 passageiros</span>
+                                    <span>📍 10 paradas</span>
+                                    <span>⏱️ 06:00 - 19:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <!-- REUSABLE: Badge from src/components/ui/badge.tsx -->
+                            <div style="position: relative; display: inline-block;">
+                                <span class="reuse-badge" title="src/components/ui/badge.tsx">[REUSE] Badge</span>
+                                <div class="status-badge active">Em Andamento</div>
+                            </div>
+                            <span style="font-size: 24px;">►</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <br><br>
+            
+            <!-- Estado vazio (exemplo quando não há rotas) -->
+            <!-- REUSABLE: EmptyRoutes from src/components/routes/EmptyRoutes.tsx -->
+            <div style="position: relative; display: none;">
+                <span class="reuse-badge" title="src/components/routes/EmptyRoutes.tsx">[REUSE] EmptyRoutes</span>
+                <div class="empty-state">
+                    <div class="empty-icon">🚌</div>
+                    <h3 style="margin-bottom: 10px;">Nenhuma rota encontrada</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Não há rotas ativas no momento ou a sua pesquisa não retornou resultados.</p>
+                    <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/button.tsx">[REUSE] Button</span>
+                        <button class="btn btn-primary">Limpar filtros</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <br><br>
+    
+    <div style="background: #f9f9f9; border: 2px solid #ccc; border-radius: 8px; padding: 20px; margin-top: 30px;">
+        <h3 style="margin-bottom: 15px;">💡 Principais Melhorias Propostas:</h3>
+        <ul style="line-height: 2;">
+            <li><strong>Barra de Pesquisa:</strong> Permite pesquisar por rotas, paradas ou motoristas</li>
+            <li><strong>Filtros Aprimorados:</strong> Chips clicáveis com contadores de itens, incluindo filtro "As minhas rotas"</li>
+            <li><strong>Cartões de Estatísticas:</strong> Componente reutilizável StatCard para melhor organização</li>
+            <li><strong>Tabs na Rota:</strong> Organização do conteúdo em abas (Paradas, Horários, Motorista, Mapa)</li>
+            <li><strong>Timeline Melhorada:</strong> Indicação visual clara da parada atual e próximas paradas</li>
+            <li><strong>Informações em Tempo Real:</strong> "Ónibus a caminho" com distância estimada</li>
+            <li><strong>Ações Rápidas:</strong> Botões para confirmar presença e ver localização no mapa</li>
+            <li><strong>Estado Vazio Informativo:</strong> Mensagem clara quando não há rotas</li>
+            <li><strong>Acessibilidade:</strong> Todos os botões e inputs têm aria-labels apropriados</li>
+            <li><strong>Responsividade:</strong> Layout adaptável para mobile e desktop</li>
+        </ul>
+    </div>
+</body>
+</html>

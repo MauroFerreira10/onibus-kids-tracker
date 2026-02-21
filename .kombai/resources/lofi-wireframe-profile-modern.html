@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeBus - Perfil (Wireframe Moderno)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .wireframe-header {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            color: #fff;
+            padding: 32px 24px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .wireframe-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .wireframe-header p {
+            color: #b0b0b0;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        /* Profile Header */
+        .profile-header {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #fff;
+            font-weight: 700;
+            border: 4px solid #f5f5f5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+            letter-spacing: -0.6px;
+        }
+        
+        .profile-role {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        
+        .edit-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn:hover {
+            background: #2d2d2d;
+            color: #fff;
+            border-color: #2d2d2d;
+        }
+        
+        /* Section */
+        .section {
+            margin-bottom: 24px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        /* Children Grid */
+        .children-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .child-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: all 0.2s;
+        }
+        
+        .child-card:hover {
+            border-color: #d0d0d0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        
+        .child-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .child-role {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        
+        .child-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .child-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .btn-small.primary {
+            border-color: #2d2d2d;
+            color: #2d2d2d;
+        }
+        
+        .btn-small.primary:hover {
+            background: #2d2d2d;
+            color: #fff;
+        }
+        
+        .btn-small.danger {
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+        
+        .btn-small.danger:hover {
+            background: #d32f2f;
+            color: #fff;
+        }
+        
+        .add-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: #2d2d2d;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-btn:hover {
+            background: #1a1a1a;
+        }
+        
+        /* Contact Info */
+        .contact-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .contact-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+        
+        .contact-item:hover {
+            background: #fafafa;
+        }
+        
+        .contact-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .contact-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .contact-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .contact-value {
+            font-weight: 500;
+            color: #1a1a1a;
+            font-size: 14px;
+        }
+        
+        /* Sign Out Button */
+        .signout-btn {
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            background: #d32f2f;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .signout-btn:hover {
+            background: #b71c1c;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: #fff;
+            border: 1px dashed #e0e0e0;
+            border-radius: 12px;
+        }
+        
+        .empty-title {
+            font-size: 15px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+        
+        /* Badges */
+        .reuse-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .new-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #FF9800;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .children-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .contact-item {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-header">
+        <h1>SafeBus — Perfil do Utilizador</h1>
+        <p>Wireframe profissional com gestão de perfil e estudantes vinculados</p>
+    </div>
+    
+    <div class="container">
+        <!-- REUSABLE: Layout from src/components/Layout.tsx -->
+        <div style="position: relative;">
+            <span class="reuse-badge" title="src/components/Layout.tsx">Reuse Layout</span>
+            
+            <!-- Profile Header -->
+            <div class="profile-header" style="position: relative;">
+                <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                <!-- REUSABLE: Avatar from src/components/ui/avatar.tsx -->
+                <div style="position: relative; display: inline-block;">
+                    <span class="reuse-badge" title="src/components/ui/avatar.tsx">Reuse Avatar</span>
+                    <div class="avatar">MC</div>
+                </div>
+                
+                <div class="profile-info">
+                    <h1 class="profile-name">Maria Costa</h1>
+                    <p class="profile-role">Responsável</p>
+                    <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                        <button class="edit-btn">Editar Perfil</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Students Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Estudantes Vinculados</h2>
+                    <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                    <div style="position: relative; display: inline-block;">
+                        <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                        <button class="add-btn">+ Adicionar Estudante</button>
+                    </div>
+                </div>
+                
+                <div class="children-grid">
+                    <!-- Child Card 1 -->
+                    <div class="child-card" style="position: relative;">
+                        <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                        <h3 class="child-name">João Costa</h3>
+                        <p class="child-role">Estudante</p>
+                        <div class="child-meta">
+                            <span>✓</span>
+                            <span>Número: 2024-001-JC</span>
+                        </div>
+                        <div class="child-actions">
+                            <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                            <div style="position: relative; flex: 1;">
+                                <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                                <button class="btn-small primary">Editar</button>
+                            </div>
+                            <div style="position: relative; flex: 1;">
+                                <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                                <button class="btn-small danger">Remover</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Child Card 2 -->
+                    <div class="child-card">
+                        <h3 class="child-name">Ana Costa</h3>
+                        <p class="child-role">Estudante</p>
+                        <div class="child-meta">
+                            <span>✓</span>
+                            <span>Número: 2024-002-AC</span>
+                        </div>
+                        <div class="child-actions">
+                            <button class="btn-small primary">Editar</button>
+                            <button class="btn-small danger">Remover</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Informações de Contato</h2>
+                </div>
+                
+                <div class="contact-card" style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/card.tsx">Reuse Card</span>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">
+                            <div class="contact-icon">📧</div>
+                            <span>Email</span>
+                        </div>
+                        <span class="contact-value">maria.costa@email.com</span>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">
+                            <div class="contact-icon">📱</div>
+                            <span>Telefone</span>
+                        </div>
+                        <span class="contact-value">+244 923 456 789</span>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">
+                            <div class="contact-icon">🏠</div>
+                            <span>Endereço</span>
+                        </div>
+                        <span class="contact-value">Rua da Independência, 123, Lubango</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sign Out -->
+            <div class="section">
+                <!-- REUSABLE: Button from src/components/ui/button.tsx -->
+                <div style="position: relative;">
+                    <span class="reuse-badge" title="src/components/ui/button.tsx">Reuse Button</span>
+                    <button class="signout-btn">Terminar Sessão</button>
+                </div>
+            </div>
+            
+            <br>
+            
+            <!-- Empty State (Hidden) -->
+            <div class="empty-state" style="display: none;">
+                <h3 class="empty-title">Nenhum estudante cadastrado</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%); border: 1px solid #e0e0e0; border-radius: 12px; padding: 32px; margin: 32px 24px; max-width: 1000px; margin-left: auto; margin-right: auto;">
+        <h3 style="margin-bottom: 20px; font-size: 20px; font-weight: 600; color: #1a1a1a;">💡 Principais Melhorias no Design</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">👤 Header com Avatar</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Avatar grande e destacado com iniciais, nome e papel do utilizador bem visíveis, com botão de edição facilmente acessível.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">👨‍👩‍👧 Gestão de Estudantes</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Grid responsivo de cartões para cada estudante com ações de editar/remover claramente visíveis.</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">📞 Informações de Contato</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Layout limpo e organizado com ícones para cada tipo de informação (email, telefone, endereço).</p>
+            </div>
+            <div style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <strong style="color: #1a1a1a; display: block; margin-bottom: 8px;">🔴 Botão de Sair Destacado</strong>
+                <p style="font-size: 14px; color: #666; line-height: 1.6;">Botão vermelho full-width no final da página para ação de terminar sessão, separado das outras ações.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
