@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Círculo de fundo -->
-  <circle cx="100" cy="100" r="90" fill="url(#gradient)" />
-  
-  <!-- Ícone de ônibus estilizado -->
-  <path d="M60 70C60 65.5817 63.5817 62 68 62H132C136.418 62 140 65.5817 140 70V110C140 114.418 136.418 118 132 118H68C63.5817 118 60 114.418 60 110V70Z" fill="white"/>
-  
-  <!-- Janelas do ônibus -->
-  <rect x="70" y="75" width="20" height="20" rx="2" fill="#4F46E5"/>
-  <rect x="95" y="75" width="20" height="20" rx="2" fill="#4F46E5"/>
-  <rect x="120" y="75" width="20" height="20" rx="2" fill="#4F46E5"/>
-  
-  <!-- Rodas do ônibus -->
-  <circle cx="75" cy="110" r="8" fill="#1E293B"/>
-  <circle cx="125" cy="110" r="8" fill="#1E293B"/>
-  
-  <!-- Escudo de proteção -->
-  <path d="M100 40C100 40 85 50 85 70C85 85 92 95 100 95C108 95 115 85 115 70C115 50 100 40 100 40Z" fill="white"/>
-  
-  <!-- Gradiente de fundo -->
-  <defs>
-    <linearGradient id="gradient" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#2563EB"/>
-    </linearGradient>
-  </defs>
-</svg> 
+<svg width="240" height="280" viewBox="0 0 240 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pin amarelo (teardrop) -->
+  <path d="M120 8C58.144 8 8 58.144 8 120c0 84 112 152 112 152s112-68 112-152C232 58.144 181.856 8 120 8z" fill="#FBBF24"/>
+
+  <!-- Círculo branco interno -->
+  <circle cx="120" cy="120" r="68" fill="#FFFFFF"/>
+
+  <!-- Ônibus (vista frontal) -->
+  <g fill="#1E3A8A">
+    <!-- Corpo principal -->
+    <path d="M88 86c-3.314 0-6 2.686-6 6v60c0 2.21 1.79 4 4 4h4v6c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-6h32v6c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-6h4c2.21 0 4-1.79 4-4V92c0-3.314-2.686-6-6-6H88z"/>
+    <!-- Teto/destaque superior -->
+    <rect x="100" y="80" width="40" height="8" rx="2"/>
+  </g>
+
+  <!-- Para-brisa (dividido em dois) -->
+  <path d="M93 100c0-1.105.895-2 2-2h22v26H95c-1.105 0-2-.895-2-2v-22z" fill="#FFFFFF"/>
+  <path d="M123 98h22c1.105 0 2 .895 2 2v22c0 1.105-.895 2-2 2h-22V98z" fill="#FFFFFF"/>
+
+  <!-- Faróis -->
+  <circle cx="96" cy="146" r="3" fill="#FFFFFF"/>
+  <circle cx="144" cy="146" r="3" fill="#FFFFFF"/>
+
+  <!-- Grade frontal -->
+  <rect x="108" y="138" width="24" height="3" rx="1.5" fill="#FFFFFF"/>
+  <rect x="108" y="144" width="24" height="3" rx="1.5" fill="#FFFFFF"/>
+</svg>

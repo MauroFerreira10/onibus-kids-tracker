@@ -41,7 +41,7 @@ export const ArrivalNotification: React.FC<ArrivalNotificationProps> = ({ stopId
               className={`bg-white rounded-xl shadow-xl p-4 flex items-start space-x-4 border ${
                 isArrival 
                   ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50' 
-                  : 'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50'
+                  : 'border-safebus-blue/20 bg-gradient-to-r from-safebus-yellow/5 to-white'
               }`}
             >
               <div className={`p-3 rounded-lg ${

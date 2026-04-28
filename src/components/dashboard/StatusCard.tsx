@@ -47,45 +47,46 @@ const StatusCard: React.FC<StatusCardProps> = ({ bus }) => {
   const isOnTime = bus.onTime;
 
   return (
-    <Card className="bg-white border shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <span className="flex items-center">
-            <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
-            Status da Viagem
-          </span>
-          <Badge className={statusInfo.color}>
-            <div className="flex items-center gap-1.5">
-              {statusInfo.icon}
-              {statusInfo.label}
+    <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-50 rounded-lg">
+              <Bus className="h-4 w-4 sm:h-5 sm:w-5 text-safebus-blue" aria-hidden="true" />
             </div>
+            <span>Status da Viagem</span>
+          </div>
+          <Badge 
+            className={`${statusInfo.color} hover:${statusInfo.color} gap-1.5 px-2.5 py-1 font-medium`} 
+            variant="outline"
+          >
+            {statusInfo.icon}
+            {statusInfo.label}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          <p className="text-gray-600">{statusInfo.description}</p>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">{statusInfo.description}</p>
           
-          <div className="flex items-center">
-            <div className="flex items-center text-sm">
-              {isOnTime ? (
-                <>
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
-                  <span className="text-green-700">No horário</span>
-                </>
-              ) : (
-                <>
-                  <Clock className="h-4 w-4 text-amber-500 mr-1.5" />
-                  <span className="text-amber-700">Fora do horário previsto</span>
-                </>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            {isOnTime ? (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-50 rounded-lg">
+                <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+                <span className="text-sm font-medium text-green-700">No horário</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 rounded-lg">
+                <Clock className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                <span className="text-sm font-medium text-amber-700">Fora do horário</span>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center mt-2">
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
+          <div className="pt-2">
+            <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className={`h-1.5 rounded-full ${
+                className={`h-2 rounded-full transition-all duration-500 ${
                   bus.status === 'active' 
                     ? 'bg-green-500' 
                     : bus.status === 'delayed'
@@ -93,6 +94,11 @@ const StatusCard: React.FC<StatusCardProps> = ({ bus }) => {
                     : 'bg-gray-400'
                 }`}
                 style={{ width: `${bus.status === 'active' ? 100 : bus.status === 'delayed' ? 65 : 0}%` }}
+                role="progressbar"
+                aria-valuenow={bus.status === 'active' ? 100 : bus.status === 'delayed' ? 65 : 0}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`Progresso da viagem: ${bus.status === 'active' ? '100' : bus.status === 'delayed' ? '65' : '0'}%`}
               ></div>
             </div>
           </div>

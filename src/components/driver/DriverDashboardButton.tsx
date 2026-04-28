@@ -16,7 +16,7 @@ const DriverDashboardButton: React.FC = () => {
       <Button
         onClick={handleNavigateToDriverDashboard}
         size="lg"
-        className="rounded-full shadow-lg bg-busapp-primary hover:bg-busapp-primary/90"
+        className="rounded-full shadow-lg bg-safebus-blue hover:bg-safebus-blue/90"
       >
         <Bus className="mr-2 h-5 w-5" />
         Painel do Motorista

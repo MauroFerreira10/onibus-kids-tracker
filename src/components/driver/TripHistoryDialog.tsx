@@ -106,7 +106,7 @@ export function TripHistoryDialog() {
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          className="flex-1 bg-white border-busapp-primary/20 text-busapp-primary hover:bg-busapp-primary/5"
+          className="flex-1 bg-white border-safebus-blue/20 text-safebus-blue hover:bg-safebus-blue/5"
         >
           <History className="mr-2 h-5 w-5" />
           Ver Histórico de Viagens

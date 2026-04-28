@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BusData } from '@/types';
-import { Loader2, MapPin, Bus, Navigation, Layers, Compass } from 'lucide-react';
+import { Loader2, MapPin, Bus, Navigation, Layers, Compass, Maximize2, Crosshair } from 'lucide-react';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import MapboxTokenForm from './map/MapboxTokenForm';
 import BusMarkers from './map/BusMarkers';
@@ -253,77 +253,27 @@ const MapView: React.FC<MapViewProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-14rem)] rounded-xl overflow-hidden bg-gradient-to-b from-blue-50 to-indigo-50 border border-blue-200 shadow-lg">
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-        <AnimatePresence>
-          {mapReady && buses.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-medium px-3 py-1.5">
-                <Bus className="w-4 h-4 mr-1.5" />
-                {buses.length} ônibus ativos
-              </Badge>
-            </motion.div>
-          )}
-          
-          {mapReady && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Badge variant="outline" className="bg-white/90 backdrop-blur-sm px-3 py-1.5">
-                <MapPin className="w-4 h-4 mr-1.5" />
-                Lubango, Angola
-              </Badge>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-        {mapReady && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex gap-2"
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleMapStyle}
-              className="bg-white/90 backdrop-blur-sm hover:bg-white"
-            >
-              <Layers className="w-4 h-4 mr-1.5" />
-              {mapStyle === 'streets' ? 'Satélite' : 'Ruas'}
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetToken}
-              className="bg-white/90 backdrop-blur-sm hover:bg-white"
-            >
-              <Compass className="w-4 h-4 mr-1.5" />
-              Alterar Token
-            </Button>
-          </motion.div>
-        )}
-      </div>
-
-      {(!mapboxToken || tokenError) && (
-        <MapboxTokenForm
-          tokenError={tokenError}
-          mapboxTokenInput={mapboxTokenInput}
-          isLoading={isLoading}
-          onTokenInputChange={setMapboxTokenInput}
-          onSaveToken={saveMapboxToken}
-        />
+    <div className="relative w-full h-[calc(100vh-14rem)] rounded-xl overflow-hidden bg-white border border-gray-200 shadow-xl">
+      {/* Loading State */}
+      {isLoading && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-gradient-to-br from-safebus-yellow/5 to-white flex flex-col items-center justify-center z-20"
+        >
+          <div className="flex flex-col items-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-blue-400/30 rounded-full animate-ping" />
+              <Loader2 className="h-16 w-16 animate-spin text-blue-600 relative z-10" />
+            </div>
+            <p className="text-xl font-semibold text-blue-900 mt-6">Carregando mapa...</p>
+            <p className="text-sm text-gray-500 mt-2">Inicializando sistema de mapeamento</p>
+          </div>
+        </motion.div>
       )}
 
+      {/* Map Container */}
       <div 
         ref={mapContainer} 
         className="w-full h-full transition-all duration-500"
@@ -334,21 +284,116 @@ const MapView: React.FC<MapViewProps> = ({
         }}
       />
 
-      {isLoading && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20"
-        >
-          <div className="flex flex-col items-center bg-white p-8 rounded-xl shadow-xl">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
-            <p className="text-xl font-medium text-blue-800">Carregando o mapa...</p>
-            <p className="text-gray-500 mt-2">Aguarde um momento</p>
-          </div>
-        </motion.div>
+      {/* Overlays - Top Left */}
+      <div className="absolute top-6 left-6 z-10 flex flex-col gap-3">
+        <AnimatePresence>
+          {mapReady && buses.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-xl p-3 border border-gray-200/50 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-blue-500 rounded-lg">
+                    <Bus className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Veículos Ativos</p>
+                    <p className="text-xl font-bold text-gray-900 leading-none">{buses.length}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          {mapReady && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-xl p-3 border border-gray-200/50 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium text-gray-700">Lubango, Angola</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Overlays - Top Right */}
+      <div className="absolute top-6 right-6 z-10 flex flex-col gap-3">
+        {mapReady && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col gap-3"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleMapStyle}
+              className="bg-white/95 backdrop-blur-md hover:bg-white shadow-lg border-gray-200/50 hover:border-gray-300 transition-all duration-200 h-auto py-2.5 px-3"
+            >
+              <Layers className="w-4 h-4 mr-2" />
+              <span className="font-medium">{mapStyle === 'streets' ? 'Ver Satélite' : 'Ver Ruas'}</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (map.current) {
+                  map.current.easeTo({ bearing: 0, duration: 1000 });
+                }
+              }}
+              className="bg-white/95 backdrop-blur-md hover:bg-white shadow-lg border-gray-200/50 hover:border-gray-300 transition-all duration-200 h-auto py-2.5 px-3"
+            >
+              <Compass className="w-4 h-4 mr-2" />
+              <span className="font-medium">Norte</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (map.current) {
+                  map.current.fitBounds(
+                    new mapboxgl.LngLatBounds(
+                      [LUBANGO_CENTER.lng - 0.1, LUBANGO_CENTER.lat - 0.1],
+                      [LUBANGO_CENTER.lng + 0.1, LUBANGO_CENTER.lat + 0.1]
+                    ),
+                    { padding: 50, duration: 1000 }
+                  );
+                }
+              }}
+              className="bg-white/95 backdrop-blur-md hover:bg-white shadow-lg border-gray-200/50 hover:border-gray-300 transition-all duration-200 h-auto py-2.5 px-3"
+            >
+              <Maximize2 className="w-4 h-4 mr-2" />
+              <span className="font-medium">Zoom Total</span>
+            </Button>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Token Error Dialog */}
+      {(!mapboxToken || tokenError) && (
+        <MapboxTokenForm
+          tokenError={tokenError}
+          mapboxTokenInput={mapboxTokenInput}
+          isLoading={isLoading}
+          onTokenInputChange={setMapboxTokenInput}
+          onSaveToken={saveMapboxToken}
+        />
       )}
 
+      {/* Bus Markers */}
       {map.current && mapLoaded && buses.length > 0 && (
         <BusMarkers
           map={map.current}

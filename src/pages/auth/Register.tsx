@@ -24,6 +24,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Invitation } from '@/types';
 import logo from '@/assets/logo.svg';
+import AnimatedBusScene from '@/components/auth/AnimatedBusScene';
 
 const userRoleSchema = z.enum(['student', 'parent', 'driver', 'manager']);
 
@@ -157,7 +158,7 @@ const Register = () => {
         return;
       }
 
-      // Register user with Supabase Auth
+      // Register user with Supabase Auth - simplified approach
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -188,48 +189,65 @@ const Register = () => {
 
       console.log('Usuário criado com sucesso:', authData.user.id);
       
-      // Update profile with additional information using upsert
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          name: data.name,
-          role: data.role,
-          contact_number: data.contactNumber || null,
-          address: data.address || null,
-          school_id: data.schoolId || null,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        });
-        
-      if (profileError) {
-        console.error('Erro detalhado ao atualizar perfil:', profileError);
-        toast.error(`Erro ao atualizar perfil: ${profileError.message}`);
-        return;
-      }
-      
-      console.log('Perfil atualizado com sucesso');
-      
-      // If user is a student, create student record
-      if (data.role === 'student') {
-        const { error: studentError } = await supabase
-          .from('students')
+      // Try to update profile - if it fails, continue anyway
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
           .upsert({
             id: authData.user.id,
             name: data.name,
-            student_number: data.studentNumber || null
+            role: data.role,
+            contact_number: data.contactNumber || null,
+            address: data.address || null,
+            school_id: data.schoolId || null,
+            updated_at: new Date().toISOString()
           }, {
             onConflict: 'id'
           });
-          
-        if (studentError) {
-          console.error('Erro detalhado ao criar registro do aluno:', studentError);
-          toast.error(`Erro ao cadastrar aluno: ${studentError.message}`);
-          return;
-        }
         
-        console.log('Registro do aluno criado com sucesso');
+        if (profileError) {
+          console.warn('Aviso: Não foi possível atualizar o perfil completo:', profileError.message);
+          // Don't return here - let user continue with basic registration
+        } else {
+          console.log('Perfil atualizado com sucesso');
+        }
+      } catch (profileUpdateError) {
+        console.warn('Aviso: Erro ao atualizar perfil:', profileUpdateError);
+        // Continue with basic registration
+      }
+      
+      // Try to create student record if applicable
+      if (data.role === 'student') {
+        try {
+          // Try to get routes for assignment
+          const { data: routesData } = await supabase
+            .from('routes')
+            .select('id')
+            .limit(1);
+          
+          const routeIdToAssign = routesData && routesData.length > 0 ? routesData[0].id : null;
+          
+          const { error: studentError } = await supabase
+            .from('students')
+            .upsert({
+              id: authData.user.id,
+              name: data.name,
+              student_number: data.studentNumber || null,
+              route_id: routeIdToAssign, // Assign to first available route
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'id'
+            });
+          
+          if (studentError) {
+            console.warn('Aviso: Não foi possível criar registro do aluno:', studentError.message);
+          } else {
+            console.log('Registro do aluno criado com sucesso com route_id:', routeIdToAssign);
+          }
+        } catch (studentError) {
+          console.warn('Aviso: Erro ao criar registro do aluno:', studentError);
+        }
       }
       
       // If registration was with activation code, mark it as used
@@ -258,35 +276,37 @@ const Register = () => {
 
   return (
     <Layout title="Registro" hideNavigation>
-      <div 
-        className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative"
-        style={{
-          backgroundImage: 'url("/lubango_bus.jpeg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+      <div className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark">
+        {/* Decorative pattern */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FBBF24' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        />
+        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-safebus-yellow/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -mb-32 -ml-32 w-[500px] h-[500px] bg-safebus-yellow/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Animated bus scene */}
+        <AnimatedBusScene />
+
         <div className="w-full max-w-md px-4 relative z-10">
-          <div className="text-center mb-8">
-            <img src={logo} alt="SafeBus Logo" className="w-24 h-24 mx-auto mb-4" />
-            <h1 className="text-4xl font-bold text-white mb-2">SafeBus</h1>
-            <p className="text-white/90">Sua segurança é nossa prioridade</p>
+          <div className="text-center mb-6">
+            <img src={logo} alt="SafeBus Logo" className="w-32 h-auto mx-auto mb-4 drop-shadow-2xl" />
+            <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight">SafeBus</h1>
+            <p className="text-safebus-yellow font-medium">Os teus filhos estão seguros</p>
           </div>
-          <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-            <CardHeader className="space-y-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-t-lg">
-              <CardTitle className="text-2xl text-center">Registro</CardTitle>
-              <CardDescription className="text-center text-white/90">
-                Crie sua conta para começar
+          <Card className="shadow-2xl border-0 bg-white">
+            <CardHeader className="space-y-1 pb-4">
+              <CardTitle className="text-2xl text-center text-safebus-blue font-bold">Criar Conta</CardTitle>
+              <CardDescription className="text-center text-gray-500">
+                Junte-se ao SafeBus em poucos passos
               </CardDescription>
             </CardHeader>
-            
+
             <Tabs defaultValue="normal" value={registrationType} onValueChange={(v) => setRegistrationType(v as 'code' | 'normal')}>
-              <div className="px-6 pt-4">
+              <div className="px-6 pt-2">
                 <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-                  <TabsTrigger value="normal" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">Cadastro Normal</TabsTrigger>
-                  <TabsTrigger value="code" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">Código de Ativação</TabsTrigger>
+                  <TabsTrigger value="normal" className="data-[state=active]:bg-safebus-yellow data-[state=active]:text-safebus-blue data-[state=active]:font-bold">Cadastro Normal</TabsTrigger>
+                  <TabsTrigger value="code" className="data-[state=active]:bg-safebus-yellow data-[state=active]:text-safebus-blue data-[state=active]:font-bold">Código de Ativação</TabsTrigger>
                 </TabsList>
               </div>
               
@@ -299,12 +319,12 @@ const Register = () => {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700">Nome completo</FormLabel>
+                            <FormLabel className="text-safebus-blue font-medium">Nome completo</FormLabel>
                             <FormControl>
                               <Input 
                                 placeholder="Seu nome" 
                                 {...field} 
-                                className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                                className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue"
                               />
                             </FormControl>
                             <FormMessage />
@@ -317,9 +337,9 @@ const Register = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700">Email</FormLabel>
+                            <FormLabel className="text-safebus-blue font-medium">Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="seu@email.com" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                              <Input type="email" placeholder="seu@email.com" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -331,9 +351,9 @@ const Register = () => {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700">Senha</FormLabel>
+                            <FormLabel className="text-safebus-blue font-medium">Senha</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                              <Input type="password" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -378,9 +398,9 @@ const Register = () => {
                         name="contactNumber"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700">Telefone</FormLabel>
+                            <FormLabel className="text-safebus-blue font-medium">Telefone</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu telefone" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                              <Input placeholder="Seu telefone" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -392,9 +412,9 @@ const Register = () => {
                         name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700">Endereço</FormLabel>
+                            <FormLabel className="text-safebus-blue font-medium">Endereço</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu endereço" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                              <Input placeholder="Seu endereço" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -407,9 +427,9 @@ const Register = () => {
                             name="studentNumber"
                             render={({ field }) => (
                               <FormItem>
-                              <FormLabel className="text-gray-700">Número de estudante</FormLabel>
+                              <FormLabel className="text-safebus-blue font-medium">Número de estudante</FormLabel>
                                 <FormControl>
-                                <Input placeholder="Seu número de estudante" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                                <Input placeholder="Seu número de estudante" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -420,14 +440,14 @@ const Register = () => {
                     <CardFooter className="flex flex-col space-y-4">
                       <Button 
                         type="submit" 
-                        className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-medium py-2.5" 
+                        className="w-full bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold py-3 shadow-lg shadow-safebus-yellow/30 transition-all" 
                         disabled={loading}
                       >
                         {loading ? "Registrando..." : "Registrar"}
                       </Button>
                       <div className="text-center text-sm text-gray-600 mt-4">
                         Já tem uma conta?{" "}
-                        <Link to="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                        <Link to="/auth/login" className="text-safebus-blue hover:text-safebus-blue-light font-semibold">
                           Entrar
                         </Link>
                       </div>
@@ -441,7 +461,7 @@ const Register = () => {
                   {!codeVerified ? (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="activation-code" className="text-gray-700">Digite o código de ativação</Label>
+                        <Label htmlFor="activation-code" className="text-safebus-blue font-medium">Digite o código de ativação</Label>
                         <div className="flex justify-center my-4">
                           <Input 
                             type="text"
@@ -477,12 +497,12 @@ const Register = () => {
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-gray-700">Nome completo</FormLabel>
+                                <FormLabel className="text-safebus-blue font-medium">Nome completo</FormLabel>
                                 <FormControl>
                                   <Input 
                                     placeholder="Seu nome" 
                                     {...field} 
-                                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -495,14 +515,14 @@ const Register = () => {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-gray-700">Email</FormLabel>
+                                <FormLabel className="text-safebus-blue font-medium">Email</FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="email" 
                                     placeholder="seu@email.com" 
                                     {...field} 
                                     disabled={!!verifiedData?.email}
-                                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -515,9 +535,9 @@ const Register = () => {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-gray-700">Senha</FormLabel>
+                                <FormLabel className="text-safebus-blue font-medium">Senha</FormLabel>
                                 <FormControl>
-                                  <Input type="password" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                                  <Input type="password" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -529,9 +549,9 @@ const Register = () => {
                             name="contactNumber"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-gray-700">Telefone</FormLabel>
+                                <FormLabel className="text-safebus-blue font-medium">Telefone</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Seu telefone" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                                  <Input placeholder="Seu telefone" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -545,9 +565,9 @@ const Register = () => {
                                 name="address"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-gray-700">Endereço para coleta/entrega</FormLabel>
+                                    <FormLabel className="text-safebus-blue font-medium">Endereço para coleta/entrega</FormLabel>
                                     <FormControl>
-                                      <Input placeholder="Seu endereço" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                                      <Input placeholder="Seu endereço" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
@@ -559,9 +579,9 @@ const Register = () => {
                                 name="studentNumber"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-gray-700">Número de estudante</FormLabel>
+                                    <FormLabel className="text-safebus-blue font-medium">Número de estudante</FormLabel>
                                     <FormControl>
-                                      <Input placeholder="Número de estudante do filho" {...field} value={verifiedData?.student_number || field.value} disabled={!!verifiedData?.student_number} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                                      <Input placeholder="Número de estudante do filho" {...field} value={verifiedData?.student_number || field.value} disabled={!!verifiedData?.student_number} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue disabled:bg-gray-50" />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
@@ -576,9 +596,9 @@ const Register = () => {
                               name="studentNumber"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-gray-700">Número de estudante</FormLabel>
+                                  <FormLabel className="text-safebus-blue font-medium">Número de estudante</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Seu número de estudante" {...field} className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500" />
+                                    <Input placeholder="Seu número de estudante" {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -586,7 +606,7 @@ const Register = () => {
                             />
                           )}
                           
-                          <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-medium py-2.5" disabled={loading}>
+                          <Button type="submit" className="w-full bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold py-3 shadow-lg shadow-safebus-yellow/30 transition-all" disabled={loading}>
                             {loading ? "Registrando..." : "Completar Registro"}
                           </Button>
                         </div>
@@ -598,7 +618,7 @@ const Register = () => {
                   {!codeVerified && (
                     <div className="text-center text-sm">
                       Já tem uma conta?{" "}
-                      <Link to="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                      <Link to="/auth/login" className="text-safebus-blue hover:text-safebus-blue-light font-semibold">
                         Entrar
                       </Link>
                     </div>

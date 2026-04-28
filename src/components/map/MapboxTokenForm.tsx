@@ -38,7 +38,7 @@ const MapboxTokenForm: React.FC<MapboxTokenFormProps> = ({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-indigo-50 p-4 rounded-xl z-10"
+      className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-safebus-yellow/5 to-white p-4 rounded-xl z-10"
     >
       <Card className="w-full max-w-md p-6 bg-white/90 backdrop-blur-sm shadow-xl">
         <div className="flex items-center justify-center mb-6">
@@ -85,7 +85,7 @@ const MapboxTokenForm: React.FC<MapboxTokenFormProps> = ({
               onChange={(e) => onTokenInputChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Cole seu token do Mapbox aqui"
-              className="pl-10 bg-white/50 backdrop-blur-sm border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              className="pl-10 bg-white/50 backdrop-blur-sm border-gray-200 focus:border-safebus-blue focus:ring-blue-500"
             />
           </div>
           

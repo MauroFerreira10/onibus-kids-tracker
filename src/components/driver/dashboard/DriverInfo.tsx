@@ -14,7 +14,7 @@ const DriverInfo: React.FC<DriverInfoProps> = ({ user, vehicle }) => {
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center text-lg">
-          <User className="mr-2 h-5 w-5 text-busapp-primary" />
+          <User className="mr-2 h-5 w-5 text-safebus-blue" />
           Informações do Motorista
         </CardTitle>
       </CardHeader>

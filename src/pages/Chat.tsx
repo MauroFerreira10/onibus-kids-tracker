@@ -540,7 +540,7 @@ const Chat = () => {
                   <div
                     key={conversation.id}
                     className={`flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      selectedConversation === conversation.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                      selectedConversation === conversation.id ? 'bg-blue-50 border-l-4 border-safebus-blue' : ''
                     }`}
                     onClick={() => setSelectedConversation(conversation.id)}
                   >
@@ -569,17 +569,58 @@ const Chat = () => {
           </ScrollArea>
         </motion.div>
 
-        {/* Right Pane: Chat Window - design profissional */}
+        {/* Right Pane: Chat Window - WhatsApp Style */}
         <motion.div
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className={`flex-1 flex flex-col bg-white ${
+          className={`flex-1 flex flex-col relative overflow-hidden ${
             selectedConversation ? 'flex' : 'hidden md:flex'
           }`}
         >
           {selectedConversation ? (
-            <div className="flex-1 flex flex-col">
+            <>
+              {/* Background Inovador - WhatsApp Style */}
+              <div className="absolute inset-0 bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark">
+                {/* Padrão geométrico sutil */}
+                <div 
+                  className="absolute inset-0 opacity-[0.03]"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                  }}
+                />
+                
+                {/* Círculos decorativos com blur */}
+                <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute bottom-0 left-0 -mb-32 -ml-32 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-white/3 to-transparent rounded-full blur-3xl" />
+                
+                {/* Linhas diagonais sutis */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-transparent via-white/5 to-transparent rotate-45 transform" />
+                  <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-transparent via-white/3 to-transparent -rotate-45 transform" />
+                </div>
+              </div>
+              
+              {/* Bolhas flutuantes animadas */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute rounded-full bg-white/5 blur-xl animate-float"
+                    style={{
+                      width: `${80 + i * 40}px`,
+                      height: `${80 + i * 40}px`,
+                      top: `${10 + i * 15}%`,
+                      left: `${5 + i * 18}%`,
+                      animationDelay: `${i * 0.5}s`,
+                      animationDuration: `${8 + i}s`
+                    }}
+                  />
+                ))}
+              </div>
+            
+            <div className="flex-1 flex flex-col relative z-10">
               <div className="p-4 border-b border-gray-200 flex items-center bg-white sticky top-0 z-10 shadow-sm">
                 <Button
                   variant="ghost"
@@ -668,7 +709,7 @@ const Chat = () => {
                       }
                     }}
                     placeholder="Digite sua mensagem..."
-                    className="w-full bg-white border border-gray-300 rounded-xl p-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[60px] max-h-[120px] transition-all"
+                    className="w-full bg-white border border-gray-300 rounded-xl p-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-safebus-blue resize-none min-h-[60px] max-h-[120px] transition-all"
                     rows={1}
                   />
                   <div className="absolute right-2 bottom-2 flex gap-1">
@@ -706,13 +747,26 @@ const Chat = () => {
                 </motion.button>
               </form>
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-lg p-4">
+          </>
+        ) : (
+          <>
+            {/* Background mesmo sem conversa selecionada */}
+            <div className="absolute inset-0 bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark">
+              <div className="absolute inset-0 opacity-[0.03]"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                }}
+              />
+              <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 left-0 -mb-32 -ml-32 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-lg p-4 relative z-10">
               <MessageSquare className="h-16 w-16 text-gray-300 mb-4" />
               <p className="text-xl font-semibold text-gray-700">Bem-vindo ao Chat!</p>
               <p className="text-md text-gray-500 mt-2 text-center">Selecione uma conversa ao lado ou inicie uma nova para começar a interagir.</p>
             </div>
-          )}
+          </>
+        )}
         </motion.div>
       </div>
     </Layout>

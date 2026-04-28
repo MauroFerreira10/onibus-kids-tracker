@@ -133,7 +133,7 @@ export const QuotaIndicator: React.FC<QuotaIndicatorProps> = ({ className }) => 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <MapPin className="w-4 h-4 text-purple-500" />
+              <MapPin className="w-4 h-4 text-safebus-yellow-dark" />
               <span className="font-medium">Rotas</span>
               {getStatusIcon(routesStatus)}
             </div>

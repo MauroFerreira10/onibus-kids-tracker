@@ -80,7 +80,7 @@ const PricingPage = () => {
   const savings = billingCycle === 'annual' ? Math.round((1 - 990/1188) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-safebus-yellow/5 to-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -142,7 +142,7 @@ const PricingPage = () => {
             >
               {plan.featured && (
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-1">
+                  <Badge className="bg-gradient-to-r from-safebus-blue to-safebus-blue-dark text-white px-4 py-1">
                     <Star className="w-3 h-3 mr-1" />
                     MAIS POPULAR
                   </Badge>
@@ -200,7 +200,7 @@ const PricingPage = () => {
                 <Button 
                   className={`w-full ${
                     plan.featured 
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
+                      ? 'bg-gradient-to-r from-safebus-blue to-safebus-blue-dark hover:from-safebus-blue-dark hover:to-safebus-blue-dark' 
                       : 'border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
                   }`}
                   size="lg"
@@ -239,8 +239,8 @@ const PricingPage = () => {
             </div>
             
             <div className="text-center">
-              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-purple-600" />
+              <div className="bg-safebus-yellow/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-safebus-yellow-dark" />
               </div>
               <h3 className="font-semibold mb-2">Relatórios Completos</h3>
               <p className="text-sm text-gray-600">Análises e métricas detalhadas</p>

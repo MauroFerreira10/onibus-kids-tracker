@@ -75,11 +75,11 @@ const Navbar: React.FC = () => {
                 to={item.path}
                 className={`flex flex-col items-center p-2 transition-all duration-200 ${
                   isActive 
-                    ? 'text-busapp-primary scale-110' 
-                    : 'text-gray-500 hover:text-busapp-accent'
+                    ? 'text-safebus-blue scale-110' 
+                    : 'text-gray-500 hover:text-safebus-yellow'
                 }`}
               >
-                <div className={`p-2 rounded-full ${isActive ? 'bg-busapp-primary/10' : ''} relative`}>
+                <div className={`p-2 rounded-full ${isActive ? 'bg-safebus-blue/10' : ''} relative`}>
                   <IconComponent size={20} />
                   {item.badge && (
                     <Badge className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center p-0 text-[10px]">
@@ -89,7 +89,7 @@ const Navbar: React.FC = () => {
                 </div>
                 <span className="text-xs mt-1">{item.label}</span>
                 {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-busapp-primary mt-1"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-safebus-blue mt-1"></span>
                 )}
               </Link>
             </li>
@@ -103,16 +103,16 @@ const Navbar: React.FC = () => {
               to="/driver/dashboard" 
               className={`flex flex-col items-center p-2 transition-all duration-200 ${
                 location.pathname.includes('/driver') 
-                  ? 'text-busapp-primary scale-110' 
-                  : 'text-gray-500 hover:text-busapp-accent'
+                  ? 'text-safebus-blue scale-110' 
+                  : 'text-gray-500 hover:text-safebus-yellow'
               }`}
             >
-              <div className={`p-2 rounded-full ${location.pathname.includes('/driver') ? 'bg-busapp-primary/10' : ''}`}>
+              <div className={`p-2 rounded-full ${location.pathname.includes('/driver') ? 'bg-safebus-blue/10' : ''}`}>
                 <Bus size={20} />
               </div>
               <span className="text-xs mt-1">Motorista</span>
               {location.pathname.includes('/driver') && (
-                <span className="w-1.5 h-1.5 rounded-full bg-busapp-primary mt-1"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-safebus-blue mt-1"></span>
               )}
             </Link>
           </li>
@@ -125,16 +125,16 @@ const Navbar: React.FC = () => {
               to="/manager/dashboard" 
               className={`flex flex-col items-center p-2 transition-all duration-200 ${
                 location.pathname.includes('/manager') 
-                  ? 'text-busapp-primary scale-110' 
-                  : 'text-gray-500 hover:text-busapp-accent'
+                  ? 'text-safebus-blue scale-110' 
+                  : 'text-gray-500 hover:text-safebus-yellow'
               }`}
             >
-              <div className={`p-2 rounded-full ${location.pathname.includes('/manager') ? 'bg-busapp-primary/10' : ''}`}>
+              <div className={`p-2 rounded-full ${location.pathname.includes('/manager') ? 'bg-safebus-blue/10' : ''}`}>
                 <LayoutDashboard size={20} />
               </div>
               <span className="text-xs mt-1">Gestor</span>
               {location.pathname.includes('/manager') && (
-                <span className="w-1.5 h-1.5 rounded-full bg-busapp-primary mt-1"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-safebus-blue mt-1"></span>
               )}
             </Link>
           </li>

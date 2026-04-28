@@ -33,7 +33,7 @@ const LocationTracker: React.FC<LocationTrackerProps> = ({ vehicle, onStatusChan
     <div className="bg-white p-4 rounded-lg shadow-sm border">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium flex items-center">
-          <MapPin className="mr-2 h-5 w-5 text-busapp-primary" />
+          <MapPin className="mr-2 h-5 w-5 text-safebus-blue" />
           Rastreamento de Localização
         </h3>
         

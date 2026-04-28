@@ -30,8 +30,8 @@ const LocationTrackerTab: React.FC<LocationTrackerTabProps> = ({
     return (
       <Card className="border shadow-sm text-center p-8">
         <div className="mb-6">
-          <div className="rounded-full bg-busapp-primary/10 p-3 inline-block mb-4">
-            <MapPin className="h-8 w-8 text-busapp-primary" />
+          <div className="rounded-full bg-safebus-blue/10 p-3 inline-block mb-4">
+            <MapPin className="h-8 w-8 text-safebus-blue" />
           </div>
           <h3 className="text-xl font-medium">Rastreamento Não Disponível</h3>
           <p className="text-gray-500 mt-2">
@@ -64,7 +64,7 @@ const LocationTrackerTab: React.FC<LocationTrackerTabProps> = ({
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center text-lg">
-            <Route className="mr-2 h-5 w-5 text-busapp-primary" />
+            <Route className="mr-2 h-5 w-5 text-safebus-blue" />
             Informações de Rastreamento
           </CardTitle>
         </CardHeader>

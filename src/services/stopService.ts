@@ -52,7 +52,7 @@ export const stopService = {
 
       if (rpcError) {
         // Fallback para inserção direta se a função RPC falhar
-        const { data, error } = await supabase
+        const { data: insertData, error: insertError } = await supabase
           .from('stop_arrivals')
           .insert({
             stop_id: stopId,
@@ -65,17 +65,13 @@ export const stopService = {
           .select()
           .single();
 
-        if (error) {
-          throw error;
+        if (insertError) {
+          console.error('Erro ao registrar chegada (fallback):', insertError);
+          throw insertError;
         }
       }
 
-      if (error) {
-        console.error('Erro ao registrar chegada:', error);
-        throw error;
-      }
-
-      console.log('Chegada registrada com sucesso:', data);
+      console.log('Chegada registrada com sucesso');
 
       // Envia uma notificação manual para garantir
       const { error: notificationError } = await supabase
@@ -153,13 +149,9 @@ export const stopService = {
           .single();
 
         if (error) {
+          console.error('Erro ao registrar saída (fallback):', error);
           throw error;
         }
-      }
-
-      if (error) {
-        console.error('Erro ao registrar saída:', error);
-        throw error;
       }
 
       // Envia uma notificação de saída

@@ -9,11 +9,24 @@ export class SubscriptionService {
         .from('subscriptions')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to handle 0 rows
 
-      if (error) throw error;
+      if (error) {
+        // PGRST116 means no rows found, which is OK for new users
+        if (error.code === 'PGRST116') {
+          console.log('No subscription found for user, will use free trial');
+          return null;
+        }
+        throw error;
+      }
+      
       return data;
-    } catch (error) {
+    } catch (error: any) {
+      // Handle case where table doesn't exist yet
+      if (error?.message?.includes('relation "subscriptions" does not exist')) {
+        console.warn('Subscriptions table not created yet. Please run migrations.');
+        return null;
+      }
       console.error('Error fetching user subscription:', error);
       return null;
     }

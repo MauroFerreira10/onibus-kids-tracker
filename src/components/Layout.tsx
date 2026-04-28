@@ -61,14 +61,14 @@ const Layout: React.FC<LayoutProps> = ({ children, title, hideNavigation = false
           >
             <div className="relative">
               {/* Efeito de brilho */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full blur-lg opacity-30 animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-safebus-blue to-safebus-blue-dark rounded-full blur-lg opacity-30 animate-pulse"></div>
               
               {/* Efeito de pulso */}
-              <div className="absolute inset-0 rounded-full border-2 border-blue-500/30 animate-ping"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-safebus-blue/30 animate-ping"></div>
               
               {/* Botão principal */}
               <Button
-                className="relative rounded-full p-5 shadow-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/30"
+                className="relative rounded-full p-5 shadow-xl bg-gradient-to-r from-safebus-blue to-safebus-blue-dark hover:from-safebus-blue-dark hover:to-safebus-blue-dark text-white transition-all duration-300 hover:shadow-2xl hover:shadow-safebus-blue/30"
                 onClick={handleChatButtonClick}
                 aria-label="Abrir Chat"
               >

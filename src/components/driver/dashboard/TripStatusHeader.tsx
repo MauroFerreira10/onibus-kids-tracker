@@ -66,7 +66,7 @@ const TripStatusHeader: React.FC<TripStatusHeaderProps> = ({
   return (
     <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
       <div className="flex items-center gap-3">
-        <Bus className="h-6 w-6 text-busapp-primary" />
+        <Bus className="h-6 w-6 text-safebus-blue" />
         <div>
           <h2 className="text-lg font-semibold">Status da Viagem</h2>
           <p className="text-sm text-gray-500">
@@ -81,7 +81,7 @@ const TripStatusHeader: React.FC<TripStatusHeaderProps> = ({
         {tripStatus === 'idle' && (
           <Button
             onClick={startTrip}
-            className="bg-busapp-primary hover:bg-busapp-primary/90"
+            className="bg-safebus-blue hover:bg-safebus-blue/90"
           >
             Iniciar Viagem
           </Button>

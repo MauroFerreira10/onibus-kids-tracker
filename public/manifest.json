@@ -1,0 +1,29 @@
+{
+  "name": "SafeBus - Rastreamento de Autocarros",
+  "short_name": "SafeBus",
+  "description": "Sistema de monitoramento de autocarros escolares em tempo real",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["education", "transportation"],
+  "lang": "pt-AO"
+}

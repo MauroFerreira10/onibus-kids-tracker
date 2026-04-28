@@ -12,8 +12,8 @@ const NoVehicle: React.FC<NoVehicleProps> = ({ onRegisterClick }) => {
   return (
     <Card className="border shadow-sm text-center p-8">
       <div className="mb-6">
-        <div className="rounded-full bg-busapp-primary/10 p-3 inline-block mb-4">
-          <Bus className="h-8 w-8 text-busapp-primary" />
+        <div className="rounded-full bg-safebus-blue/10 p-3 inline-block mb-4">
+          <Bus className="h-8 w-8 text-safebus-blue" />
         </div>
         <h3 className="text-xl font-medium">Nenhum Veículo Registrado</h3>
         <p className="text-gray-500 mt-2">

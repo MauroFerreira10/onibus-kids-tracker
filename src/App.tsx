@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,8 +8,9 @@ import { QuotaProvider } from "./contexts/QuotaContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import DriverRoute from "./components/DriverRoute";
+import { useWebVitals } from "./hooks/useWebVitals";
 
-// Páginas
+// SEM lazy loading - Importações diretas para FCP/LCP melhores
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import RoutesPage from "./pages/Routes";
@@ -27,9 +29,20 @@ import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 
 // Create a client
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
+  // Monitora Core Web Vitals
+  useWebVitals();
+  
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -38,30 +51,30 @@ function App() {
             <TooltipProvider>
               <Toaster />
               <RouterRoutes>
-              {/* Public routes */}
-              <Route path="/auth/login" element={<Login />} />
-              <Route path="/auth/register" element={<Register />} />
-              
-              {/* Protected routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } />
-              <Route path="/routes" element={
-                <ProtectedRoute>
-                  <RoutesPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/schedule" element={
-                <ProtectedRoute>
-                  <Schedule />
-                </ProtectedRoute>
-              } />
-              <Route path="/notifications" element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
+                {/* Public routes */}
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/register" element={<Register />} />
+                
+                {/* Protected routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/routes" element={
+                  <ProtectedRoute>
+                    <RoutesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/schedule" element={
+                  <ProtectedRoute>
+                    <Schedule />
+                  </ProtectedRoute>
+                } />
+                <Route path="/notifications" element={
+                  <ProtectedRoute>
+                    <Notifications />
+                  </ProtectedRoute>
               } />
               <Route path="/profile" element={
                 <ProtectedRoute>

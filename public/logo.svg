@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="280" viewBox="0 0 240 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M120 8C58.144 8 8 58.144 8 120c0 84 112 152 112 152s112-68 112-152C232 58.144 181.856 8 120 8z" fill="#FBBF24"/>
+  <circle cx="120" cy="120" r="68" fill="#FFFFFF"/>
+  <g fill="#1E3A8A">
+    <path d="M88 86c-3.314 0-6 2.686-6 6v60c0 2.21 1.79 4 4 4h4v6c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-6h32v6c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-6h4c2.21 0 4-1.79 4-4V92c0-3.314-2.686-6-6-6H88z"/>
+    <rect x="100" y="80" width="40" height="8" rx="2"/>
+  </g>
+  <path d="M93 100c0-1.105.895-2 2-2h22v26H95c-1.105 0-2-.895-2-2v-22z" fill="#FFFFFF"/>
+  <path d="M123 98h22c1.105 0 2 .895 2 2v22c0 1.105-.895 2-2 2h-22V98z" fill="#FFFFFF"/>
+  <circle cx="96" cy="146" r="3" fill="#FFFFFF"/>
+  <circle cx="144" cy="146" r="3" fill="#FFFFFF"/>
+  <rect x="108" y="138" width="24" height="3" rx="1.5" fill="#FFFFFF"/>
+  <rect x="108" y="144" width="24" height="3" rx="1.5" fill="#FFFFFF"/>
+</svg>

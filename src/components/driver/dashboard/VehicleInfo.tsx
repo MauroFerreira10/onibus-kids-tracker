@@ -16,7 +16,7 @@ const VehicleInfo: React.FC<VehicleInfoProps> = ({ vehicle, onUpdateVehicle }) =
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center text-lg">
-          <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
+          <Bus className="mr-2 h-5 w-5 text-safebus-blue" />
           Informações do Veículo
         </CardTitle>
       </CardHeader>

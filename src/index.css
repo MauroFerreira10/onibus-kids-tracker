@@ -14,11 +14,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 196 82% 50%;
-    --primary-foreground: 210 40% 98%;
+    /* SafeBus: Azul Profundo #1E3A8A */
+    --primary: 224 64% 33%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 49 100% 50%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* SafeBus: Amarelo Segurança #FBBF24 */
+    --secondary: 43 96% 56%;
+    --secondary-foreground: 224 64% 20%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -62,11 +64,13 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 196 82% 50%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* SafeBus: Azul Profundo #1E3A8A */
+    --primary: 224 64% 33%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 49 100% 50%;
-    --secondary-foreground: 210 40% 98%;
+    /* SafeBus: Amarelo Segurança #FBBF24 */
+    --secondary: 43 96% 56%;
+    --secondary-foreground: 224 64% 20%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
@@ -98,5 +102,26 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+    }
+    50% {
+      transform: translateY(-10px) translateX(-10px);
+    }
+    75% {
+      transform: translateY(-30px) translateX(5px);
+    }
+  }
+
+  .animate-float {
+    animation: float 10s ease-in-out infinite;
   }
 }

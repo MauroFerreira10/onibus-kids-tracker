@@ -63,13 +63,23 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Nova paleta de cores para o aplicativo de ônibus escolar
+				// SafeBus — paleta oficial
+				safebus: {
+					blue: '#1E3A8A',
+					'blue-dark': '#172E6E',
+					'blue-light': '#2E4FA8',
+					yellow: '#FBBF24',
+					'yellow-dark': '#D69E0E',
+					'yellow-light': '#FCD34D',
+					white: '#FFFFFF',
+				},
+				// Aliases legados (mantidos pra compat com componentes antigos)
 				busapp: {
-					primary: '#1EAEDB',
-					secondary: '#FFD800',
-					accent: '#33C3F0',
-					dark: '#222222',
-					light: '#F6F6F7'
+					primary: '#1E3A8A',
+					secondary: '#FBBF24',
+					accent: '#FBBF24',
+					dark: '#172E6E',
+					light: '#FFFFFF'
 				}
 			},
 			borderRadius: {

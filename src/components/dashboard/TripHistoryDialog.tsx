@@ -107,7 +107,7 @@ const TripHistoryDialog: React.FC<TripHistoryDialogProps> = ({ busId }) => {
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          className="flex-1 bg-white border-busapp-primary/20 text-busapp-primary hover:bg-busapp-primary/5"
+          className="flex-1 bg-white border-safebus-blue/20 text-safebus-blue hover:bg-safebus-blue/5"
         >
           <History className="mr-2 h-5 w-5" />
           Ver Histórico de Viagens
@@ -124,7 +124,7 @@ const TripHistoryDialog: React.FC<TripHistoryDialogProps> = ({ busId }) => {
         <div className="space-y-4 mt-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-busapp-primary mb-2" />
+              <Loader2 className="h-8 w-8 animate-spin text-safebus-blue mb-2" />
               <p className="text-sm text-gray-500">Carregando histórico...</p>
             </div>
           ) : tripHistory.length === 0 ? (

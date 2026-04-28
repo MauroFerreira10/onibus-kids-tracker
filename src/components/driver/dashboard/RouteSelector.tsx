@@ -23,14 +23,14 @@ const RouteSelector: React.FC<RouteSelectorProps> = ({
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center text-lg">
-          <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
+          <Bus className="mr-2 h-5 w-5 text-safebus-blue" />
           Selecionar Rota
         </CardTitle>
       </CardHeader>
       <CardContent>
         {loadingRoutes ? (
           <div className="flex justify-center py-2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-busapp-primary"></div>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-safebus-blue"></div>
           </div>
         ) : (
           <div className="space-y-2">

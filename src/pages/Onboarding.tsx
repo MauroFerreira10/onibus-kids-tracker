@@ -196,7 +196,7 @@ const OnboardingFlow = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-purple-600" />
+                <Calendar className="w-5 h-5 text-safebus-yellow-dark" />
                 <CardTitle>Agendamento</CardTitle>
               </div>
             </CardHeader>
@@ -307,7 +307,7 @@ const OnboardingFlow = () => {
   const IconComponent = currentStepData.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-safebus-yellow/5 to-white py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Progress indicator */}
         <div className="mb-8">

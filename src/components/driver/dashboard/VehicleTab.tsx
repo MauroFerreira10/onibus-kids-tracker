@@ -18,7 +18,7 @@ const VehicleTab: React.FC<VehicleTabProps> = ({
   if (loading) {
     return (
       <div className="flex justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-busapp-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-safebus-blue"></div>
       </div>
     );
   }

@@ -102,7 +102,7 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId, vehicleId, currentStopId
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center text-lg">
-            <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
+            <Bus className="mr-2 h-5 w-5 text-safebus-blue" />
             Informações da Rota
           </CardTitle>
         </CardHeader>
@@ -120,7 +120,7 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId, vehicleId, currentStopId
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center text-lg">
-            <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
+            <Bus className="mr-2 h-5 w-5 text-safebus-blue" />
             Informações da Rota
           </CardTitle>
         </CardHeader>
@@ -140,7 +140,7 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId, vehicleId, currentStopId
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center text-lg">
-          <Bus className="mr-2 h-5 w-5 text-busapp-primary" />
+          <Bus className="mr-2 h-5 w-5 text-safebus-blue" />
           Informações da Rota
         </CardTitle>
       </CardHeader>
@@ -156,7 +156,7 @@ const RouteInfo: React.FC<RouteInfoProps> = ({ routeId, vehicleId, currentStopId
           </div>
           <div className="flex items-center justify-between">
             <span className="font-medium">Próximo ponto:</span>
-            <span className="text-busapp-primary flex items-center">
+            <span className="text-safebus-blue flex items-center">
               <MapPin className="h-4 w-4 mr-1" />
               {currentStopId ? 'Parada atual' : 'Não definido'}
             </span>

@@ -9,6 +9,7 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import logo from '@/assets/logo.svg';
+import AnimatedBusScene from '@/components/auth/AnimatedBusScene';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -181,64 +182,67 @@ const Login = () => {
 
   return (
     <Layout title="Login" hideNavigation>
-      <div 
-        className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative"
-        style={{
-          backgroundImage: 'url("/lubango_bus.jpeg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+      <div className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark">
+        {/* Decorative pattern */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FBBF24' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        />
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-safebus-yellow/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -mb-32 -ml-32 w-[500px] h-[500px] bg-safebus-yellow/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Animated bus scene */}
+        <AnimatedBusScene />
+
         <div className="w-full max-w-md px-4 relative z-10">
-          <div className="text-center mb-8">
-            <img src={logo} alt="SafeBus Logo" className="w-24 h-24 mx-auto mb-4" />
-            <h1 className="text-4xl font-bold text-white mb-2">SafeBus</h1>
-            <p className="text-white/90">Sua segurança é nossa prioridade</p>
+          <div className="text-center mb-6">
+            <img src={logo} alt="SafeBus Logo" className="w-32 h-auto mx-auto mb-4 drop-shadow-2xl" />
+            <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight">SafeBus</h1>
+            <p className="text-safebus-yellow font-medium">Os teus filhos estão seguros</p>
           </div>
-          <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-            <CardHeader className="space-y-1 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-t-lg">
-              <CardTitle className="text-2xl text-center">Login</CardTitle>
-              <CardDescription className="text-center text-white/90">
-                Entre com sua conta para acessar o sistema
+          <Card className="shadow-2xl border-0 bg-white">
+            <CardHeader className="space-y-1 pb-4">
+              <CardTitle className="text-2xl text-center text-safebus-blue font-bold">Entrar</CardTitle>
+              <CardDescription className="text-center text-gray-500">
+                Acesse a sua conta SafeBus
               </CardDescription>
             </CardHeader>
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700">Email</Label>
+                  <Label htmlFor="email" className="text-safebus-blue font-medium">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-gray-700">Senha</Label>
+                  <Label htmlFor="password" className="text-safebus-blue font-medium">Senha</Label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue"
                   />
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-medium py-2.5" 
+                <Button
+                  type="submit"
+                  className="w-full bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold py-3 shadow-lg shadow-safebus-yellow/30 transition-all"
                   disabled={loading}
                 >
                   {loading ? "Entrando..." : "Entrar"}
                 </Button>
-                <div className="text-center text-sm text-gray-600 mt-4">
+                <div className="text-center text-sm text-gray-600">
                   Não tem uma conta?{" "}
-                  <Link to="/auth/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                  <Link to="/auth/register" className="text-safebus-blue hover:text-safebus-blue-light font-semibold">
                     Registrar
                   </Link>
                 </div>
@@ -247,28 +251,28 @@ const Login = () => {
           </Card>
         </div>
       </div>
-      
+
       <Dialog open={showDemoDialog} onOpenChange={setShowDemoDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Conta de Demonstração</DialogTitle>
+            <DialogTitle className="text-safebus-blue">Conta de Demonstração</DialogTitle>
             <DialogDescription>
               Parece que você está tentando entrar com a conta de demonstração do gestor.
               Vamos criar essa conta para você automaticamente se ela ainda não existir.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowDemoDialog(false)}
               className="border-gray-200 hover:bg-gray-100"
             >
               Cancelar
             </Button>
-            <Button 
-              onClick={createManagerAccount} 
+            <Button
+              onClick={createManagerAccount}
               disabled={creatingDemoAccount}
-              className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white"
+              className="bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold"
             >
               {creatingDemoAccount ? "Criando..." : "Criar Conta"}
             </Button>

@@ -100,7 +100,7 @@ export const BusArrivalNotification: React.FC<BusArrivalNotificationProps> = ({
             className={`p-4 rounded-xl border ${
               arrival.status === 'arrived' 
                 ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
-                : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                : 'bg-gradient-to-r from-safebus-yellow/5 to-white border-safebus-blue/20'
             } shadow-sm hover:shadow-md transition-all`}
           >
             <div className="flex items-center justify-between">
@@ -124,7 +124,7 @@ export const BusArrivalNotification: React.FC<BusArrivalNotificationProps> = ({
                     <Badge variant="outline" className={
                       arrival.status === 'arrived' 
                         ? 'bg-green-100 text-green-700 border-green-200' 
-                        : 'bg-blue-100 text-blue-700 border-blue-200'
+                        : 'bg-blue-100 text-blue-700 border-safebus-blue/20'
                     }>
                       {new Date(arrival.arrival_time).toLocaleTimeString('pt-BR', {
                         hour: '2-digit',
