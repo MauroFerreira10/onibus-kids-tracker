@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import DashboardBackground from './dashboard/DashboardBackground';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -40,31 +41,34 @@ const Layout: React.FC<LayoutProps> = ({ children, title, hideNavigation = false
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {title && (
         <title>{title} | SafeBus</title>
       )}
-      <Navbar />
-      <GlobalNotifications />
-      <Toaster
-        richColors
-        position="top-right"
-        expand={true}
-        closeButton={true}
-        theme="light"
-        style={{ zIndex: 9999 }}
-        toastOptions={{
-          duration: 5000,
-          style: {
-            background: 'white',
-            color: '#333',
-            border: '1px solid #e5e7eb',
-          },
-        }}
-      />
-      <main className="flex-1 container mx-auto px-4 py-6 pb-16">
-        {children}
-      </main>
+      <DashboardBackground />
+      <div className="relative z-10 flex flex-col flex-1">
+        <Navbar />
+        <GlobalNotifications />
+        <Toaster
+          richColors
+          position="top-right"
+          expand={true}
+          closeButton={true}
+          theme="light"
+          style={{ zIndex: 9999 }}
+          toastOptions={{
+            duration: 5000,
+            style: {
+              background: 'white',
+              color: '#333',
+              border: '1px solid #e5e7eb',
+            },
+          }}
+        />
+        <main className="flex-1 w-full px-4 py-6 pb-16">
+          {children}
+        </main>
+      </div>
 
       <AnimatePresence>
         {user && !hideNavigation && (

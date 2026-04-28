@@ -142,7 +142,7 @@ const DriverDashboard = () => {
   
   return (
     <Layout>
-      <div className="flex flex-col gap-6 min-h-screen bg-gradient-to-br from-safebus-yellow/5 to-white p-4">
+      <div className="flex flex-col gap-6 min-h-screen p-4">
         {/* Header status */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

@@ -2,7 +2,7 @@ import React from 'react';
 
 const DashboardBackground: React.FC = () => {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
       <style>{`
         @keyframes db-grid-pan {
           0%   { transform: translate(0, 0); }
