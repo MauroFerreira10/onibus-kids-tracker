@@ -182,7 +182,7 @@ const Login = () => {
 
   return (
     <Layout title="Login" hideNavigation>
-      <div className="min-h-screen flex items-center justify-center overflow-y-auto py-8 relative bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark">
+      <div className="h-screen w-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark">
         {/* Decorative pattern */}
         <div className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
@@ -195,11 +195,11 @@ const Login = () => {
         {/* Animated bus scene */}
         <AnimatedBusScene />
 
-        <div className="w-full max-w-md px-4 relative z-10">
-          <div className="text-center mb-6">
-            <img src={logo} alt="SafeBus Logo" className="w-32 h-auto mx-auto mb-4 drop-shadow-2xl" />
-            <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight">SafeBus</h1>
-            <p className="text-safebus-yellow font-medium">Os teus filhos estão seguros</p>
+        <div className="w-full max-w-md px-4 relative z-10 max-h-screen overflow-y-auto py-6 no-scrollbar">
+          <div className="text-center mb-5">
+            <img src={logo} alt="SafeBus Logo" className="w-24 h-auto mx-auto mb-3 drop-shadow-2xl" />
+            <h1 className="text-3xl font-extrabold text-white mb-1 tracking-tight">SafeBus</h1>
+            <p className="text-safebus-yellow font-medium text-sm">Os teus filhos estão seguros</p>
           </div>
           <Card className="shadow-2xl border-0 bg-white">
             <CardHeader className="space-y-1 pb-4">

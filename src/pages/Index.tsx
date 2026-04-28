@@ -15,6 +15,7 @@ import StatusCard from '@/components/dashboard/StatusCard';
 import TripHistoryDialog from '@/components/dashboard/TripHistoryDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import RecentNotificationsDialog from '@/components/notifications/RecentNotificationsDialog';
+import DashboardBackground from '@/components/dashboard/DashboardBackground';
 
 const Index = () => {
   const { buses, isLoading, error, refreshBuses } = useBusData();
@@ -70,7 +71,8 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <DashboardBackground />
+      <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Header/Hero Section */}
         <header
           className="relative overflow-hidden bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark text-white p-6 sm:p-8 lg:p-10 rounded-2xl shadow-xl"

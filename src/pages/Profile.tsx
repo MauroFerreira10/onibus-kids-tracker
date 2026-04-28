@@ -274,40 +274,38 @@ const Profile = () => {
     }
   };
   
+  const roleLabels: Record<string, string> = {
+    parent: 'Responsável',
+    student: 'Estudante',
+    driver: 'Motorista',
+    manager: 'Gestor',
+  };
+
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4 space-y-8">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8">
+        <div className="max-w-4xl mx-auto px-4 space-y-6">
           {isLoading ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center justify-center">
-                <Skeleton className="h-24 w-24 rounded-full" />
-              </div>
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-6 w-2/3 mx-auto" />
-              <Skeleton className="h-[200px] w-full" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <Skeleton className="h-48 w-full rounded-2xl" />
+              <Skeleton className="h-[200px] w-full rounded-2xl" />
             </motion.div>
           ) : !session ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200"
+              className="text-center py-16 bg-white rounded-2xl shadow-md border border-safebus-blue/10"
             >
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">
-                Você não está conectado
-              </h2>
-              <p className="mb-8 text-gray-600">
-                Faça login para acessar seu perfil e gerenciar suas configurações
-              </p>
-              <div className="space-x-4">
-                <Button asChild variant="default" className="bg-blue-600 hover:bg-blue-700">
-                  <Link to="/auth/login">Login</Link>
+              <div className="w-20 h-20 bg-safebus-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="w-10 h-10 text-safebus-blue/40" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2 text-safebus-blue">Você não está conectado</h2>
+              <p className="mb-6 text-gray-500">Faça login para acessar o seu perfil</p>
+              <div className="flex justify-center gap-3">
+                <Button asChild className="bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold border-0">
+                  <Link to="/auth/login">Entrar</Link>
                 </Button>
-                <Button asChild variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
+                <Button asChild variant="outline" className="border-safebus-blue/20 text-safebus-blue hover:bg-safebus-blue/5">
                   <Link to="/auth/register">Criar conta</Link>
                 </Button>
               </div>
@@ -320,35 +318,53 @@ const Profile = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="space-y-8"
+                  className="space-y-6"
                 >
-                  {/* Header com Avatar e Nome - design profissional */}
-                  <motion.div 
+                  {/* Hero Profile Header */}
+                  <motion.div
                     initial={{ scale: 0.95 }}
                     animate={{ scale: 1 }}
-                    className="relative bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
+                    className="relative overflow-hidden bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark rounded-2xl shadow-xl"
                   >
-                    <div className="flex items-center space-x-6">
-                      <div className="relative">
-                        <Avatar className="w-20 h-20 border-2 border-gray-200">
+                    <div
+                      className="absolute inset-0 opacity-10 pointer-events-none"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FBBF24' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")`,
+                      }}
+                    />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-safebus-yellow/10 rounded-full -mr-16 -mt-16 pointer-events-none" />
+
+                    <div className="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                      <div className="relative flex-shrink-0">
+                        <Avatar className="w-24 h-24 border-4 border-safebus-yellow shadow-2xl">
                           <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                          <AvatarFallback className="text-xl bg-gray-100 text-gray-700 border border-gray-200">
+                          <AvatarFallback className="text-3xl bg-safebus-yellow text-safebus-blue font-extrabold">
                             {profileData.name?.charAt(0).toUpperCase() || '?'}
                           </AvatarFallback>
                         </Avatar>
+                        <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full border-4 border-safebus-blue flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">
-                          {profileData.name || 'Nome não informado'}
+
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight truncate">
+                          {profileData.name || 'Sem nome'}
                         </h2>
-                        <p className="text-gray-600 mt-1">
-                          {profileData.role ? profileData.role.charAt(0).toUpperCase() + profileData.role.slice(1) : 'Papel não informado'}
-                        </p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <span className="inline-flex items-center gap-1.5 bg-safebus-yellow text-safebus-blue px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                            <UserCheck className="w-3.5 h-3.5" />
+                            {roleLabels[profileData.role] || profileData.role}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 px-3 py-1 rounded-full text-xs font-medium border border-white/20">
+                            <Mail className="w-3 h-3" />
+                            {profileData.email}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
                           onClick={() => setIsEditing(true)}
-                          className="mt-4 border-gray-300 text-gray-700 hover:bg-gray-50"
+                          className="mt-4 bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold border-0"
                         >
                           Editar perfil
                         </Button>
@@ -356,145 +372,131 @@ const Profile = () => {
                     </div>
                   </motion.div>
 
-                  {/* Seção de Estudantes Vinculados */}
+                  {/* Estudantes vinculados */}
                   {profileData.role === 'parent' && (
-                    <motion.section 
+                    <motion.section
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
-                      className="space-y-4"
+                      className="bg-white rounded-2xl shadow-md border border-safebus-blue/10 overflow-hidden"
                     >
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          Estudantes vinculados
-                        </h3>
-                        <Button 
-                          variant="default" 
+                      <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-safebus-blue/3 to-transparent flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-bold text-safebus-blue">Estudantes vinculados</h3>
+                          <p className="text-sm text-gray-400 mt-0.5">Filhos cadastrados ao seu perfil</p>
+                        </div>
+                        <Button
                           size="sm"
-                          onClick={() => {
-                            childForm.reset({name: '', student_number: ''});
-                            setIsAddingChild(true);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => { childForm.reset({ name: '', student_number: '' }); setIsAddingChild(true); }}
+                          className="bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold border-0"
                         >
-                          Adicionar estudante
+                          + Adicionar
                         </Button>
                       </div>
 
-                      {/* Lista de Estudantes */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-5">
                         {profileData.children && profileData.children.length > 0 ? (
-                          profileData.children.map((child, index) => (
-                            <motion.div
-                              key={child.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: index * 0.05 }}
-                            >
-                              <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow rounded-xl">
-                                <CardHeader className="pb-2">
-                                  <CardTitle className="text-lg text-gray-900">
-                                    {child.name}
-                                  </CardTitle>
-                                  <CardDescription>Estudante</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-2 text-sm">
-                                    {child.student_number && (
-                                      <div className="flex items-center">
-                                        <UserCheck size={16} className="mr-2 text-gray-500" />
-                                        <span>Número: {child.student_number}</span>
-                                      </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {profileData.children.map((child, index) => (
+                              <motion.div
+                                key={child.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="group rounded-xl border border-gray-100 hover:border-safebus-blue/30 bg-white hover:shadow-md transition-all p-4"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-safebus-blue to-safebus-blue-dark rounded-xl flex items-center justify-center text-white font-extrabold text-lg flex-shrink-0">
+                                    {child.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-safebus-blue truncate">{child.name}</h4>
+                                    {child.student_number ? (
+                                      <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                                        <UserCheck className="w-3 h-3" />
+                                        Nº {child.student_number}
+                                      </p>
+                                    ) : (
+                                      <p className="text-xs text-gray-400 mt-0.5">Sem número</p>
                                     )}
                                   </div>
-                                </CardContent>
-                                <CardFooter className="flex justify-between">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
+                                </div>
+                                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                                  <button
                                     onClick={() => handleEditChild(child)}
-                                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    className="flex-1 text-xs font-semibold text-safebus-blue hover:bg-safebus-blue/5 py-1.5 rounded-md transition-colors"
                                   >
                                     Editar
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm"
+                                  </button>
+                                  <button
                                     onClick={() => handleDeleteChild(child.id)}
-                                    className="bg-red-600 hover:bg-red-700"
+                                    className="flex-1 text-xs font-semibold text-red-500 hover:bg-red-50 py-1.5 rounded-md transition-colors"
                                   >
                                     Remover
-                                  </Button>
-                                </CardFooter>
-                              </Card>
-                            </motion.div>
-                          ))
+                                  </button>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
                         ) : (
-                          <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="col-span-2 text-center p-8 border rounded-xl bg-white border-gray-200"
-                          >
-                            <p className="text-gray-500">Nenhum estudante cadastrado</p>
-                          </motion.div>
+                          <div className="text-center py-10">
+                            <div className="w-14 h-14 bg-safebus-blue/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <User className="w-7 h-7 text-safebus-blue/30" />
+                            </div>
+                            <p className="text-gray-400 text-sm font-medium">Nenhum estudante cadastrado</p>
+                          </div>
                         )}
                       </div>
                     </motion.section>
                   )}
 
-                  {/* Informações de Contato */}
+                  {/* Informações de contato */}
                   <motion.section
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
+                    className="bg-white rounded-2xl shadow-md border border-safebus-blue/10 overflow-hidden"
                   >
-                    <h3 className="text-xl font-semibold mb-4 text-gray-900">
-                      Informações de contato
-                    </h3>
-                    <Card className="bg-white border border-gray-200 shadow-sm rounded-xl">
-                      <CardContent className="pt-6">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <div className="flex items-center">
-                              <Mail size={18} className="mr-3 text-gray-600" />
-                              <span className="text-gray-600">Email</span>
+                    <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-safebus-blue/3 to-transparent">
+                      <h3 className="text-lg font-bold text-safebus-blue">Informações de contato</h3>
+                      <p className="text-sm text-gray-400 mt-0.5">Os teus dados pessoais</p>
+                    </div>
+                    <div className="p-5 space-y-2">
+                      {[
+                        { icon: Mail, label: 'Email', value: profileData.email },
+                        { icon: Phone, label: 'Telefone', value: profileData.contact_number || 'Não informado' },
+                        { icon: Home, label: 'Endereço', value: profileData.address || 'Não informado' },
+                      ].map((item) => (
+                        <div
+                          key={item.label}
+                          className="flex items-center justify-between p-3 rounded-xl hover:bg-safebus-blue/3 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-safebus-blue/10 rounded-lg">
+                              <item.icon className="w-4 h-4 text-safebus-blue" />
                             </div>
-                            <span className="font-medium">{profileData.email}</span>
+                            <span className="text-xs uppercase tracking-widest font-bold text-safebus-blue/60">{item.label}</span>
                           </div>
-                          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <div className="flex items-center">
-                              <Phone size={18} className="mr-3 text-gray-600" />
-                              <span className="text-gray-600">Telefone</span>
-                            </div>
-                            <span className="font-medium">{profileData.contact_number || 'Não informado'}</span>
-                          </div>
-                          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <div className="flex items-center">
-                              <Home size={18} className="mr-3 text-gray-600" />
-                              <span className="text-gray-600">Endereço</span>
-                            </div>
-                            <span className="font-medium text-right">{profileData.address || 'Não informado'}</span>
-                          </div>
+                          <span className="font-semibold text-safebus-blue text-right truncate ml-2 max-w-[60%]">{item.value}</span>
                         </div>
-                      </CardContent>
-                    </Card>
+                      ))}
+                    </div>
                   </motion.section>
 
                   {/* Botão de Sair */}
-                  <motion.section
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="pt-4"
                   >
-                    <Button 
-                      variant="destructive" 
-                      className="w-full bg-red-600 hover:bg-red-700"
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-semibold py-6 rounded-xl"
                       onClick={signOut}
                     >
-                      Sair
+                      Sair da conta
                     </Button>
-                  </motion.section>
+                  </motion.div>
                 </motion.div>
               ) : (
                 <motion.div
@@ -503,12 +505,10 @@ const Profile = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                 >
-                  <Card className="bg-white border border-gray-200 shadow-sm rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-2xl text-gray-900">
-                        Editar Perfil
-                      </CardTitle>
-                      <CardDescription>Atualize suas informações pessoais</CardDescription>
+                  <Card className="bg-white border border-safebus-blue/10 shadow-md rounded-2xl">
+                    <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-safebus-blue/3 to-transparent">
+                      <CardTitle className="text-2xl text-safebus-blue font-bold">Editar Perfil</CardTitle>
+                      <CardDescription>Atualize as suas informações pessoais</CardDescription>
                     </CardHeader>
                     <Form {...profileForm}>
                       <form onSubmit={profileForm.handleSubmit(handleUpdateProfile)}>
@@ -520,7 +520,7 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Nome completo</FormLabel>
                                 <FormControl>
-                                  <Input {...field} className="border-gray-300 focus:border-blue-500" />
+                                  <Input {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -534,7 +534,7 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Telefone</FormLabel>
                                 <FormControl>
-                                  <Input {...field} className="border-gray-300 focus:border-blue-500" />
+                                  <Input {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -548,7 +548,7 @@ const Profile = () => {
                               <FormItem>
                                 <FormLabel>Endereço</FormLabel>
                                 <FormControl>
-                                  <Textarea {...field} className="border-gray-300 focus:border-blue-500" />
+                                  <Textarea {...field} className="border-gray-200 focus:border-safebus-blue focus:ring-safebus-blue" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -562,17 +562,17 @@ const Profile = () => {
                           </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                          <Button 
-                            type="button" 
+                          <Button
+                            type="button"
                             variant="outline"
                             onClick={() => setIsEditing(false)}
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                            className="border-gray-200 text-gray-700 hover:bg-gray-50"
                           >
                             Cancelar
                           </Button>
-                          <Button 
+                          <Button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-safebus-yellow hover:bg-safebus-yellow-dark text-safebus-blue font-bold border-0"
                           >
                             Salvar alterações
                           </Button>

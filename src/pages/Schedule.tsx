@@ -1,75 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { StopData } from '@/types';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Bus, AlertCircle, CheckCircle2, Timer, TrendingUp } from 'lucide-react';
+import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Bus, AlertCircle, CheckCircle2, Timer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { fetchStopsWithStatus } from '@/services/scheduleService';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Schedule = () => {
   const [stops, setStops] = useState<StopData[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('today');
-  const [debugInfo, setDebugInfo] = useState<string>('');
   const { toast } = useToast();
-  
+
   useEffect(() => {
     fetchStops();
   }, [selectedDate]);
-  
+
   const fetchStops = async () => {
     try {
       setIsLoading(true);
-      setDebugInfo('Iniciando carregamento...');
-      
-      // Get day of the week (0 = Sunday, 1 = Monday, etc.)
       const dayOfWeek = selectedDate.getDay();
-      setDebugInfo(`Dia da semana: ${dayOfWeek} (${dayOfWeek === 0 ? 'Domingo' : dayOfWeek === 6 ? 'Sábado' : 'Dia útil'})`);
-      
-      // Only show stops on weekdays (Monday-Friday)
       if (dayOfWeek === 0 || dayOfWeek === 6) {
         setStops([]);
         setIsLoading(false);
         return;
       }
-      
-      setDebugInfo('Buscando paradas no banco de dados...');
-      
-      // Buscar paradas com verificação de status de horário
       const stopsWithStatus = await fetchStopsWithStatus();
-      setDebugInfo(`Paradas encontradas: ${stopsWithStatus.length}`);
       setStops(stopsWithStatus);
-      
       if (stopsWithStatus.length === 0) {
         toast({
-          title: "Nenhum horário encontrado",
-          description: "Verifique se existem paradas cadastradas no sistema.",
-          variant: "default"
+          title: 'Nenhum horário encontrado',
+          description: 'Verifique se existem paradas cadastradas no sistema.',
+          variant: 'default',
         });
       }
     } catch (error) {
-      console.error("Erro:", error);
-      setDebugInfo(`Erro: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Erro:', error);
       toast({
-        title: "Erro",
-        description: "Ocorreu um problema ao carregar os horários.",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Ocorreu um problema ao carregar os horários.',
+        variant: 'destructive',
       });
       setStops([]);
     } finally {
       setIsLoading(false);
     }
   };
-  
-  // Limpar confirmações expiradas periodicamente
+
   useEffect(() => {
     const cleanupInterval = setInterval(async () => {
       try {
@@ -77,312 +59,273 @@ const Schedule = () => {
       } catch (error) {
         console.error('Erro ao limpar confirmações expiradas:', error);
       }
-    }, 60000); // A cada minuto
-    
+    }, 60000);
     return () => clearInterval(cleanupInterval);
   }, []);
-  
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    }).format(date);
-  };
-  
-  const formatTime = (timeStr: string) => {
-    return timeStr;
-  };
-  
-  // Função para mudar a data selecionada
+
+  const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
+
   const changeDate = (days: number) => {
     const newDate = new Date(selectedDate);
     newDate.setDate(selectedDate.getDate() + days);
     setSelectedDate(newDate);
   };
-  
-  // Check if selected date is a weekend
+
   const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
-  
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
+  const onTime = stops.filter((s) => s.scheduledTime === s.estimatedTime).length;
+  const delayed = stops.length - onTime;
+
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-          {/* Header Section - Clean and professional */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-safebus-blue/10 rounded-lg">
-                <Bus className="w-6 h-6 text-safebus-blue" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-semibold text-gray-900">Horários do Transporte</h1>
-                <p className="text-sm text-gray-600 mt-1">Acompanhe em tempo real a localização e horários das paradas</p>
-              </div>
-            </div>
-            
-            {/* Debug info (temporary) */}
-            {debugInfo && (
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-700 text-xs font-mono">{debugInfo}</p>
-              </div>
-            )}
-          </div>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6"
+        >
+          {/* Hero Header */}
+          <motion.header
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark rounded-2xl shadow-xl"
+          >
+            <div
+              className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FBBF24' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")`,
+              }}
+            />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-safebus-yellow/10 rounded-full -mr-16 -mt-16 pointer-events-none" />
 
-          {/* Stats Cards - Simple and clean */}
-          {!isLoading && stops.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-white border-gray-200 shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                    <MapPin className="w-4 h-4 mr-2 text-safebus-blue" />
-                    Total de Paradas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-semibold text-gray-900">{stops.length}</div>
-                  <p className="text-xs text-gray-500 mt-1">Todas as paradas da rota</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white border-gray-200 shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                    <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
-                    No Horário
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-semibold text-green-700">
-                    {stops.filter(s => s.scheduledTime === s.estimatedTime).length}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Paradas no horário previsto</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white border-gray-200 shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                    <Timer className="w-4 h-4 mr-2 text-amber-600" />
-                    Com Atraso
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-semibold text-amber-700">
-                    {stops.filter(s => s.scheduledTime !== s.estimatedTime).length}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Paradas com atraso</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Date Selector - Simple */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => changeDate(-1)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
-              >
-                <ChevronLeft className="w-5 h-5 text-gray-700" />
-              </button>
-              
-              <div className="text-center">
-                <div className="flex items-center justify-center space-x-2 mb-2">
-                  <Calendar className="w-5 h-5 text-gray-600" />
-                  <span className="text-lg font-medium capitalize text-gray-900">
-                    {formatDate(selectedDate)}
-                  </span>
+            <div className="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-14 h-14 bg-safebus-yellow rounded-2xl shadow-lg flex-shrink-0">
+                  <Clock className="h-8 w-8 text-safebus-blue" />
                 </div>
-                {selectedDate.toDateString() === new Date().toDateString() && (
-                  <Badge className="bg-blue-600 text-white px-3 py-1">
-                    Hoje
-                  </Badge>
-                )}
-                {isWeekend && (
-                  <Badge variant="destructive" className="mt-2">
-                    Fim de Semana
-                  </Badge>
-                )}
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Horários do Transporte</h1>
+                  <p className="text-safebus-yellow font-semibold text-sm mt-0.5">Acompanhe paradas em tempo real</p>
+                </div>
               </div>
-              
-              <button 
-                onClick={() => changeDate(1)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-700" />
-              </button>
+              <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-white text-sm font-semibold">Atualização em tempo real</span>
+              </div>
             </div>
-          </div>
 
-        {/* Schedule Information */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Informações de Horário</h3>
-            <p className="text-sm text-gray-600 mt-1">Visão geral dos horários principais</p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <h4 className="font-medium mb-3 text-gray-900 flex items-center">
-                <Clock className="w-4 h-4 mr-2 text-gray-600" />
-                Horários Principais
-              </h4>
-              <ul className="space-y-2">
-                <li className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700">Reitoria da Mandume</span>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">07:30</Badge>
-                </li>
-                <li className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700">Bairro do Tchioco</span>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">07:50</Badge>
-                </li>
-              </ul>
-            </div>
-            
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <h4 className="font-medium mb-3 text-gray-900 flex items-center">
-                <CheckCircle2 className="w-4 h-4 mr-2 text-gray-600" />
-                Status do Serviço
-              </h4>
-              {stops.length > 0 ? (
-                <div className="space-y-2">
-                  {stops.some(s => s.scheduledTime === s.estimatedTime) ? (
-                    <div className="flex items-center space-x-2 text-sm">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-green-700 font-medium">Serviço no horário</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2 text-sm">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                      <span className="text-amber-700 font-medium">Serviço com atrasos</span>
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-600 mt-2">
-                    Status baseado na localização e horário atual do motorista
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2 text-sm">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span className="text-gray-600 font-medium">Sem dados disponíveis</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Stops List */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Horários para {formatDate(selectedDate)}</h2>
-            {stops.length > 0 && (
-              <Badge variant="outline" className="text-gray-600">
-                {stops.length} {stops.length === 1 ? 'parada' : 'paradas'}
-              </Badge>
-            )}
-          </div>
-          
-          {isWeekend && (
-            <Alert className="mb-6 border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertTitle className="text-red-800">Sem serviço</AlertTitle>
-              <AlertDescription className="text-red-700">
-                Os autocarros não operam aos fins de semana. Por favor, selecione um dia útil.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="w-full h-32" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {stops.map((stop, index) => (
+            {/* Embedded stats */}
+            <div className="relative z-10 grid grid-cols-3 border-t border-white/10">
+              {[
+                { icon: MapPin, label: 'Paradas', value: stops.length, color: 'text-safebus-yellow' },
+                { icon: CheckCircle2, label: 'No horário', value: onTime, color: 'text-emerald-400' },
+                { icon: Timer, label: 'Com atraso', value: delayed, color: 'text-orange-300' },
+              ].map((s, i) => (
                 <div
-                  key={stop.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  key={s.label}
+                  className="px-5 py-4 border-r border-white/10 last:border-r-0 hover:bg-white/5 transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-3 flex-1">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{stop.name}</h3>
-                        <p className="text-sm text-gray-600 flex items-center mt-1">
-                          <MapPin className="w-3 h-3 mr-1 text-gray-400" />
-                          {stop.address}
-                        </p>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gray-50 rounded p-3 border border-gray-200">
-                          <div className="text-xs text-gray-500 mb-1">Horário Previsto</div>
-                          <div className="flex items-center">
-                            <Clock className="w-4 h-4 text-gray-600 mr-2" />
-                            <span className="font-medium text-gray-900">{formatTime(stop.scheduledTime || '')}</span>
-                          </div>
-                        </div>
-                        
-                        <div className={cn(
-                          "rounded p-3 border",
-                          stop.scheduledTime !== stop.estimatedTime
-                            ? "bg-amber-50 border-amber-200"
-                            : "bg-green-50 border-green-200"
-                        )}>
-                          <div className="text-xs text-gray-500 mb-1">Horário Estimado</div>
-                          <div className="flex items-center">
-                            <Clock className={cn(
-                              "w-4 h-4 mr-2",
-                              stop.scheduledTime !== stop.estimatedTime
-                                ? "text-amber-600"
-                                : "text-green-600"
-                            )} />
-                            <span className={cn(
-                              "font-medium",
-                              stop.scheduledTime !== stop.estimatedTime
-                                ? "text-amber-700"
-                                : "text-green-700"
-                            )}>
-                              {formatTime(stop.estimatedTime || '')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="p-1 bg-white/15 rounded-md">
+                      <s.icon className={`w-3.5 h-3.5 ${s.color}`} />
                     </div>
-                    
-                    <div className={cn(
-                      "px-3 py-2 rounded text-xs font-medium border",
-                      stop.scheduledTime !== stop.estimatedTime
-                        ? "bg-amber-100 text-amber-800 border-amber-200"
-                        : "bg-green-100 text-green-800 border-green-200"
-                    )}>
-                      <div className="flex items-center space-x-1">
-                        <div className={cn(
-                          "w-2 h-2 rounded-full",
-                          stop.scheduledTime !== stop.estimatedTime
-                            ? "bg-amber-600"
-                            : "bg-green-600"
-                        )} />
-                        <span>
-                          {stop.scheduledTime !== stop.estimatedTime ? "Atrasado" : "No horário"}
-                        </span>
-                      </div>
-                    </div>
+                    <p className="text-white/60 text-xs font-medium uppercase tracking-wide">{s.label}</p>
                   </div>
+                  {isLoading ? (
+                    <div className="h-7 w-12 bg-white/20 animate-pulse rounded mt-1" />
+                  ) : (
+                    <p className="text-2xl font-extrabold text-white">{s.value}</p>
+                  )}
                 </div>
               ))}
-              
-              {stops.length === 0 && !isWeekend && (
-                <div className="text-center py-12">
-                  <Bus className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">Nenhum horário disponível para esta data.</p>
-                </div>
-              )}
             </div>
-          )}
-        </div>
-        </div>
+          </motion.header>
+
+          {/* Date Selector */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl shadow-md border border-safebus-blue/10 p-5"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <button
+                onClick={() => changeDate(-1)}
+                className="p-3 rounded-xl bg-safebus-blue/5 hover:bg-safebus-blue/10 transition-colors group"
+                aria-label="Dia anterior"
+              >
+                <ChevronLeft className="w-5 h-5 text-safebus-blue group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+
+              <div className="flex-1 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Calendar className="w-5 h-5 text-safebus-blue" />
+                  <span className="text-lg font-bold capitalize text-safebus-blue">{formatDate(selectedDate)}</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  {isToday && <Badge className="bg-safebus-yellow text-safebus-blue border-0 font-semibold">Hoje</Badge>}
+                  {isWeekend && <Badge className="bg-red-500 text-white border-0">Fim de semana</Badge>}
+                </div>
+              </div>
+
+              <button
+                onClick={() => changeDate(1)}
+                className="p-3 rounded-xl bg-safebus-blue/5 hover:bg-safebus-blue/10 transition-colors group"
+                aria-label="Dia seguinte"
+              >
+                <ChevronRight className="w-5 h-5 text-safebus-blue group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Stops list */}
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-md border border-safebus-blue/10 overflow-hidden"
+          >
+            <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-safebus-blue/3 to-transparent">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-safebus-blue">Paradas para {formatDate(selectedDate).split(',')[0]}</h2>
+                  <p className="text-sm text-gray-400 mt-0.5">Horário previsto e estimado em tempo real</p>
+                </div>
+                {stops.length > 0 && (
+                  <div className="flex items-center gap-2 bg-safebus-blue/5 px-3 py-1.5 rounded-full">
+                    <Bus className="w-4 h-4 text-safebus-blue" />
+                    <span className="text-sm font-semibold text-safebus-blue">
+                      {stops.length} {stops.length === 1 ? 'parada' : 'paradas'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6">
+              {isWeekend && (
+                <Alert className="mb-6 border-red-200 bg-red-50">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <AlertTitle className="text-red-800 font-bold">Sem serviço</AlertTitle>
+                  <AlertDescription className="text-red-700">
+                    Os autocarros não operam aos fins de semana. Selecione um dia útil.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="w-full h-28 rounded-xl" />
+                  ))}
+                </div>
+              ) : stops.length > 0 ? (
+                <div className="space-y-3">
+                  {stops.map((stop, index) => {
+                    const onTimeStop = stop.scheduledTime === stop.estimatedTime;
+                    return (
+                      <motion.div
+                        key={stop.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="group rounded-xl border border-gray-100 hover:border-safebus-blue/30 bg-white hover:shadow-md transition-all overflow-hidden"
+                      >
+                        <div className="flex">
+                          <div
+                            className={cn(
+                              'w-1.5 flex-shrink-0',
+                              onTimeStop ? 'bg-emerald-500' : 'bg-orange-500'
+                            )}
+                          />
+                          <div className="flex-1 p-4 sm:p-5">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-safebus-blue text-base">{stop.name}</h3>
+                                <p className="text-sm text-gray-500 flex items-center mt-1 truncate">
+                                  <MapPin className="w-3.5 h-3.5 mr-1.5 text-gray-400 flex-shrink-0" />
+                                  {stop.address}
+                                </p>
+
+                                <div className="grid grid-cols-2 gap-3 mt-4">
+                                  <div className="bg-safebus-blue/5 rounded-lg p-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-safebus-blue/60 font-bold mb-1">Previsto</p>
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="w-4 h-4 text-safebus-blue" />
+                                      <span className="font-bold text-safebus-blue">{stop.scheduledTime || '—'}</span>
+                                    </div>
+                                  </div>
+                                  <div
+                                    className={cn(
+                                      'rounded-lg p-3',
+                                      onTimeStop ? 'bg-emerald-50' : 'bg-orange-50'
+                                    )}
+                                  >
+                                    <p
+                                      className={cn(
+                                        'text-[10px] uppercase tracking-widest font-bold mb-1',
+                                        onTimeStop ? 'text-emerald-600/80' : 'text-orange-600/80'
+                                      )}
+                                    >
+                                      Estimado
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <Clock
+                                        className={cn(
+                                          'w-4 h-4',
+                                          onTimeStop ? 'text-emerald-600' : 'text-orange-600'
+                                        )}
+                                      />
+                                      <span
+                                        className={cn(
+                                          'font-bold',
+                                          onTimeStop ? 'text-emerald-700' : 'text-orange-700'
+                                        )}
+                                      >
+                                        {stop.estimatedTime || '—'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <Badge
+                                className={cn(
+                                  'border-0 font-semibold flex items-center gap-1.5 self-start',
+                                  onTimeStop
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-orange-500 text-white'
+                                )}
+                              >
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                </span>
+                                {onTimeStop ? 'No horário' : 'Atrasado'}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : !isWeekend ? (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-safebus-blue/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Bus className="w-8 h-8 text-safebus-blue/40" />
+                  </div>
+                  <p className="text-gray-400 font-medium">Nenhum horário disponível para esta data</p>
+                </div>
+              ) : null}
+            </div>
+          </motion.section>
+        </motion.div>
       </div>
     </Layout>
   );

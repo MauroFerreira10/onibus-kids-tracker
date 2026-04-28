@@ -22,15 +22,32 @@ const Layout: React.FC<LayoutProps> = ({ children, title, hideNavigation = false
     navigate('/chat');
   };
 
+  if (hideNavigation) {
+    return (
+      <div className="min-h-screen w-full">
+        {title && <title>{title} | SafeBus</title>}
+        <Toaster
+          richColors
+          position="top-right"
+          expand={true}
+          closeButton={true}
+          theme="light"
+          style={{ zIndex: 9999 }}
+        />
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {title && (
-        <title>{title} | BusApp</title>
+        <title>{title} | SafeBus</title>
       )}
-      {!hideNavigation && <Navbar />}
+      <Navbar />
       <GlobalNotifications />
-      <Toaster 
-        richColors 
+      <Toaster
+        richColors
         position="top-right"
         expand={true}
         closeButton={true}
