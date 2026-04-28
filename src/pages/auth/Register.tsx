@@ -276,7 +276,7 @@ const Register = () => {
 
   return (
     <Layout title="Registro" hideNavigation>
-      <div className="h-screen w-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark">
+      <div className="h-screen w-screen flex flex-col items-center justify-start relative overflow-hidden bg-gradient-to-br from-safebus-blue via-safebus-blue to-safebus-blue-dark pt-8">
         {/* Decorative pattern */}
         <div className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
@@ -288,13 +288,12 @@ const Register = () => {
         {/* Animated bus scene */}
         <AnimatedBusScene />
 
-        <div className="w-full max-w-md px-4 relative z-10 max-h-screen overflow-y-auto py-6 no-scrollbar">
-          <div className="text-center mb-5">
-            <img src={logo} alt="SafeBus Logo" className="w-20 h-auto mx-auto mb-3 drop-shadow-2xl" />
-            <h1 className="text-3xl font-extrabold text-white mb-1 tracking-tight">SafeBus</h1>
-            <p className="text-safebus-yellow font-medium text-sm">Os teus filhos estão seguros</p>
+        <div className="w-full max-w-md px-4 relative z-10 max-h-screen overflow-y-auto py-6 no-scrollbar flex flex-col items-center">
+          <div className="text-center -mb-2">
+            <img src="/safebus-logo.png" alt="SafeBus Logo" className="w-56 h-auto mx-auto mb-0 drop-shadow-2xl" />
+            <p className="text-safebus-yellow font-orbitron text-lg tracking-widest font-bold">Segurança em cada trajeto</p>
           </div>
-          <Card className="shadow-2xl border-0 bg-white">
+          <Card className="shadow-2xl border-0 bg-white w-full mt-5">
             <CardHeader className="space-y-1 pb-4">
               <CardTitle className="text-2xl text-center text-safebus-blue font-bold">Criar Conta</CardTitle>
               <CardDescription className="text-center text-gray-500">

@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Bell, MapPin, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { pushNotificationService } from '@/services/pushNotificationService';
 
 export const GlobalNotifications: React.FC = () => {
   const { user } = useAuth();
@@ -42,6 +43,12 @@ export const GlobalNotifications: React.FC = () => {
         (payload) => {
           console.log('Nova notificação recebida:', payload);
           const notification = payload.new;
+
+          // Disparar push notification local para qualquer notificação recebida
+          pushNotificationService.showLocalNotification(
+            'SafeBus',
+            notification.message || 'Nova notificação'
+          );
 
           // Mostrar toast para notificações de chat
           if (notification.type === 'chat') {

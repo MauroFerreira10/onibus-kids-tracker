@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LocationData, VehicleData } from '@/types';
+import { calculateNextStopETA, updateVehicleETA } from '@/services/etaService';
 
 interface UseLocationTrackingProps {
   vehicle: VehicleData;
   user: { id: string } | null;
   onStatusChange?: (isTracking: boolean) => void;
+  routeId?: string | null;
 }
 
-export const useLocationTracking = ({ vehicle, user, onStatusChange }: UseLocationTrackingProps) => {
+export const useLocationTracking = ({ vehicle, user, onStatusChange, routeId }: UseLocationTrackingProps) => {
   const [isTracking, setIsTracking] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
@@ -190,7 +192,24 @@ export const useLocationTracking = ({ vehicle, user, onStatusChange }: UseLocati
           last_location_update: new Date().toISOString()
         })
         .eq('id', vehicle.id);
-        
+
+      // Calcula ETA automaticamente se houver rota associada
+      if (routeId) {
+        try {
+          const eta = await calculateNextStopETA(
+            routeId,
+            position.coords.latitude,
+            position.coords.longitude,
+            position.coords.speed ? position.coords.speed * 3.6 : null // m/s → km/h
+          );
+          if (eta) {
+            await updateVehicleETA(vehicle.id, eta.etaMinutes, eta.stopName);
+          }
+        } catch (etaErr) {
+          console.warn('Erro ao calcular ETA:', etaErr);
+        }
+      }
+
     } catch (error) {
       console.error('Erro ao processar localização:', error);
     }

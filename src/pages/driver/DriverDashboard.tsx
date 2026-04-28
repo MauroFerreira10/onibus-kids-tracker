@@ -80,6 +80,7 @@ const DriverDashboard = () => {
     startTrip: originalStartTrip,
     endTrip: originalEndTrip,
     markStudentAsBoarded,
+    markStudentAsDisembarked,
     handleVehicleRegistered,
     currentStopId,
     setCurrentStopId
@@ -257,11 +258,12 @@ const DriverDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white/80 backdrop-blur-lg rounded-xl shadow-sm border border-gray-200/50 p-4"
             >
-              <StudentsList 
-                students={students} 
-                loadingStudents={loadingStudents} 
-                tripStatus={tripStatus} 
-                onMarkAsBoarded={markStudentAsBoarded} 
+              <StudentsList
+                students={students}
+                loadingStudents={loadingStudents}
+                tripStatus={tripStatus}
+                onMarkAsBoarded={markStudentAsBoarded}
+                onMarkAsDisembarked={markStudentAsDisembarked}
               />
             </motion.div>
           </TabsContent>

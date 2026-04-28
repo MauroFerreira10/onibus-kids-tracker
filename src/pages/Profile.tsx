@@ -23,6 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { User, UserCheck, Bus, Clock, MapPin, Phone, Mail, Home } from 'lucide-react';
+import PushNotificationToggle from '@/components/notifications/PushNotificationToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -480,6 +481,22 @@ const Profile = () => {
                           <span className="font-semibold text-safebus-blue text-right truncate ml-2 max-w-[60%]">{item.value}</span>
                         </div>
                       ))}
+                    </div>
+                  </motion.section>
+
+                  {/* Notificações Push */}
+                  <motion.section
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="bg-white rounded-2xl shadow-md border border-safebus-blue/10 overflow-hidden"
+                  >
+                    <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-safebus-blue/3 to-transparent">
+                      <h3 className="text-lg font-bold text-safebus-blue">Notificações</h3>
+                      <p className="text-sm text-gray-400 mt-0.5">Configura os alertas em tempo real</p>
+                    </div>
+                    <div className="p-5">
+                      <PushNotificationToggle />
                     </div>
                   </motion.section>
 

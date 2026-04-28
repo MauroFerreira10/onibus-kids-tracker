@@ -98,9 +98,7 @@ const Index = () => {
 
           {/* Content */}
           <div className="relative z-10 flex items-center gap-4">
-            <div className="hidden sm:flex items-center justify-center w-14 h-14 bg-safebus-yellow rounded-2xl shadow-lg flex-shrink-0">
-              <Bus className="h-8 w-8 text-safebus-blue" />
-            </div>
+            <img src="/safebus-logo.png" alt="SafeBus Logo" className="h-24 w-auto drop-shadow-lg flex-shrink-0 hidden sm:block" />
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-1">
                 SafeBus

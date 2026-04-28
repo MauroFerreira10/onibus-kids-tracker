@@ -207,9 +207,7 @@ export const useDriverDashboard = () => {
             stopId: student.stop_id,
             status
           };
-        })
-        // Filtrar alunos com status 'boarded' para não aparecerem na lista
-        .filter(student => student.status !== 'boarded');
+        });
       
       setStudents(studentsWithStatus);
 
@@ -546,6 +544,65 @@ export const useDriverDashboard = () => {
     }
   };
   
+  const markStudentAsDisembarked = async (studentId: string) => {
+    try {
+      if (!routeId || !user?.id) {
+        toast.error('Rota ou utilizador não disponível');
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const { data: existing } = await supabase
+        .from('student_attendance')
+        .select('id')
+        .eq('student_id', studentId)
+        .eq('trip_date', today)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('student_attendance')
+          .update({ status: 'disembarked', marked_at: new Date().toISOString(), marked_by: user.id })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('student_attendance')
+          .insert({
+            student_id: studentId,
+            trip_date: today,
+            status: 'disembarked',
+            marked_at: new Date().toISOString(),
+            marked_by: user.id,
+            route_id: routeId,
+          });
+        if (error) throw error;
+      }
+
+      // Actualiza attendance_simple
+      const { data: existingSimple } = await supabase
+        .from('attendance_simple')
+        .select('id')
+        .eq('user_id', studentId)
+        .eq('date', today)
+        .maybeSingle();
+
+      if (existingSimple) {
+        await supabase
+          .from('attendance_simple')
+          .update({ status: 'disembarked' })
+          .eq('id', existingSimple.id);
+      }
+
+      if (routeId) await loadStudents(routeId);
+      toast.success('Desembarque registado com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao registar desembarque:', error);
+      toast.error(`Erro ao registar desembarque: ${error?.message || ''}`);
+    }
+  };
+
   const handleVehicleRegistered = (newVehicle: VehicleData) => {
     setVehicle(newVehicle);
     setShowRegisterVehicle(false);
@@ -584,6 +641,7 @@ export const useDriverDashboard = () => {
     startTrip,
     endTrip,
     markStudentAsBoarded,
+    markStudentAsDisembarked,
     handleVehicleRegistered,
     currentStopId,
     setCurrentStopId,
