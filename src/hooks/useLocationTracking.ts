@@ -200,7 +200,8 @@ export const useLocationTracking = ({ vehicle, user, onStatusChange, routeId }: 
             routeId,
             position.coords.latitude,
             position.coords.longitude,
-            position.coords.speed ? position.coords.speed * 3.6 : null // m/s → km/h
+            position.coords.speed ? position.coords.speed * 3.6 : null, // m/s → km/h
+            vehicle.id // passa vehicleId para disparar email quando ETA <= 5 min
           );
           if (eta) {
             await updateVehicleETA(vehicle.id, eta.etaMinutes, eta.stopName);

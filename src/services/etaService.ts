@@ -1,5 +1,39 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Minutos de antecedência para disparar email
+const EMAIL_ALERT_THRESHOLD_MINUTES = 5;
+
+// Memória de sessão para não disparar email repetido na mesma sessão
+const emailAlertsSent = new Set<string>();
+
+async function triggerArrivalEmailAlert(
+  stopId: string,
+  stopName: string,
+  routeId: string,
+  vehicleId: string,
+  etaMinutes: number
+): Promise<void> {
+  const key = `${stopId}_${vehicleId}_${new Date().toDateString()}`;
+  if (emailAlertsSent.has(key)) return;
+
+  emailAlertsSent.add(key);
+
+  try {
+    const { error } = await supabase.functions.invoke('send-arrival-email', {
+      body: { stopId, stopName, routeId, vehicleId, etaMinutes },
+    });
+    if (error) {
+      console.error('Erro ao invocar send-arrival-email:', error);
+      emailAlertsSent.delete(key); // permite nova tentativa
+    } else {
+      console.log(`Email de chegada enviado para paragem "${stopName}" (ETA: ${etaMinutes} min)`);
+    }
+  } catch (err) {
+    console.error('Falha ao disparar alerta de email:', err);
+    emailAlertsSent.delete(key);
+  }
+}
+
 interface Stop {
   id: string;
   name: string;
@@ -35,7 +69,8 @@ export async function calculateETAForRoute(
   routeId: string,
   currentLat: number,
   currentLon: number,
-  speedKmh?: number | null
+  speedKmh?: number | null,
+  vehicleId?: string
 ): Promise<ETAResult[]> {
   const { data: stops, error } = await supabase
     .from('stops')
@@ -81,6 +116,15 @@ export async function calculateETAForRoute(
       etaMinutes,
       distanceKm: parseFloat(cumulativeKm.toFixed(2)),
     });
+
+    // Dispara email quando autocarro está a <= 5 minutos da paragem
+    if (
+      vehicleId &&
+      etaMinutes <= EMAIL_ALERT_THRESHOLD_MINUTES &&
+      etaMinutes > 0
+    ) {
+      triggerArrivalEmailAlert(stop.id, stop.name, routeId, vehicleId, etaMinutes);
+    }
   }
 
   return results;
@@ -90,9 +134,10 @@ export async function calculateNextStopETA(
   routeId: string,
   currentLat: number,
   currentLon: number,
-  speedKmh?: number | null
+  speedKmh?: number | null,
+  vehicleId?: string
 ): Promise<{ stopName: string; etaMinutes: number } | null> {
-  const etas = await calculateETAForRoute(routeId, currentLat, currentLon, speedKmh);
+  const etas = await calculateETAForRoute(routeId, currentLat, currentLon, speedKmh, vehicleId);
   if (etas.length === 0) return null;
   return { stopName: etas[0].stopName, etaMinutes: etas[0].etaMinutes };
 }
