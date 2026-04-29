@@ -233,25 +233,22 @@ const Chat = () => {
     }
   };
 
-  // Atualizar status quando o usuário entra/sai
+  // Atualizar status quando o usuário entra/sai — com debounce para evitar múltiplos POSTs
   useEffect(() => {
     if (!user) return;
 
-    // Atualizar status para online quando o componente monta
-    updateUserStatus(true);
+    // Pequeno delay para garantir que só um POST é feito mesmo com re-renders rápidos
+    const timer = setTimeout(() => updateUserStatus(true), 300);
 
-    // Atualizar status para offline quando o usuário sai
-    const handleBeforeUnload = () => {
-      updateUserStatus(false);
-    };
-
+    const handleBeforeUnload = () => updateUserStatus(false);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       updateUserStatus(false);
     };
-  }, [user]);
+  }, [user?.id]);
 
   // Inscrever-se para atualizações de status em tempo real
   useEffect(() => {

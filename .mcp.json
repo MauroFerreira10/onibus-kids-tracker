@@ -21,11 +21,7 @@
     },
     "supabase": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-supabase"],
-      "env": {
-        "SUPABASE_URL": "https://qxfxkhufqakwcuvjyvon.supabase.co",
-        "SUPABASE_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4ZnhraHVmcWFrd2N1dmp5dm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwNzYwMDAsImV4cCI6MTg3NjA3NjAwMH0.5gVPQQqUaCfTf5KhPf4yYo5YFWL5wT4Q6NdJ9pQ8N6I"
-      }
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--access-token", "sbp_bac2cd143dc072ecef1da775dc5d55ecc9008e1f"]
     }
   }
 }
