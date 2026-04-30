@@ -12,6 +12,8 @@ interface RouteItemProps {
   attendanceStatus: Record<string, string>;
   markPresentAtStop: (stopId: string) => Promise<void>;
   user: any | null;
+  assignedRouteId?: string | null;
+  assignedStopId?: string | null;
 }
 
 // Design tokens - cores profissionais
@@ -21,7 +23,7 @@ const statusColors = {
   pending: 'bg-amber-100 text-amber-800 border-amber-200'
 };
 
-export const RouteItem = memo(({ route, attendanceStatus, markPresentAtStop, user }: RouteItemProps) => {
+export const RouteItem = memo(({ route, attendanceStatus, markPresentAtStop, user, assignedRouteId, assignedStopId }: RouteItemProps) => {
   const statusLabel = route.status === 'active' ? 'Em Andamento' : 
                       route.status === 'completed' ? 'Concluída' : 'Pendente';
 
@@ -31,32 +33,31 @@ export const RouteItem = memo(({ route, attendanceStatus, markPresentAtStop, use
       value={route.id}
       className="border border-gray-200 rounded-xl overflow-hidden bg-white hover:bg-gray-50/30 transition-colors shadow-sm"
     >
-      <AccordionTrigger 
-        className="hover:bg-gray-50/50 px-6 py-5 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-xl"
+      <AccordionTrigger
+        className="hover:bg-gray-50/50 px-4 py-4 sm:px-6 sm:py-5 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-xl"
         aria-label={`Rota ${route.name}, status: ${statusLabel}`}
       >
-        <div className="flex items-center w-full">
-          <div className="p-3 bg-gray-100 rounded-lg mr-4 border border-gray-200">
-            <Bus className="w-6 h-6 text-gray-700" aria-hidden="true" />
+        <div className="flex items-center w-full gap-3 min-w-0">
+          <div className="p-2 sm:p-3 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
+            <Bus className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" aria-hidden="true" />
           </div>
-          <div className="flex-1 text-left">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h3 className="text-lg font-semibold text-gray-900">{route.name}</h3>
-              <Badge className={cn(
-                "border font-medium",
-                statusColors[route.status]
-              )}>
+          <div className="flex-1 text-left min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">{route.name}</h3>
+              <Badge className={cn("border font-medium text-xs shrink-0", statusColors[route.status])}>
                 {statusLabel}
               </Badge>
             </div>
-            <p className="text-gray-600 text-sm mt-1">{route.description}</p>
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-              <div className="flex items-center">
-                <Users className="w-4 h-4 mr-1" aria-hidden="true" />
-                {route.passengers || 0} passageiros
+            {route.description && (
+              <p className="text-gray-500 text-xs mt-0.5 truncate">{route.description}</p>
+            )}
+            <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+              <div className="flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" aria-hidden="true" />
+                {route.passengers || 0}
               </div>
-              <div className="flex items-center">
-                <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
+              <div className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                 {route.stops?.length || 0} paradas
               </div>
             </div>
@@ -71,11 +72,14 @@ export const RouteItem = memo(({ route, attendanceStatus, markPresentAtStop, use
           className="px-6 py-4 bg-gray-50/30 border-t border-gray-200"
         >
           <RouteSchedule schedule={route.schedule} />
-          <StopsList 
-            stops={route.stops} 
-            attendanceStatus={attendanceStatus} 
+          <StopsList
+            stops={route.stops}
+            attendanceStatus={attendanceStatus}
             markPresentAtStop={markPresentAtStop}
             user={user}
+            assignedRouteId={assignedRouteId}
+            assignedStopId={assignedStopId}
+            thisRouteId={route.id}
           />
         </motion.div>
       </AccordionContent>
@@ -116,7 +120,7 @@ const RouteSchedule = ({ schedule }: { schedule: RouteData['schedule'] }) => {
           <span className="font-semibold">{schedule.startTime} - {schedule.endTime}</span>
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
-          {schedule.weekdays.map(day => (
+          {(schedule.weekdays ?? []).map(day => (
             <Badge key={day} variant="secondary" className="bg-white border border-gray-200 text-gray-700">
               {day.charAt(0).toUpperCase() + day.slice(1)}
             </Badge>

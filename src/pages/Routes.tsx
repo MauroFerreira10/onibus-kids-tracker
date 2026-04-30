@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { Map, Clock, Users, Navigation, TrendingUp, CheckCircle2, Bus } from 'lucide-react';
 
 const Routes = () => {
-  const { routes, isLoading, attendanceStatus, markPresentAtStop } = useRoutes();
+  const { routes, isLoading, attendanceStatus, markPresentAtStop, assignedRouteId, assignedStopId } = useRoutes();
   const { user } = useAuth();
 
   const stats = [
@@ -143,6 +143,8 @@ const Routes = () => {
                   attendanceStatus={attendanceStatus}
                   markPresentAtStop={markPresentAtStop}
                   user={user}
+                  assignedRouteId={assignedRouteId}
+                  assignedStopId={assignedStopId}
                 />
               ) : (
                 <EmptyRoutes />

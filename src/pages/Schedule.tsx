@@ -237,78 +237,46 @@ const Schedule = () => {
                         className="group rounded-xl border border-gray-100 hover:border-safebus-blue/30 bg-white hover:shadow-md transition-all overflow-hidden"
                       >
                         <div className="flex">
-                          <div
-                            className={cn(
-                              'w-1.5 flex-shrink-0',
-                              onTimeStop ? 'bg-emerald-500' : 'bg-orange-500'
-                            )}
-                          />
-                          <div className="flex-1 p-4 sm:p-5">
-                            <div className="flex items-start justify-between gap-4">
+                          <div className={cn('w-1.5 flex-shrink-0', onTimeStop ? 'bg-emerald-500' : 'bg-orange-500')} />
+                          <div className="flex-1 p-3 sm:p-5">
+                            {/* Nome + badge numa linha */}
+                            <div className="flex items-start justify-between gap-2 mb-2">
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-safebus-blue text-base">{stop.name}</h3>
-                                <p className="text-sm text-gray-500 flex items-center mt-1 truncate">
-                                  <MapPin className="w-3.5 h-3.5 mr-1.5 text-gray-400 flex-shrink-0" />
-                                  {stop.address}
-                                </p>
-
-                                <div className="grid grid-cols-2 gap-3 mt-4">
-                                  <div className="bg-safebus-blue/5 rounded-lg p-3">
-                                    <p className="text-[10px] uppercase tracking-widest text-safebus-blue/60 font-bold mb-1">Previsto</p>
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="w-4 h-4 text-safebus-blue" />
-                                      <span className="font-bold text-safebus-blue">{stop.scheduledTime || '—'}</span>
-                                    </div>
-                                  </div>
-                                  <div
-                                    className={cn(
-                                      'rounded-lg p-3',
-                                      onTimeStop ? 'bg-emerald-50' : 'bg-orange-50'
-                                    )}
-                                  >
-                                    <p
-                                      className={cn(
-                                        'text-[10px] uppercase tracking-widest font-bold mb-1',
-                                        onTimeStop ? 'text-emerald-600/80' : 'text-orange-600/80'
-                                      )}
-                                    >
-                                      Estimado
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                      <Clock
-                                        className={cn(
-                                          'w-4 h-4',
-                                          onTimeStop ? 'text-emerald-600' : 'text-orange-600'
-                                        )}
-                                      />
-                                      <span
-                                        className={cn(
-                                          'font-bold',
-                                          onTimeStop ? 'text-emerald-700' : 'text-orange-700'
-                                        )}
-                                      >
-                                        {stop.estimatedTime || '—'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <Badge
-                                className={cn(
-                                  'border-0 font-semibold flex items-center gap-1.5 self-start',
-                                  onTimeStop
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'bg-orange-500 text-white'
+                                <h3 className="font-bold text-safebus-blue text-sm sm:text-base leading-tight">{stop.name}</h3>
+                                {stop.address && (
+                                  <p className="text-xs text-gray-500 flex items-center mt-0.5 truncate">
+                                    <MapPin className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
+                                    {stop.address}
+                                  </p>
                                 )}
-                              >
-                                <span className="relative flex h-2 w-2">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                                </span>
-                                {onTimeStop ? 'No horário' : 'Atrasado'}
+                              </div>
+                              <Badge className={cn('border-0 font-semibold text-xs flex-shrink-0', onTimeStop ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white')}>
+                                {onTimeStop ? 'No horário' : 'Atraso'}
                               </Badge>
                             </div>
+
+                            {/* Horários em linha no mobile */}
+                            <div className="flex gap-2">
+                              <div className="flex-1 bg-safebus-blue/5 rounded-lg px-3 py-2">
+                                <p className="text-[9px] uppercase tracking-widest text-safebus-blue/60 font-bold mb-0.5">Previsto</p>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="w-3.5 h-3.5 text-safebus-blue flex-shrink-0" />
+                                  <span className="font-bold text-safebus-blue text-sm">{stop.scheduledTime || '—'}</span>
+                                </div>
+                              </div>
+                              <div className={cn('flex-1 rounded-lg px-3 py-2', onTimeStop ? 'bg-emerald-50' : 'bg-orange-50')}>
+                                <p className={cn('text-[9px] uppercase tracking-widest font-bold mb-0.5', onTimeStop ? 'text-emerald-600/80' : 'text-orange-600/80')}>
+                                  Estimado
+                                </p>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className={cn('w-3.5 h-3.5 flex-shrink-0', onTimeStop ? 'text-emerald-600' : 'text-orange-600')} />
+                                  <span className={cn('font-bold text-sm', onTimeStop ? 'text-emerald-700' : 'text-orange-700')}>
+                                    {stop.estimatedTime || '—'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
                           </div>
                         </div>
                       </motion.div>

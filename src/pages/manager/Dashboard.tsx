@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { UserData } from '@/types';
-import { Users, Bus, UserPlus, User, UserCog, Key, Activity, TrendingUp, AlertCircle, Calendar, Bell, ChevronRight, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Users, Bus, UserPlus, User, UserCog, Key, Activity, TrendingUp, AlertCircle, Calendar, Bell, ChevronRight, ArrowUpRight, ArrowDownRight, Route } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -268,6 +268,13 @@ const ManagerDashboard = () => {
       route: '/manager/register-drivers',
       bg: 'bg-safebus-blue',
       hover: 'hover:bg-safebus-blue-dark',
+    },
+    {
+      label: 'Atribuir Rotas',
+      icon: Route,
+      route: '/manager/student-assignment',
+      bg: 'bg-green-600',
+      hover: 'hover:bg-green-700',
     },
     {
       label: 'Códigos de Convite',

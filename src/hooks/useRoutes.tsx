@@ -20,6 +20,8 @@ export const useRoutes = () => {
   const [routes, setRoutes] = useState<RouteData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
+  const [assignedRouteId, setAssignedRouteId] = useState<string | null>(null);
+  const [assignedStopId, setAssignedStopId] = useState<string | null>(null);
   const { user } = useAuth();
   const { profile, isStudent } = useUserProfile();
   const navigate = useNavigate();
@@ -50,7 +52,17 @@ export const useRoutes = () => {
         
         setRoutes(mappedRoutes);
         
-        // If the user is logged in, fetch their attendance status
+        // Se for aluno, buscar rota e paragem atribuídas
+        if (user && isStudent) {
+          const { data: studentData } = await supabase
+            .from('students')
+            .select('route_id, stop_id')
+            .eq('id', user.id)
+            .maybeSingle();
+          setAssignedRouteId(studentData?.route_id ?? null);
+          setAssignedStopId(studentData?.stop_id ?? null);
+        }
+
         if (user) {
           updateAttendanceStatus();
         }
@@ -100,8 +112,6 @@ export const useRoutes = () => {
         return;
       }
       
-      console.log(`Marcando presença no ponto ${stopId} para o usuário ${user.id}`);
-      
       // Get stop information to find the route_id
       const { data: stopData, error: stopError } = await supabase
         .from('stops')
@@ -138,11 +148,21 @@ export const useRoutes = () => {
         return;
       }
 
+      if (error.message === 'NO_ROUTE_ASSIGNED') {
+        toast.error("Ainda não tens rota atribuída. Contacta o gestor para te associar a uma rota.");
+        return;
+      }
+
+      if (error.message === 'WRONG_ROUTE' || error.message === 'WRONG_STOP') {
+        toast.error("Só podes confirmar presença na tua paragem atribuída.");
+        return;
+      }
+
       if (error.message?.includes('10 minutos')) {
         toast.warning("Você só pode confirmar presença novamente após 10 minutos da última confirmação.");
         return;
       }
-      
+
       toast.error("Ocorreu um problema ao registrar sua presença. Por favor, tente novamente mais tarde.");
     }
   };
@@ -152,5 +172,7 @@ export const useRoutes = () => {
     isLoading,
     attendanceStatus,
     markPresentAtStop,
+    assignedRouteId,
+    assignedStopId,
   };
 };

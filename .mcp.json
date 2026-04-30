@@ -21,7 +21,7 @@
     },
     "supabase": {
       "command": "npx",
-      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--access-token", "sbp_bac2cd143dc072ecef1da775dc5d55ecc9008e1f"]
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--access-token", "sbp_1a5c054e41153cd1312e8f543c46c8191c454aaf"]
     }
   }
 }

@@ -10,9 +10,11 @@ interface RoutesListProps {
   attendanceStatus: Record<string, string>;
   markPresentAtStop: (stopId: string) => Promise<void>;
   user: any | null;
+  assignedRouteId?: string | null;
+  assignedStopId?: string | null;
 }
 
-export const RoutesList = React.memo(({ routes, attendanceStatus, markPresentAtStop, user }: RoutesListProps) => {
+export const RoutesList = React.memo(({ routes, attendanceStatus, markPresentAtStop, user, assignedRouteId, assignedStopId }: RoutesListProps) => {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -136,11 +138,13 @@ export const RoutesList = React.memo(({ routes, attendanceStatus, markPresentAtS
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(index * 0.03, 0.2) }}
             >
-              <RouteItem 
-                route={route} 
-                attendanceStatus={attendanceStatus} 
+              <RouteItem
+                route={route}
+                attendanceStatus={attendanceStatus}
                 markPresentAtStop={markPresentAtStop}
                 user={user}
+                assignedRouteId={assignedRouteId}
+                assignedStopId={assignedStopId}
               />
             </motion.div>
           ))}

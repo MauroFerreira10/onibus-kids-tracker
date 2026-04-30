@@ -150,124 +150,86 @@ const Register = () => {
     try {
       setLoading(true);
       
-      console.log('Iniciando registro com dados:', { ...data, password: '[REDACTED]' });
-      
       // Validar dados antes do registro
       if (!data.email || !data.password || !data.name || !data.role) {
         toast.error('Por favor, preencha todos os campos obrigatórios');
         return;
       }
 
-      // Register user with Supabase Auth - simplified approach
+      // Segurança: no registo público apenas 'student' é permitido.
+      // Manager/driver só via código de convite verificado.
+      const safeRole = registrationType === 'code' && codeVerified && verifiedRole
+        ? verifiedRole
+        : 'student';
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
             name: data.name,
-            role: data.role,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+            role: safeRole,
+          }
         }
       });
 
       if (authError) {
-        console.error('Erro detalhado no registro:', authError);
         if (authError.message.includes('already registered')) {
-          toast.error('Este email já está registrado');
+          toast.error('Este email já está registado');
         } else {
-          toast.error(`Erro no registro: ${authError.message}`);
+          toast.error(`Erro no registo: ${authError.message}`);
         }
         return;
       }
 
       if (!authData.user) {
-        console.error('Nenhum usuário retornado após registro');
-        toast.error('Erro ao criar o usuário');
+        toast.error('Erro ao criar o utilizador');
         return;
       }
 
-      console.log('Usuário criado com sucesso:', authData.user.id);
-      
-      // Try to update profile - if it fails, continue anyway
+      // Atualizar perfil com safeRole
       try {
-        const { error: profileError } = await supabase
+        await supabase
           .from('profiles')
           .upsert({
             id: authData.user.id,
             name: data.name,
-            role: data.role,
+            role: safeRole,
             contact_number: data.contactNumber || null,
             address: data.address || null,
             school_id: data.schoolId || null,
             updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'id'
-          });
-        
-        if (profileError) {
-          console.warn('Aviso: Não foi possível atualizar o perfil completo:', profileError.message);
-          // Don't return here - let user continue with basic registration
-        } else {
-          console.log('Perfil atualizado com sucesso');
-        }
-      } catch (profileUpdateError) {
-        console.warn('Aviso: Erro ao atualizar perfil:', profileUpdateError);
-        // Continue with basic registration
+          }, { onConflict: 'id' });
+      } catch {
+        // Não bloqueia o registo
       }
-      
-      // Try to create student record if applicable
-      if (data.role === 'student') {
+
+      // Criar registo na tabela students (sem rota — gestor atribui depois)
+      if (safeRole === 'student') {
         try {
-          // Try to get routes for assignment
-          const { data: routesData } = await supabase
-            .from('routes')
-            .select('id')
-            .limit(1);
-          
-          const routeIdToAssign = routesData && routesData.length > 0 ? routesData[0].id : null;
-          
-          const { error: studentError } = await supabase
-            .from('students')
-            .upsert({
-              id: authData.user.id,
-              name: data.name,
-              student_number: data.studentNumber || null,
-              route_id: routeIdToAssign, // Assign to first available route
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'id'
-            });
-          
-          if (studentError) {
-            console.warn('Aviso: Não foi possível criar registro do aluno:', studentError.message);
-          } else {
-            console.log('Registro do aluno criado com sucesso com route_id:', routeIdToAssign);
-          }
-        } catch (studentError) {
-          console.warn('Aviso: Erro ao criar registro do aluno:', studentError);
+          await supabase.from('students').upsert({
+            id: authData.user.id,
+            name: data.name,
+            student_number: data.studentNumber || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+        } catch {
+          // Não bloqueia o registo
         }
       }
-      
-      // If registration was with activation code, mark it as used
+
+      // Marcar código de convite como usado
       if (registrationType === 'code' && verifiedData) {
-        const { error: updateCodeError } = await supabase
+        await supabase
           .from('invitations')
           .update({ used: true, used_by: authData.user.id })
           .eq('id', verifiedData.id);
-          
-        if (updateCodeError) {
-          console.error('Erro ao atualizar código de ativação:', updateCodeError);
-          // Not critical, just log
-        }
       }
-      
-      console.log('Registro concluído com sucesso');
-      toast.success('Registro realizado com sucesso! Entre com suas credenciais.');
+
+      toast.success('Registo concluído! O gestor irá atribuir a sua rota. Pode iniciar sessão agora.');
       navigate('/auth/login');
-    } catch (error) {
-      console.error('Erro durante o registro:', error);
+    } catch (error: any) {
       toast.error('Erro ao criar conta. Por favor, tente novamente.');
     } finally {
       setLoading(false);

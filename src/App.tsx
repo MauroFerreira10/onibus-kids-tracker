@@ -25,6 +25,7 @@ import ManagerDashboard from "./pages/manager/Dashboard";
 import RegisterStudents from "./pages/manager/RegisterStudents";
 import RegisterParents from "./pages/manager/RegisterParents";
 import RegisterDrivers from "./pages/manager/RegisterDrivers";
+import StudentAssignment from "./pages/manager/StudentAssignment";
 import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 
@@ -120,6 +121,11 @@ function App() {
               <Route path="/manager/register-drivers" element={
                 <AdminRoute>
                   <RegisterDrivers />
+                </AdminRoute>
+              } />
+              <Route path="/manager/student-assignment" element={
+                <AdminRoute>
+                  <StudentAssignment />
                 </AdminRoute>
               } />
               

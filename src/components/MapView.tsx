@@ -2,23 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BusData } from '@/types';
-import { Loader2, MapPin, Bus, Navigation, Layers, Compass, Maximize2, Crosshair } from 'lucide-react';
+import { Loader2, MapPin, Bus, Layers, Maximize2, Compass } from 'lucide-react';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import MapboxTokenForm from './map/MapboxTokenForm';
 import BusMarkers from './map/BusMarkers';
 import { toast } from 'sonner';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Tenta obter o token do Mapbox da variável de ambiente, caso contrário usa um token padrão
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoidGhlbWF1cmEyMDAyIiwiYSI6ImNtaWl4MG9jaTB1bXkzZHM4enpqOTM3MzUifQ.R38sMigucCZavEJI8wRojw';
 
-// Coordenadas do Lubango, Angola
-const LUBANGO_CENTER = {
-  lng: 13.4925, 
-  lat: -14.9167
-};
+const LUBANGO_CENTER = { lng: 13.4925, lat: -14.9167 };
 
 interface MapViewProps {
   buses?: BusData[];
@@ -27,11 +20,11 @@ interface MapViewProps {
   centerOnUser?: boolean;
 }
 
-const MapView: React.FC<MapViewProps> = ({ 
-  buses = [], 
+const MapView: React.FC<MapViewProps> = ({
+  buses = [],
   selectedBusId,
   onSelectBus,
-  centerOnUser = false
+  centerOnUser = false,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -39,7 +32,7 @@ const MapView: React.FC<MapViewProps> = ({
   const [mapReady, setMapReady] = useState(false);
   const [mapStyle, setMapStyle] = useState<'streets' | 'satellite'>('streets');
   const userPositionMarker = useRef<mapboxgl.Marker | null>(null);
-  
+
   const {
     mapboxToken,
     mapboxTokenInput,
@@ -48,13 +41,11 @@ const MapView: React.FC<MapViewProps> = ({
     isLoading,
     setIsLoading,
     saveMapboxToken,
-    resetToken,
-    clearInvalidToken
+    clearInvalidToken,
   } = useMapboxToken(MAPBOX_TOKEN);
 
   const clearCurrentMap = () => {
     if (map.current) {
-      console.log("Limpando mapa existente...");
       map.current.remove();
       map.current = null;
     }
@@ -62,327 +53,165 @@ const MapView: React.FC<MapViewProps> = ({
     setMapReady(false);
   };
 
-  // Efeito para centralizar no usuário quando centerOnUser é true
+  // Geolocalização para centerOnUser
   useEffect(() => {
     if (!mapReady || !map.current || !centerOnUser) return;
-
     if (userPositionMarker.current) {
       userPositionMarker.current.remove();
       userPositionMarker.current = null;
     }
+    if (!navigator.geolocation) return;
 
-    if (navigator.geolocation) {
-      let retryCount = 0;
-      const maxRetries = 3;
-      const timeout = 60000;
-
-      const getLocation = () => {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            
-            const el = document.createElement('div');
-            el.className = 'user-location-marker';
-            el.innerHTML = `
-              <div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md pulse-animation"></div>
-            `;
-            
-            userPositionMarker.current = new mapboxgl.Marker(el)
-              .setLngLat([longitude, latitude])
-              .addTo(map.current!);
-              
-            const style = document.createElement('style');
-            style.textContent = `
-              .pulse-animation {
-                box-shadow: 0 0 0 rgba(66, 133, 244, 0.4);
-                animation: pulse 2s infinite;
-              }
-              @keyframes pulse {
-                0% {
-                  box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
-                }
-                70% {
-                  box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
-                }
-                100% {
-                  box-shadow: 0 0 0 0 rgba(66, 133, 244, 0);
-                }
-              }
-            `;
-            document.head.appendChild(style);
-            
-            const watchId = navigator.geolocation.watchPosition(
-              (newPosition) => {
-                const { latitude: newLat, longitude: newLng } = newPosition.coords;
-                if (userPositionMarker.current) {
-                  userPositionMarker.current.setLngLat([newLng, newLat]);
-                }
-              },
-              (error) => {
-                console.error("Erro ao obter localização:", error);
-                handleLocationError(error);
-              },
-              {
-            enableHighAccuracy: false,
-            maximumAge: 300000,
-                timeout: timeout
-              }
-            );
-            
-            return () => {
-              navigator.geolocation.clearWatch(watchId);
-              if (userPositionMarker.current) {
-                userPositionMarker.current.remove();
-              }
-            };
-          },
-          (error) => {
-            console.error("Erro ao obter localização inicial:", error);
-            handleLocationError(error);
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: timeout,
-            maximumAge: 300000
-          }
-        );
-      };
-
-      const handleLocationError = (error: GeolocationPositionError) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          toast.error("Permissão de localização negada");
-          return;
-        }
-
-        if (retryCount < maxRetries) {
-          retryCount++;
-          toast.info(`Tentando obter localização novamente (${retryCount}/${maxRetries})...`);
-          setTimeout(getLocation, 2000);
-        } else {
-          toast.error("Não foi possível obter sua localização após várias tentativas");
-        }
-      };
-
-      getLocation();
-    } else {
-      toast.error("Geolocalização não suportada pelo seu navegador");
-    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const el = document.createElement('div');
+        el.innerHTML = `<div style="width:14px;height:14px;border-radius:50%;background:#3B82F6;border:2px solid white;box-shadow:0 0 0 4px rgba(59,130,246,0.25)"></div>`;
+        userPositionMarker.current = new mapboxgl.Marker(el)
+          .setLngLat([coords.longitude, coords.latitude])
+          .addTo(map.current!);
+      },
+      () => toast.error('Não foi possível obter a tua localização'),
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
   }, [mapReady, centerOnUser]);
 
+  // Inicializar mapa
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
-    
     clearCurrentMap();
 
     try {
       setIsLoading(true);
-      
       mapboxgl.accessToken = mapboxToken;
-      
-      if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
-        console.error("Erro: Container do mapa com dimensões zero");
-        toast.error("Erro: Container do mapa com dimensões zero");
-        setIsLoading(false);
-        return;
-      }
-      
+
       const newMap = new mapboxgl.Map({
         container: mapContainer.current,
-        style: mapStyle === 'streets' ? 'mapbox://styles/mapbox/streets-v11' : 'mapbox://styles/mapbox/satellite-v9',
+        style: mapStyle === 'streets'
+          ? 'mapbox://styles/mapbox/streets-v12'
+          : 'mapbox://styles/mapbox/satellite-streets-v12',
         center: [LUBANGO_CENTER.lng, LUBANGO_CENTER.lat],
         zoom: 13,
-        failIfMajorPerformanceCaveat: false,
         attributionControl: false,
-        // Otimizações de performance
-        antialias: false, // Desabilita antialiasing para melhor performance
-        preserveDrawingBuffer: false, // Melhora performance
-        refreshExpiredTiles: false, // Evita recarregar tiles expirados
-        maxTileCacheSize: 50, // Limita cache de tiles
-        fadeDuration: 0, // Remove fade para carregamento mais rápido
+        antialias: false,
+        fadeDuration: 0,
       });
-      
-      newMap.addControl(new mapboxgl.AttributionControl({ compact: true }));
-      
+
+      newMap.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
+      newMap.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
+      newMap.addControl(
+        new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true }),
+        'bottom-right'
+      );
+
       newMap.on('load', () => {
         setMapLoaded(true);
         setMapReady(true);
         setIsLoading(false);
-        // Removido toast para não interromper o fluxo
       });
-      
+
       newMap.on('error', (e) => {
-        console.error("❌ Erro no mapa:", e);
-        const errorMessage = e.error?.message || 'Erro desconhecido';
-        
-        // Verifica se é um erro de token inválido
-        if (errorMessage.includes('invalid') || errorMessage.includes('token') || errorMessage.includes('access token')) {
+        const msg = e.error?.message || '';
+        if (msg.includes('invalid') || msg.includes('token') || msg.includes('access token')) {
           clearInvalidToken();
         } else {
-          toast.error('Erro ao carregar o mapa: ' + errorMessage);
+          toast.error('Erro ao carregar o mapa');
         }
         setIsLoading(false);
       });
-      
-      newMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      
-      newMap.addControl(
-        new mapboxgl.GeolocateControl({
-          positionOptions: {
-            enableHighAccuracy: true
-          },
-          trackUserLocation: true,
-          showUserHeading: true
-        }),
-        'top-right'
-      );
-      
+
       map.current = newMap;
-      
       return clearCurrentMap;
-      
-    } catch (error) {
-      console.error("❌ Erro ao inicializar o mapa:", error);
-      toast.error('Erro ao inicializar o mapa: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+    } catch {
+      toast.error('Erro ao inicializar o mapa');
       setIsLoading(false);
       clearCurrentMap();
     }
-  }, [mapboxToken, mapStyle, setIsLoading]);
+  }, [mapboxToken, mapStyle]);
 
-  const toggleMapStyle = () => {
-    setMapStyle(prev => prev === 'streets' ? 'satellite' : 'streets');
+  const resetView = () => {
+    if (!map.current) return;
+    map.current.easeTo({ center: [LUBANGO_CENTER.lng, LUBANGO_CENTER.lat], zoom: 13, duration: 800 });
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-14rem)] rounded-xl overflow-hidden bg-white border border-gray-200 shadow-xl">
-      {/* Loading State */}
-      {isLoading && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-gradient-to-br from-safebus-yellow/5 to-white flex flex-col items-center justify-center z-20"
-        >
-          <div className="flex flex-col items-center">
-            <div className="relative">
-              <div className="absolute inset-0 bg-blue-400/30 rounded-full animate-ping" />
-              <Loader2 className="h-16 w-16 animate-spin text-blue-600 relative z-10" />
-            </div>
-            <p className="text-xl font-semibold text-blue-900 mt-6">Carregando mapa...</p>
-            <p className="text-sm text-gray-500 mt-2">Inicializando sistema de mapeamento</p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Map Container */}
-      <div 
-        ref={mapContainer} 
-        className="w-full h-full transition-all duration-500"
-        style={{ 
-          display: mapboxToken && !tokenError ? 'block' : 'none',
-          opacity: mapReady ? 1 : 0,
-          borderRadius: '0.75rem'
-        }}
-      />
-
-      {/* Overlays - Top Left */}
-      <div className="absolute top-6 left-6 z-10 flex flex-col gap-3">
-        <AnimatePresence>
-          {mapReady && buses.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-xl p-3 border border-gray-200/50 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-blue-500 rounded-lg">
-                    <Bus className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Veículos Ativos</p>
-                    <p className="text-xl font-bold text-gray-900 leading-none">{buses.length}</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          
-          {mapReady && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-xl p-3 border border-gray-200/50 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  <span className="font-medium text-gray-700">Lubango, Angola</span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Overlays - Top Right */}
-      <div className="absolute top-6 right-6 z-10 flex flex-col gap-3">
-        {mapReady && (
+    <div className="relative w-full rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-md"
+      style={{ height: 'clamp(320px, 55vw, 600px)' }}
+    >
+      {/* Loading overlay */}
+      <AnimatePresence>
+        {isLoading && (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col gap-3"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm"
           >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleMapStyle}
-              className="bg-white/95 backdrop-blur-md hover:bg-white shadow-lg border-gray-200/50 hover:border-gray-300 transition-all duration-200 h-auto py-2.5 px-3"
-            >
-              <Layers className="w-4 h-4 mr-2" />
-              <span className="font-medium">{mapStyle === 'streets' ? 'Ver Satélite' : 'Ver Ruas'}</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (map.current) {
-                  map.current.easeTo({ bearing: 0, duration: 1000 });
-                }
-              }}
-              className="bg-white/95 backdrop-blur-md hover:bg-white shadow-lg border-gray-200/50 hover:border-gray-300 transition-all duration-200 h-auto py-2.5 px-3"
-            >
-              <Compass className="w-4 h-4 mr-2" />
-              <span className="font-medium">Norte</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (map.current) {
-                  map.current.fitBounds(
-                    new mapboxgl.LngLatBounds(
-                      [LUBANGO_CENTER.lng - 0.1, LUBANGO_CENTER.lat - 0.1],
-                      [LUBANGO_CENTER.lng + 0.1, LUBANGO_CENTER.lat + 0.1]
-                    ),
-                    { padding: 50, duration: 1000 }
-                  );
-                }
-              }}
-              className="bg-white/95 backdrop-blur-md hover:bg-white shadow-lg border-gray-200/50 hover:border-gray-300 transition-all duration-200 h-auto py-2.5 px-3"
-            >
-              <Maximize2 className="w-4 h-4 mr-2" />
-              <span className="font-medium">Zoom Total</span>
-            </Button>
+            <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-3" />
+            <p className="text-sm font-medium text-gray-600">A carregar mapa...</p>
           </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
-      {/* Token Error Dialog */}
+      {/* Mapa */}
+      <div
+        ref={mapContainer}
+        className="absolute inset-0 w-full h-full"
+        style={{ display: mapboxToken && !tokenError ? 'block' : 'none', opacity: mapReady ? 1 : 0, transition: 'opacity 0.4s' }}
+      />
+
+      {/* Overlays — top left: info */}
+      <AnimatePresence>
+        {mapReady && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="absolute top-3 left-3 z-10 flex flex-col gap-2"
+          >
+            {/* Cidade */}
+            <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100 text-xs font-medium text-gray-600">
+              <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+              <span>Lubango, Angola</span>
+            </div>
+
+            {/* Contador de veículos */}
+            <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100">
+              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${buses.length > 0 ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+              <span className="text-xs font-semibold text-gray-700">
+                {buses.length > 0 ? `${buses.length} autocarro${buses.length > 1 ? 's' : ''} ativo${buses.length > 1 ? 's' : ''}` : 'Nenhum autocarro ativo'}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlays — top right: controles */}
+      <AnimatePresence>
+        {mapReady && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="absolute top-3 right-3 z-10 flex flex-col gap-2"
+          >
+            {/* Trocar estilo */}
+            <button
+              onClick={() => setMapStyle(s => s === 'streets' ? 'satellite' : 'streets')}
+              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100 text-xs font-medium text-gray-700 hover:bg-white transition-colors active:scale-95"
+              title="Alternar estilo do mapa"
+            >
+              <Layers className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+              <span className="hidden sm:inline">{mapStyle === 'streets' ? 'Satélite' : 'Ruas'}</span>
+            </button>
+
+            {/* Reset view */}
+            <button
+              onClick={resetView}
+              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100 text-xs font-medium text-gray-700 hover:bg-white transition-colors active:scale-95"
+              title="Centrar no Lubango"
+            >
+              <Compass className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+              <span className="hidden sm:inline">Centrar</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Token form se necessário */}
       {(!mapboxToken || tokenError) && (
         <MapboxTokenForm
           tokenError={tokenError}
@@ -393,7 +222,7 @@ const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Bus Markers */}
+      {/* Marcadores dos autocarros */}
       {map.current && mapLoaded && buses.length > 0 && (
         <BusMarkers
           map={map.current}
@@ -402,6 +231,7 @@ const MapView: React.FC<MapViewProps> = ({
           onSelectBus={onSelectBus}
         />
       )}
+
     </div>
   );
 };

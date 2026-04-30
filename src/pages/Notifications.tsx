@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { Notification } from '@/types/notifications';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const Notifications = () => {
   const { user } = useAuth();
+  const { isDriver, isManager } = useUserProfile();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -146,16 +148,9 @@ const Notifications = () => {
     }
   };
 
-  const getUserRole = () => {
-    // This is a placeholder - in a real app, you would get this from the user's profile
-    // or from a context that holds the user's role
-    return 'driver'; // or 'manager'
-  };
+  const getUserRole = () => isManager ? 'manager' : isDriver ? 'driver' : 'student';
 
-  const canSendNotifications = () => {
-    const role = getUserRole();
-    return role === 'driver' || role === 'manager';
-  };
+  const canSendNotifications = () => isDriver || isManager;
 
   const getIcon = (iconType: string) => {
     const baseClasses = 'h-5 w-5';

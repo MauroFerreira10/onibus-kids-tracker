@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Clock, CheckCircle2, AlertCircle, Bus, Loader2, Navigation, User, Star } from 'lucide-react';
+import { MapPin, Clock, CheckCircle2, AlertCircle, Bus, Loader2, Navigation, Star, Info } from 'lucide-react';
 import { StopData } from '@/types';
 import { BusArrivalNotification } from '@/components/notifications/BusArrivalNotification';
 import { ArrivalNotification } from '@/components/notifications/ArrivalNotification';
@@ -13,6 +13,9 @@ interface StopsListProps {
   attendanceStatus: Record<string, string>;
   markPresentAtStop: (stopId: string) => Promise<void>;
   user: any | null;
+  assignedRouteId?: string | null;
+  assignedStopId?: string | null;
+  thisRouteId?: string;
   userAssignedStopId?: string;
 }
 
@@ -21,7 +24,9 @@ export const StopsList: React.FC<StopsListProps> = ({
   attendanceStatus,
   markPresentAtStop,
   user,
-  userAssignedStopId
+  assignedRouteId,
+  assignedStopId,
+  thisRouteId,
 }) => {
   const { isStudent } = useUserProfile();
   const [loadingStopId, setLoadingStopId] = useState<string | null>(null);
@@ -47,137 +52,131 @@ export const StopsList: React.FC<StopsListProps> = ({
     };
   };
 
+  // Esta rota é a rota atribuída ao aluno?
+  const isAssignedRoute = assignedRouteId && thisRouteId && assignedRouteId === thisRouteId;
+
   return (
-    <div className="space-y-6 mt-6" role="region" aria-label="Lista de paradas da rota">
+    <div className="space-y-4 mt-4" role="region" aria-label="Lista de paradas da rota">
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold text-lg flex items-center">
-          <Bus className="w-5 h-5 mr-2 text-gray-700" aria-hidden="true" />
-          Paradas da Rota
+        <h4 className="font-semibold flex items-center text-gray-800">
+          <Bus className="w-4 h-4 mr-2 text-gray-600" aria-hidden="true" />
+          Paradas
         </h4>
-        {isStudent && userAssignedStopId && (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            <User className="w-3 h-3 mr-1" />
-            Sua parada
+        {isStudent && isAssignedRoute && assignedStopId && (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+            <Star className="w-3 h-3 mr-1" />
+            A tua rota
           </Badge>
         )}
       </div>
-      
-      <div className="relative">
+
+      {/* Aviso para aluno sem rota atribuída */}
+      {user && isStudent && !assignedRouteId && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Rota não atribuída</p>
+            <p className="text-xs text-amber-700 mt-0.5">O gestor ainda não te atribuiu uma rota. Após a atribuição, poderás confirmar presença.</p>
+          </div>
+        </div>
+      )}
+
+      <div className="relative pl-8">
         {/* Timeline line */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300" role="presentation" />
-        
+        <div className="absolute left-3 top-3 bottom-3 w-0.5 bg-gray-200" role="presentation" />
+
         {stops.map((stop, index) => {
-          const isUserStop = userAssignedStopId === stop.id;
-          const estimatedInfo = getEstimatedInfo(index);
-          
+          const isUserStop = isAssignedRoute && assignedStopId === stop.id;
+          const isPresent = attendanceStatus[stop.id] === 'present' || attendanceStatus[stop.id] === 'present_at_stop';
+
           return (
-          <motion.div
-            key={stop.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: Math.min(index * 0.03, 0.2) }}
-            className={`relative mb-8 last:mb-0 ${isUserStop ? 'ring-2 ring-blue-500 ring-offset-2 rounded-lg' : ''}`}
-          >
-            <div className="flex items-start">
-              {/* Stop icon */}
-              <div className="relative z-10 flex-shrink-0">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 ${
-                  isUserStop 
-                    ? 'bg-blue-500 border-blue-500' 
+            <motion.div
+              key={stop.id}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: Math.min(index * 0.03, 0.15) }}
+              className="relative mb-4 last:mb-0"
+            >
+              {/* Dot on timeline */}
+              <div className={`absolute -left-8 top-3 w-6 h-6 rounded-full flex items-center justify-center border-2 z-10 ${
+                isPresent
+                  ? 'bg-green-500 border-green-500'
+                  : isUserStop
+                    ? 'bg-safebus-blue border-safebus-blue'
                     : 'bg-white border-gray-300'
-                }`}>
-                  {isUserStop ? (
-                    <Star className="h-6 w-6 text-white" aria-hidden="true" />
-                  ) : (
-                    <MapPin className="h-6 w-6 text-gray-600" aria-hidden="true" />
-                  )}
+              }`}>
+                {isPresent
+                  ? <CheckCircle2 className="h-3 w-3 text-white" />
+                  : isUserStop
+                    ? <Star className="h-3 w-3 text-white" />
+                    : <MapPin className="h-3 w-3 text-gray-400" />
+                }
+              </div>
+
+              {/* Card */}
+              <div className={`rounded-xl border p-3 sm:p-4 transition-all ${
+                isUserStop
+                  ? 'border-safebus-blue/40 bg-safebus-blue/5 shadow-sm'
+                  : isPresent
+                    ? 'border-green-200 bg-green-50/50'
+                    : 'border-gray-200 bg-white'
+              }`}>
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-semibold text-sm text-gray-900 truncate">{stop.name}</h3>
+                      {isUserStop && (
+                        <Badge className="bg-safebus-blue/10 text-safebus-blue border-safebus-blue/20 text-[10px] px-1.5 py-0">
+                          <Star className="w-2.5 h-2.5 mr-0.5" />
+                          A tua
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-gray-500 border-gray-200">
+                        #{index + 1}
+                      </Badge>
+                    </div>
+                    {stop.address && (
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">{stop.address}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0 text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">
+                    <Clock className="h-3 w-3" />
+                    {stop.estimatedTime}
+                  </div>
                 </div>
-                {index < stops.length - 1 && (
-                  <div className="absolute left-1/2 -bottom-8 w-0.5 h-8 bg-gray-300" role="presentation" />
+
+                {/* Arrival notifications */}
+                <div className="mt-2 space-y-1">
+                  <BusArrivalNotification stopId={stop.id} />
+                  <ArrivalNotification stopId={stop.id} />
+                </div>
+
+                {/* Botão presença — apenas na paragem atribuída */}
+                {user && isStudent && isUserStop && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    {isPresent ? (
+                      <div className="flex items-center text-green-700 bg-green-100 px-3 py-2 rounded-lg border border-green-200 text-sm" role="status">
+                        <CheckCircle2 className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="font-medium">Presença confirmada</span>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => handleMarkPresent(stop.id)}
+                        disabled={loadingStopId === stop.id}
+                        className="w-full bg-safebus-blue hover:bg-safebus-blue/90 text-white rounded-lg h-9 text-sm active:scale-95 transition-all"
+                      >
+                        {loadingStopId === stop.id
+                          ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          : <AlertCircle className="h-4 w-4 mr-2" />
+                        }
+                        {loadingStopId === stop.id ? 'A confirmar...' : 'Confirmar presença'}
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
-              
-              {/* Stop content */}
-              <div className="ml-6 flex-1">
-                <motion.div 
-                  whileHover={{ scale: 1.01 }}
-                  className={`bg-white rounded-xl border p-5 shadow-sm hover:shadow-md transition-all ${
-                    isUserStop 
-                      ? 'border-blue-300 bg-blue-50/30' 
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-lg text-gray-900">{stop.name}</h3>
-                        {isUserStop && (
-                          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                            <Star className="w-3 h-3 mr-1" />
-                            Sua parada
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
-                          Parada {index + 1}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">{stop.address}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <div className="flex items-center text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200" aria-label={`Horário previsto: ${stop.estimatedTime}`}>
-                        <Clock className="h-4 w-4 mr-1" aria-hidden="true" />
-                        {stop.estimatedTime}
-                      </div>
-                      {/* Distance/time info */}
-                      <div className="flex items-center text-xs text-gray-500 gap-3" aria-label={`Distância: ${estimatedInfo.distance}, Tempo estimado: ${estimatedInfo.time}`}>
-                        <div className="flex items-center">
-                          <Navigation className="h-3 w-3 mr-1" aria-hidden="true" />
-                          {estimatedInfo.distance}
-                        </div>
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" aria-hidden="true" />
-                          {estimatedInfo.time}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Arrival notifications */}
-                  <div className="mt-4 space-y-2">
-                    <BusArrivalNotification stopId={stop.id} />
-                    <ArrivalNotification stopId={stop.id} />
-                  </div>
-
-                  {/* Attendance status - only for students */}
-                  {user && isStudent && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      {attendanceStatus[stop.id] === 'present' || attendanceStatus[stop.id] === 'present_at_stop' ? (
-                        <div className="flex items-center text-green-700 bg-green-100 px-4 py-2.5 rounded-lg border border-green-200" role="status" aria-live="polite">
-                          <CheckCircle2 className="h-5 w-5 mr-2" aria-hidden="true" />
-                          <span className="font-medium">Presença confirmada</span>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={() => handleMarkPresent(stop.id)}
-                          variant="outline"
-                          disabled={loadingStopId === stop.id}
-                          className="w-full border-dashed bg-white hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300 rounded-lg shadow-sm active:scale-95 transition-all focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          aria-label={`Confirmar presença na parada ${stop.name}`}
-                        >
-                          {loadingStopId === stop.id ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                          )}
-                          {loadingStopId === stop.id ? 'Confirmando...' : 'Confirmar presença'}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
           );
         })}
       </div>

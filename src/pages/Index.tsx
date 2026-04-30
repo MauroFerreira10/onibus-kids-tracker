@@ -285,8 +285,8 @@ const Index = () => {
               </div>
             </div>
 
-            <TabsContent value="map" className="h-full">
-              <div className="h-full rounded-xl overflow-hidden">
+            <TabsContent value="map">
+              <div className="rounded-xl overflow-hidden">
                 {isLoading ? (
                   <div className="w-full h-[calc(100vh-14rem)] min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200">
                     <div className="flex flex-col items-center gap-4">
