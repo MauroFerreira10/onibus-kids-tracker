@@ -8,6 +8,7 @@ import { QuotaProvider } from "./contexts/QuotaContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import DriverRoute from "./components/DriverRoute";
+import SchoolAdminRoute from "./components/SchoolAdminRoute";
 import { useWebVitals } from "./hooks/useWebVitals";
 
 // SEM lazy loading - Importações diretas para FCP/LCP melhores
@@ -28,6 +29,9 @@ import RegisterDrivers from "./pages/manager/RegisterDrivers";
 import StudentAssignment from "./pages/manager/StudentAssignment";
 import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
+import SchoolDashboard from "./pages/school/Dashboard";
+import SchoolRoutes from "./pages/school/SchoolRoutes";
+import SchoolStudents from "./pages/school/Students";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -127,6 +131,23 @@ function App() {
                 <AdminRoute>
                   <StudentAssignment />
                 </AdminRoute>
+              } />
+              
+              {/* School Admin routes */}
+              <Route path="/school/dashboard" element={
+                <SchoolAdminRoute>
+                  <SchoolDashboard />
+                </SchoolAdminRoute>
+              } />
+              <Route path="/school/routes" element={
+                <SchoolAdminRoute>
+                  <SchoolRoutes />
+                </SchoolAdminRoute>
+              } />
+              <Route path="/school/students" element={
+                <SchoolAdminRoute>
+                  <SchoolStudents />
+                </SchoolAdminRoute>
               } />
               
               <Route path="/pricing" element={<Pricing />} />

@@ -86,7 +86,7 @@ export const useRoutes = () => {
     return () => {
       channel.unsubscribe();
     };
-  }, [user, navigate]);
+  }, [user, navigate, isStudent]);
 
   const updateAttendanceStatus = async () => {
     try {

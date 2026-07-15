@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, MessageSquare, Loader2, ArrowLeft, Plus } from 'lucide-react';
+import { Send, MessageSquare, Loader2, ArrowLeft, Plus, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +23,7 @@ interface Conversation {
   participants: string[];
   created_at: string;
   updated_at: string;
+  school_id?: string | null;
 }
 
 interface Profile {
@@ -36,6 +37,7 @@ const roleLabel: Record<string, string> = {
   driver: 'Motorista',
   parent: 'Pai/Mãe',
   student: 'Aluno',
+  school_admin: 'Escola',
 };
 
 const roleColor: Record<string, string> = {
@@ -43,6 +45,7 @@ const roleColor: Record<string, string> = {
   driver: 'bg-blue-100 text-blue-700',
   parent: 'bg-green-100 text-green-700',
   student: 'bg-orange-100 text-orange-700',
+  school_admin: 'bg-indigo-100 text-indigo-700',
 };
 
 const avatarColor: Record<string, string> = {
@@ -50,6 +53,7 @@ const avatarColor: Record<string, string> = {
   driver: 'bg-blue-500',
   parent: 'bg-green-500',
   student: 'bg-orange-500',
+  school_admin: 'bg-indigo-500',
 };
 
 function formatTime(dateStr: string) {
@@ -78,21 +82,19 @@ const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Carregar todos os profiles (exceto o próprio)
   useEffect(() => {
     if (!user) return;
     supabase.from('profiles').select('id, name, role').neq('id', user.id)
       .then(({ data }) => setProfiles(data as Profile[] ?? []));
   }, [user]);
 
-  // Carregar conversas
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
-        .contains('participants', [user.id])
+        .or(`participants.cs.{${user.id}},school_id.not.isnull`)
         .order('updated_at', { ascending: false });
       if (!error) setConversations(data as Conversation[] ?? []);
       setLoading(false);
@@ -100,12 +102,11 @@ const Chat = () => {
     load();
 
     const channel = supabase.channel('conversations_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => load())
       .subscribe();
     return () => { channel.unsubscribe(); };
   }, [user]);
 
-  // Carregar mensagens da conversa selecionada
   useEffect(() => {
     if (!selectedConv) return;
     setMessages([]);
@@ -135,12 +136,10 @@ const Chat = () => {
     return () => { channel.unsubscribe(); };
   }, [selectedConv]);
 
-  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -149,7 +148,7 @@ const Chat = () => {
   }, [newMessage]);
 
   const getOtherParticipantId = useCallback((conv: Conversation) =>
-    conv.participants.find(p => p !== user?.id), [user]);
+    conv.participants?.find(p => p !== user?.id), [user]);
 
   const getProfile = useCallback((id: string) =>
     profiles.find(p => p.id === id), [profiles]);
@@ -172,7 +171,6 @@ const Chat = () => {
     if (error) {
       toast.error('Erro ao enviar mensagem.');
     } else {
-      // Adicionar localmente com o ID real — o realtime vai ignorar pois já existe
       setMessages(prev => prev.some(m => m.id === inserted.id) ? prev : [...prev, inserted as Message]);
       await supabase.from('conversations')
         .update({ updated_at: new Date().toISOString() })
@@ -185,9 +183,8 @@ const Chat = () => {
     if (!user) return;
     setShowNewChat(false);
 
-    // Verificar se já existe conversa
     const existing = conversations.find(c =>
-      c.participants.includes(participantId) && c.participants.includes(user.id)
+      c.participants?.includes(participantId) && c.participants?.includes(user.id)
     );
     if (existing) {
       setSelectedConv(existing.id);
@@ -205,6 +202,7 @@ const Chat = () => {
   };
 
   const selectedConvObj = conversations.find(c => c.id === selectedConv);
+  const isSchoolChat = selectedConvObj?.school_id != null;
   const otherParticipantId = selectedConvObj ? getOtherParticipantId(selectedConvObj) : null;
   const otherProfile = otherParticipantId ? getProfile(otherParticipantId) : null;
 
@@ -221,10 +219,7 @@ const Chat = () => {
   return (
     <Layout title="Chat">
       <div className="flex h-[calc(100vh-80px)] bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-
-        {/* Sidebar — lista de conversas */}
         <div className={`w-full md:w-80 flex-shrink-0 flex flex-col border-r border-gray-100 bg-gray-50 ${selectedConv ? 'hidden md:flex' : 'flex'}`}>
-          {/* Header */}
           <div className="px-4 py-4 border-b border-gray-100 bg-white flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-gray-900">Mensagens</h2>
@@ -239,7 +234,6 @@ const Chat = () => {
             </button>
           </div>
 
-          {/* Painel nova conversa */}
           <AnimatePresence>
             {showNewChat && (
               <motion.div
@@ -272,7 +266,6 @@ const Chat = () => {
             )}
           </AnimatePresence>
 
-          {/* Lista de conversas */}
           <ScrollArea className="flex-1">
             {conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-center px-6">
@@ -281,7 +274,8 @@ const Chat = () => {
               </div>
             ) : (
               conversations.map(conv => {
-                const otherId = getOtherParticipantId(conv);
+                const isGroup = conv.school_id != null;
+                const otherId = isGroup ? null : getOtherParticipantId(conv);
                 const other = otherId ? getProfile(otherId) : null;
                 const isSelected = selectedConv === conv.id;
 
@@ -291,14 +285,15 @@ const Chat = () => {
                     onClick={() => setSelectedConv(conv.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 transition-colors text-left ${isSelected ? 'bg-blue-50 border-l-2 border-l-blue-600' : 'hover:bg-white'}`}
                   >
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${avatarColor[other?.role ?? ''] ?? 'bg-gray-300'}`}>
-                      {other ? getInitials(other.name) : '?'}
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${isGroup ? 'bg-indigo-500' : avatarColor[other?.role ?? ''] ?? 'bg-gray-300'}`}>
+                      {isGroup ? <Users className="h-5 w-5" /> : other ? getInitials(other.name) : '?'}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-medium truncate ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
-                        {other?.name ?? 'Desconhecido'}
+                      <p className={`text-sm font-medium truncate flex items-center gap-1.5 ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
+                        {isGroup ? 'Chat da Escola' : other?.name ?? 'Desconhecido'}
+                        {isGroup && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">Grupo</span>}
                       </p>
-                      <p className="text-xs text-gray-400 truncate">{roleLabel[other?.role ?? ''] ?? '—'}</p>
+                      <p className="text-xs text-gray-400 truncate">{isGroup ? 'Conversa de grupo' : roleLabel[other?.role ?? ''] ?? '—'}</p>
                     </div>
                   </button>
                 );
@@ -307,11 +302,9 @@ const Chat = () => {
           </ScrollArea>
         </div>
 
-        {/* Área principal de chat */}
         <div className={`flex-1 flex flex-col min-w-0 ${selectedConv ? 'flex' : 'hidden md:flex'}`}>
-          {selectedConv && otherProfile ? (
+          {selectedConv && (isSchoolChat || otherProfile) ? (
             <>
-              {/* Header da conversa */}
               <div className="px-4 py-3 border-b border-gray-100 bg-white flex items-center gap-3 flex-shrink-0">
                 <button
                   className="md:hidden text-gray-500 hover:text-gray-700 mr-1"
@@ -319,18 +312,21 @@ const Chat = () => {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${avatarColor[otherProfile.role] ?? 'bg-gray-400'}`}>
-                  {getInitials(otherProfile.name)}
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${isSchoolChat ? 'bg-indigo-500' : avatarColor[otherProfile?.role ?? ''] ?? 'bg-gray-400'}`}>
+                  {isSchoolChat ? <Users className="h-5 w-5" /> : otherProfile ? getInitials(otherProfile.name) : '?'}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">{otherProfile.name}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleColor[otherProfile.role] ?? 'bg-gray-100 text-gray-600'}`}>
-                    {roleLabel[otherProfile.role] ?? otherProfile.role}
-                  </span>
+                  <p className="text-sm font-semibold text-gray-900">{isSchoolChat ? 'Chat da Escola' : otherProfile?.name}</p>
+                  {isSchoolChat ? (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-indigo-100 text-indigo-700">Grupo</span>
+                  ) : (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleColor[otherProfile?.role ?? ''] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {roleLabel[otherProfile?.role ?? ''] ?? otherProfile?.role}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Mensagens */}
               <div className="flex-1 overflow-y-auto bg-[#f0f4f8] px-4 py-4" style={{ scrollBehavior: 'smooth' }}>
                 {messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-gray-400 text-sm">
@@ -373,7 +369,6 @@ const Chat = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input de mensagem */}
               <form
                 onSubmit={handleSend}
                 className="px-4 py-3 bg-white border-t border-gray-100 flex items-end gap-2 flex-shrink-0"
@@ -403,7 +398,6 @@ const Chat = () => {
               </form>
             </>
           ) : (
-            /* Estado vazio — nenhuma conversa selecionada */
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6 bg-[#f0f4f8]">
               <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
                 <MessageSquare className="h-8 w-8 text-blue-500" />

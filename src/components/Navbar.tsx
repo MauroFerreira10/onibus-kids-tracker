@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { isDriver, isManager } = useUserProfile();
+  const { isDriver, isManager, isSchoolAdmin } = useUserProfile();
 
   // Itens base sempre presentes
   const coreItems = [
@@ -26,6 +26,7 @@ const Navbar: React.FC = () => {
   const extraItems = [
     ...(isDriver ? [{ label: 'Painel', path: '/driver/dashboard', icon: Bus }] : []),
     ...(isManager ? [{ label: 'Gestor', path: '/manager/dashboard', icon: LayoutDashboard }] : []),
+    ...(isSchoolAdmin ? [{ label: 'Escola', path: '/school/dashboard', icon: LayoutDashboard }] : []),
   ];
 
   const isActive = (path: string) =>

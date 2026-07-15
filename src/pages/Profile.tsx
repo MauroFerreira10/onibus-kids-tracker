@@ -4,10 +4,7 @@ import Layout from '@/components/Layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
   Form,
   FormControl,
@@ -22,7 +19,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { User, UserCheck, Bus, Clock, MapPin, Phone, Mail, Home } from 'lucide-react';
+import { User, UserCheck, Bus, Phone, Mail, Home, Route, Truck } from 'lucide-react';
 import PushNotificationToggle from '@/components/notifications/PushNotificationToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,6 +67,7 @@ const Profile = () => {
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [selectedChild, setSelectedChild] = useState<ChildData | null>(null);
   const [isEditingChild, setIsEditingChild] = useState(false);
+  const [childRouteInfo, setChildRouteInfo] = useState<Record<string, { routeName?: string; licensePlate?: string; driverName?: string }>>({});
   
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -148,6 +146,42 @@ const Profile = () => {
       fetchProfileData();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!profileData?.children?.length) return;
+    const loadChildRouteInfo = async () => {
+      const info: Record<string, any> = {};
+      for (const child of profileData.children) {
+        const { data: studentData } = await supabase
+          .from('students')
+          .select('route_id')
+          .eq('student_number', child.student_number)
+          .maybeSingle();
+        if (studentData?.route_id) {
+          const { data: route } = await supabase
+            .from('routes')
+            .select('name, vehicle_id, driver_id')
+            .eq('id', studentData.route_id)
+            .single();
+          if (route) {
+            let licensePlate = '';
+            let driverName = '';
+            if (route.vehicle_id) {
+              const { data: v } = await supabase.from('vehicles').select('license_plate').eq('id', route.vehicle_id).single();
+              licensePlate = v?.license_plate || '';
+            }
+            if (route.driver_id) {
+              const { data: d } = await supabase.from('profiles').select('name').eq('id', route.driver_id).single();
+              driverName = d?.name || '';
+            }
+            info[child.id] = { routeName: route.name, licensePlate, driverName };
+          }
+        }
+      }
+      setChildRouteInfo(info);
+    };
+    loadChildRouteInfo();
+  }, [profileData?.children]);
   
   // Função para atualizar o perfil
   const handleUpdateProfile = async (data: ProfileFormValues) => {
@@ -398,46 +432,71 @@ const Profile = () => {
                       <div className="p-5">
                         {profileData.children && profileData.children.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {profileData.children.map((child, index) => (
-                              <motion.div
-                                key={child.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="group rounded-xl border border-gray-100 hover:border-safebus-blue/30 bg-white hover:shadow-md transition-all p-4"
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div className="w-12 h-12 bg-gradient-to-br from-safebus-blue to-safebus-blue-dark rounded-xl flex items-center justify-center text-white font-extrabold text-lg flex-shrink-0">
-                                    {child.name.charAt(0).toUpperCase()}
+                            {profileData.children.map((child, index) => {
+                              const childInfo = childRouteInfo[child.id];
+                              return (
+                                <motion.div
+                                  key={child.id}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: index * 0.05 }}
+                                  className="group rounded-xl border border-gray-100 hover:border-safebus-blue/30 bg-white hover:shadow-md transition-all p-4"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-safebus-blue to-safebus-blue-dark rounded-xl flex items-center justify-center text-white font-extrabold text-lg flex-shrink-0">
+                                      {child.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-bold text-safebus-blue truncate">{child.name}</h4>
+                                      {child.student_number ? (
+                                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                                          <UserCheck className="w-3 h-3" />
+                                          Nº {child.student_number}
+                                        </p>
+                                      ) : (
+                                        <p className="text-xs text-gray-400 mt-0.5">Sem número</p>
+                                      )}
+                                      {childInfo && (
+                                        <div className="mt-2 space-y-1">
+                                          {childInfo.routeName && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                                              <Route className="w-3 h-3 text-safebus-blue" />
+                                              Rota: {childInfo.routeName}
+                                            </p>
+                                          )}
+                                          {childInfo.licensePlate && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                                              <Truck className="w-3 h-3 text-amber-600" />
+                                              Veículo: {childInfo.licensePlate}
+                                            </p>
+                                          )}
+                                          {childInfo.driverName && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                                              <Bus className="w-3 h-3 text-green-600" />
+                                              Motorista: {childInfo.driverName}
+                                            </p>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-safebus-blue truncate">{child.name}</h4>
-                                    {child.student_number ? (
-                                      <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-                                        <UserCheck className="w-3 h-3" />
-                                        Nº {child.student_number}
-                                      </p>
-                                    ) : (
-                                      <p className="text-xs text-gray-400 mt-0.5">Sem número</p>
-                                    )}
+                                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                                    <button
+                                      onClick={() => handleEditChild(child)}
+                                      className="flex-1 text-xs font-semibold text-safebus-blue hover:bg-safebus-blue/5 py-1.5 rounded-md transition-colors"
+                                    >
+                                      Editar
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteChild(child.id)}
+                                      className="flex-1 text-xs font-semibold text-red-500 hover:bg-red-50 py-1.5 rounded-md transition-colors"
+                                    >
+                                      Remover
+                                    </button>
                                   </div>
-                                </div>
-                                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                                  <button
-                                    onClick={() => handleEditChild(child)}
-                                    className="flex-1 text-xs font-semibold text-safebus-blue hover:bg-safebus-blue/5 py-1.5 rounded-md transition-colors"
-                                  >
-                                    Editar
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteChild(child.id)}
-                                    className="flex-1 text-xs font-semibold text-red-500 hover:bg-red-50 py-1.5 rounded-md transition-colors"
-                                  >
-                                    Remover
-                                  </button>
-                                </div>
-                              </motion.div>
-                            ))}
+                                </motion.div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="text-center py-10">

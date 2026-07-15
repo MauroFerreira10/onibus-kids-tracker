@@ -12,6 +12,7 @@ export const useUserProfile = () => {
     isParent: profile?.role === 'parent',
     isDriver: profile?.role === 'driver',
     isManager: profile?.role === 'manager',
+    isSchoolAdmin: profile?.role === 'school_admin',
   };
 };
 

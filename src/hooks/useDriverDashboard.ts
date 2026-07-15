@@ -13,7 +13,7 @@ interface Route {
 }
 
 export const useDriverDashboard = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedBusId, setSelectedBusId] = useState<string | undefined>();
   const [students, setStudents] = useState<StudentWithStatus[]>([]);
   const [tripStatus, setTripStatus] = useState<'idle' | 'in_progress' | 'completed'>('idle');
@@ -95,10 +95,15 @@ export const useDriverDashboard = () => {
   const fetchRoutes = async () => {
     try {
       setLoadingRoutes(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('routes')
-        .select('id, name, total_stops')
-        .order('name');
+        .select('id, name, total_stops');
+
+      if (profile?.school_id) {
+        query = query.eq('school_id', profile.school_id);
+      }
+
+      const { data, error } = await query.order('name');
 
       if (error) {
         throw error;
