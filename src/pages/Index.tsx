@@ -23,7 +23,6 @@ const Index = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showParentBanner, setShowParentBanner] = useState(true);
-  const [activeTab, setActiveTab] = useState<'map' | 'list'>('map');
   const loadedOnce = useRef(false);
 
   const { buses, isLoading, error, refreshBuses } = useBusData(
@@ -66,7 +65,6 @@ const Index = () => {
 
   const handleSelectBus = useCallback((busId: string) => {
     setSelectedBusId(prev => prev === busId ? undefined : busId);
-    setActiveTab('map');
   }, []);
 
   const selectedBus = selectedBusId ? buses.find(b => b.id === selectedBusId) : null;
@@ -191,37 +189,22 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Tabs: Mapa / Lista — simplified */}
+        {/* Bus List */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-4 pt-4 pb-1 border-b border-gray-50">
-            <button
-              onClick={() => setActiveTab('map')}
-              className={`text-xs font-semibold px-4 py-2 rounded-lg transition-all ${activeTab === 'map' ? 'bg-safebus-blue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-            >
-              Mapa
-            </button>
-            <button
-              onClick={() => setActiveTab('list')}
-              className={`text-xs font-semibold px-4 py-2 rounded-lg transition-all ${activeTab === 'list' ? 'bg-safebus-blue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-            >
-              Lista
-            </button>
-            <span className="ml-auto text-xs text-gray-400">{buses.length} autocarro{buses.length !== 1 ? 's' : ''}</span>
+          <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-50">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Autocarros</span>
+            <span className="text-xs text-gray-400">{buses.length} autocarro{buses.length !== 1 ? 's' : ''}</span>
           </div>
 
           <div className="p-4">
-            {activeTab === 'list' || isInitialLoading || error ? (
-              isInitialLoading ? (
-                <div className="space-y-3">{[1, 2].map(i => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}</div>
-              ) : error ? (
-                <div className="text-center py-8">
-                  <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-2" />
-                  <p className="text-sm text-red-600 mb-3">{error}</p>
-                  <Button size="sm" onClick={refreshBuses} variant="destructive"><RefreshCw className="h-3 w-3 mr-1" /> Tentar novamente</Button>
-                </div>
-              ) : (
-                <BusList buses={buses} selectedBusId={selectedBusId} onSelectBus={handleSelectBus} />
-              )
+            {isInitialLoading ? (
+              <div className="space-y-3">{[1, 2].map(i => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-2" />
+                <p className="text-sm text-red-600 mb-3">{error}</p>
+                <Button size="sm" onClick={refreshBuses} variant="destructive"><RefreshCw className="h-3 w-3 mr-1" /> Tentar novamente</Button>
+              </div>
             ) : (
               <BusList buses={buses} selectedBusId={selectedBusId} onSelectBus={handleSelectBus} />
             )}
