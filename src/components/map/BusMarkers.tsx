@@ -37,51 +37,55 @@ const BusMarkers: React.FC<BusMarkersProps> = ({ map, buses, selectedBusId, onSe
   const flyToDone = useRef(false);
 
   useEffect(() => {
-    const markers = markersRef.current;
-    const currentIds = new Set(buses.map(b => b.id));
+    try {
+      const markers = markersRef.current;
+      const currentIds = new Set(buses.map(b => b.id));
 
-    // Remove markers for buses no longer in list
-    markers.forEach((marker, id) => {
-      if (!currentIds.has(id)) {
-        marker.remove();
-        markers.delete(id);
-      }
-    });
+      // Remove markers for buses no longer in list
+      markers.forEach((marker, id) => {
+        if (!currentIds.has(id)) {
+          marker.remove();
+          markers.delete(id);
+        }
+      });
 
-    // Add or update markers
-    buses.forEach(bus => {
-      const isSelected = selectedBusId === bus.id;
-      const existing = markers.get(bus.id);
+      // Add or update markers
+      buses.forEach(bus => {
+        const isSelected = selectedBusId === bus.id;
+        const existing = markers.get(bus.id);
 
-      if (existing) {
-        const m = existing;
-        m.setLngLat([bus.longitude, bus.latitude]);
+        if (existing) {
+          const m = existing;
+          m.setLngLat([bus.longitude, bus.latitude]);
 
-        const el = m.getElement();
-        const wasSelected = el.innerHTML.includes('animate-pulse');
-        if (isSelected !== wasSelected) {
-          const newEl = createMarkerElement(bus, isSelected, () => onSelectBus?.(bus.id));
-          m.setElement(newEl);
+          const el = m.getElement();
+          const wasSelected = el.innerHTML.includes('animate-pulse');
+          if (isSelected !== wasSelected) {
+            const newEl = createMarkerElement(bus, isSelected, () => onSelectBus?.(bus.id));
+            m.setElement(newEl);
+          }
+        } else {
+          const onClick = () => onSelectBus?.(bus.id);
+          const el = createMarkerElement(bus, isSelected, onClick);
+          const marker = new mapboxgl.Marker(el)
+            .setLngLat([bus.longitude, bus.latitude])
+            .addTo(map);
+          markers.set(bus.id, marker);
+        }
+      });
+
+      // Fly to selected bus only once per selection
+      if (selectedBusId) {
+        const bus = buses.find(b => b.id === selectedBusId);
+        if (bus && !flyToDone.current) {
+          map.flyTo({ center: [bus.longitude, bus.latitude], zoom: 15, speed: 0.8, curve: 1.5 });
+          flyToDone.current = true;
         }
       } else {
-        const onClick = () => onSelectBus?.(bus.id);
-        const el = createMarkerElement(bus, isSelected, onClick);
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([bus.longitude, bus.latitude])
-          .addTo(map);
-        markers.set(bus.id, marker);
+        flyToDone.current = false;
       }
-    });
-
-    // Fly to selected bus only once per selection
-    if (selectedBusId) {
-      const bus = buses.find(b => b.id === selectedBusId);
-      if (bus && !flyToDone.current) {
-        map.flyTo({ center: [bus.longitude, bus.latitude], zoom: 15, speed: 0.8, curve: 1.5 });
-        flyToDone.current = true;
-      }
-    } else {
-      flyToDone.current = false;
+    } catch (err) {
+      console.error('BusMarkers: erro ao actualizar marcadores', err);
     }
   }, [buses, selectedBusId, map]);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense, memo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import Layout from '@/components/Layout';
 const MapView = lazy(() => import('@/components/MapView'));
 import BusList from '@/components/BusList';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import TripHistoryDialog from '@/components/dashboard/TripHistoryDialog';
 import RecentNotificationsDialog from '@/components/notifications/RecentNotificationsDialog';
 import DashboardBackground from '@/components/dashboard/DashboardBackground';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
@@ -75,6 +76,7 @@ const Index = () => {
   return (
     <Layout>
       <DashboardBackground />
+      <ErrorBoundary>
       <div className="relative z-10 flex flex-col max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-24 gap-3">
         {/* Minimalist Header */}
         <div className="flex items-center justify-between py-3">
@@ -213,6 +215,7 @@ const Index = () => {
       </div>
 
       <RecentNotificationsDialog open={showNotifications} onOpenChange={setShowNotifications} />
+      </ErrorBoundary>
     </Layout>
   );
 };
