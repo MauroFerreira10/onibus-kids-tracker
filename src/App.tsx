@@ -13,6 +13,7 @@ import { useWebVitals } from "./hooks/useWebVitals";
 
 // SEM lazy loading - Importações diretas para FCP/LCP melhores
 import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 import RoutesPage from "./pages/Routes";
 import Schedule from "./pages/Schedule";
@@ -57,11 +58,12 @@ function App() {
               <Toaster />
               <RouterRoutes>
                 {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/register" element={<Register />} />
                 
                 {/* Protected routes */}
-                <Route path="/" element={
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Index />
                   </ProtectedRoute>

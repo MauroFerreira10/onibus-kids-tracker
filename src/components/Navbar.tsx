@@ -15,7 +15,7 @@ const Navbar: React.FC = () => {
 
   // Itens base sempre presentes
   const coreItems = [
-    { label: 'Mapa', path: '/', icon: Map },
+    { label: 'Mapa', path: '/dashboard', icon: Map },
     { label: 'Rotas', path: '/routes', icon: Bus },
     { label: 'Horários', path: '/schedule', icon: Calendar },
     { label: 'Alertas', path: '/notifications', icon: BellRing },
@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
   ];
 
   const isActive = (path: string) =>
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+    path === '/dashboard' ? location.pathname.startsWith('/dashboard') : location.pathname.startsWith(path);
 
   const NavLink = ({ item }: { item: typeof coreItems[0] }) => {
     const active = isActive(item.path);

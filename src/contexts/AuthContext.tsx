@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const role = userProfile?.role;
         if (role === 'driver') navigate('/driver/dashboard');
         else if (role === 'manager') navigate('/manager/dashboard');
-        else navigate('/');
+        else navigate('/dashboard');
       }
     } else {
       setProfile(null);

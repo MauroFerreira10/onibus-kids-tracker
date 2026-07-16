@@ -158,7 +158,7 @@ const Login = () => {
         if (profileError) {
           console.error('Error fetching user role:', profileError);
           toast.success('Login realizado com sucesso!');
-          navigate('/');
+          navigate('/dashboard');
         } else {
           toast.success('Login realizado com sucesso!');
           
@@ -168,7 +168,7 @@ const Login = () => {
           } else if (profileData.role === 'driver') {
             navigate('/driver/dashboard');
           } else {
-            navigate('/');
+            navigate('/dashboard');
           }
         }
       }
