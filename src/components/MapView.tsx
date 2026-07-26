@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BusData } from '@/types';
-import { MapPin, Layers, Compass } from 'lucide-react';
+import { Layers, Compass } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import MapboxTokenForm from './map/MapboxTokenForm';
 import BusMarkers from './map/BusMarkers';
@@ -85,7 +86,7 @@ const MapView: React.FC<MapViewProps> = ({ buses = [], selectedBusId, onSelectBu
       {isLoading && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-2">
-            <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 border-safebus-blue border-t-transparent rounded-full animate-spin" />
             <p className="text-sm font-medium text-gray-600">A carregar mapa...</p>
           </div>
         </div>
@@ -94,31 +95,28 @@ const MapView: React.FC<MapViewProps> = ({ buses = [], selectedBusId, onSelectBu
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" style={{ display: mapboxToken && !tokenError ? 'block' : 'none' }} />
 
       {mapReady && (
-        <>
-          <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
-            <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100 text-xs font-medium text-gray-600">
-              <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-              <span>Lubango, Angola</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100">
-              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${buses.length > 0 ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-              <span className="text-xs font-semibold text-gray-700">
-                {buses.length > 0 ? `${buses.length} autocarro${buses.length > 1 ? 's' : ''} ativo${buses.length > 1 ? 's' : ''}` : 'Nenhum autocarro ativo'}
-              </span>
-            </div>
-          </div>
-
-          <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-            <button onClick={handleStyleToggle} className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100 text-xs font-medium text-gray-700 hover:bg-white transition-colors active:scale-95" title="Alternar estilo do mapa">
-              <Layers className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-              <span className="hidden sm:inline">{mapStyle === 'streets' ? 'Satélite' : 'Ruas'}</span>
-            </button>
-            <button onClick={resetView} className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm border border-gray-100 text-xs font-medium text-gray-700 hover:bg-white transition-colors active:scale-95" title="Centrar no Lubango">
-              <Compass className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-              <span className="hidden sm:inline">Centrar</span>
-            </button>
-          </div>
-        </>
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="bg-white/90 backdrop-blur-md border border-gray-100 shadow-sm hover:bg-white text-gray-700"
+            onClick={handleStyleToggle}
+            title="Alternar estilo do mapa"
+          >
+            <Layers className="w-3.5 h-3.5 text-safebus-blue mr-1.5" />
+            <span className="hidden sm:inline">{mapStyle === 'streets' ? 'Satélite' : 'Ruas'}</span>
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="bg-white/90 backdrop-blur-md border border-gray-100 shadow-sm hover:bg-white text-gray-700"
+            onClick={resetView}
+            title="Centrar no Lubango"
+          >
+            <Compass className="w-3.5 h-3.5 text-safebus-blue mr-1.5" />
+            <span className="hidden sm:inline">Centrar</span>
+          </Button>
+        </div>
       )}
 
       {(!mapboxToken || tokenError) && (

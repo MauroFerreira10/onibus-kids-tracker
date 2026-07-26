@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import Layout from '@/components/Layout';
+import LoadingScreen from '@/components/LoadingScreen';
 const MapView = lazy(() => import('@/components/MapView'));
 import BusList from '@/components/BusList';
 import { useBusData } from '@/hooks/useBusData';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Bus, AlertTriangle, Clock, RefreshCw, Loader2, Bell, X } from 'lucide-react';
+import {
+  Bus, MapPin, Bell, X, RefreshCw, Clock, Route,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import TripHistoryDialog from '@/components/dashboard/TripHistoryDialog';
@@ -13,7 +16,8 @@ import RecentNotificationsDialog from '@/components/notifications/RecentNotifica
 import DashboardBackground from '@/components/dashboard/DashboardBackground';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const formatTime = (date: Date) =>
+  date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
 const Index = () => {
   const { user, profile } = useAuth();
@@ -24,13 +28,18 @@ const Index = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showParentBanner, setShowParentBanner] = useState(true);
+  const [splashDone, setSplashDone] = useState(false);
   const loadedOnce = useRef(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSplashDone(true), 1800);
+    return () => clearTimeout(t);
+  }, []);
 
   const { buses, isLoading, error, refreshBuses } = useBusData(
     isParentUser && parentVehicleIds ? { vehicleIds: parentVehicleIds } : undefined
   );
 
-  // Fetch parent's children vehicles once
   useEffect(() => {
     if (!isParentUser || !user || parentVehicleIds !== undefined) return;
     const fetch = async () => {
@@ -48,7 +57,6 @@ const Index = () => {
     fetch();
   }, [isParentUser, user, parentVehicleIds]);
 
-  // Auto-refresh every 60s — stable interval
   const refreshRef = useRef(refreshBuses);
   refreshRef.current = refreshBuses;
 
@@ -70,23 +78,34 @@ const Index = () => {
 
   const selectedBus = selectedBusId ? buses.find(b => b.id === selectedBusId) : null;
   const isInitialLoading = isLoading && !loadedOnce.current;
-
   if (!isInitialLoading) loadedOnce.current = true;
 
+  const activeCount = buses.length;
+
   return (
+    <>
+      {(!splashDone || isInitialLoading) && <LoadingScreen />}
     <Layout>
       <DashboardBackground />
       <ErrorBoundary>
-      <div className="relative z-10 flex flex-col max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-24 gap-3">
-        {/* Minimalist Header */}
-        <div className="flex items-center justify-between py-3">
+      <div className="relative z-10 flex flex-col max-w-7xl mx-auto px-4 pb-28 gap-4">
+
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-safebus-blue to-safebus-blue-dark flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-safebus-blue to-safebus-blue-dark flex items-center justify-center shadow-md shadow-safebus-blue/20">
               <Bus className="h-5 w-5 text-white" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-safebus-blue leading-tight">SafeBus</h1>
-              <p className="text-[10px] text-gray-400 leading-tight">Rastreamento em Tempo Real</p>
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <MapPin className="h-3 w-3" />
+                <span>Lubango, Angola</span>
+                <span className="text-gray-300 mx-1">·</span>
+                <span className={`font-medium ${activeCount > 0 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                  {activeCount > 0 ? `${activeCount} activo${activeCount > 1 ? 's' : ''}` : '0 activos'}
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -97,126 +116,154 @@ const Index = () => {
               </span>
               <span className="text-[11px] font-semibold text-emerald-700">Online</span>
             </div>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowNotifications(true)}>
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-gray-200" onClick={() => setShowNotifications(true)}>
               <Bell className="h-4 w-4 text-gray-500" />
             </Button>
           </div>
         </div>
 
-        {/* Parent Banner */}
+        {/* ── Parent Banner ── */}
         {isParentUser && showParentBanner && (
           <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-xl px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-violet-100 rounded-lg"><Bus className="h-4 w-4 text-violet-600" /></div>
+              <div className="p-1.5 bg-violet-100 rounded-lg">
+                <Bus className="h-4 w-4 text-violet-600" />
+              </div>
               <p className="text-sm text-violet-800 font-medium">A mostrar apenas autocarros dos teus filhos</p>
             </div>
-            <button onClick={() => setShowParentBanner(false)} className="text-violet-400 hover:text-violet-600"><X className="h-4 w-4" /></button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-violet-400 hover:text-violet-600" onClick={() => setShowParentBanner(false)}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         )}
 
-        {/* Map */}
+        {/* ── Map ── */}
         <div className="relative rounded-2xl overflow-hidden shadow-lg border border-gray-100" style={{ height: isParentUser ? '420px' : '480px' }}>
-          {isInitialLoading || error ? (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-              {isInitialLoading ? (
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-10 w-10 animate-spin text-safebus-blue" />
-                  <p className="text-safebus-blue font-semibold text-sm">Carregando...</p>
+          {error ? (
+              <div className="text-center p-6">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
+                  <span className="text-red-500 text-xl font-bold">!</span>
                 </div>
-              ) : (
-                <div className="text-center p-6">
-                  <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                  <p className="text-red-700 text-sm mb-3">{error}</p>
-                  <Button size="sm" onClick={refreshBuses} variant="destructive"><RefreshCw className="h-3 w-3 mr-1" /> Tentar novamente</Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Suspense fallback={
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                <Loader2 className="h-10 w-10 animate-spin text-safebus-blue" />
+                <p className="text-red-700 text-sm mb-3">{error}</p>
+                <Button size="sm" variant="destructive" onClick={refreshBuses}>
+                  <RefreshCw className="h-3 w-3 mr-1.5" /> Tentar novamente
+                </Button>
               </div>
-            }>
+            ) : (
+            <Suspense fallback={<LoadingScreen />}>
               <MapView buses={buses} selectedBusId={selectedBusId} onSelectBus={handleSelectBus} />
             </Suspense>
           )}
 
           {/* Selected bus floating bar */}
           {selectedBus && !isInitialLoading && !error && (
-            <div className="absolute top-3 left-3 right-3 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-3 z-10">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-2 min-w-0">
-                  <div className="p-1.5 bg-safebus-blue/10 rounded-lg flex-shrink-0"><Bus className="h-4 w-4 text-safebus-blue" /></div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{selectedBus.currentStop}</p>
-                    <p className="text-xs text-gray-500">Próxima: {selectedBus.nextStop} · {selectedBus.estimatedTimeToNextStop} min</p>
+            <div className="absolute top-3 left-3 right-3 z-10">
+              <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 p-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="p-2 bg-safebus-blue/10 rounded-lg flex-shrink-0">
+                      <Route className="h-4 w-4 text-safebus-blue" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {selectedBus.currentStop || 'Paragem atual'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Próxima: {selectedBus.nextStop || '—'} · {selectedBus.estimatedTimeToNextStop ?? '—'} min
+                      </p>
+                    </div>
                   </div>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 flex-shrink-0" onClick={() => setSelectedBusId(undefined)}>
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <button onClick={() => setSelectedBusId(undefined)} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X className="h-4 w-4" /></button>
               </div>
             </div>
           )}
 
           {/* Bottom stats bar */}
-          <div className="absolute bottom-3 left-3 right-3">
-            <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 px-4 py-2.5">
+          <div className="absolute bottom-3 left-3 right-3 z-10">
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 px-4 py-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5">
                     <Bus className="h-4 w-4 text-safebus-blue" />
-                    <span className="text-sm font-bold text-safebus-blue">{buses.length}</span>
-                    <span className="text-xs text-gray-500">autocarros</span>
+                    <span className="text-sm font-bold text-safebus-blue">{activeCount}</span>
+                    <span className="text-xs text-gray-500">autocarro{activeCount !== 1 ? 's' : ''}</span>
                   </div>
+                  <div className="h-4 w-px bg-gray-200" />
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5 text-gray-400" />
                     <span className="text-xs text-gray-500">{formatTime(lastUpdate)}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={handleRefresh} disabled={isRefreshing} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-safebus-blue transition-colors">
-                    <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-gray-400 hover:text-safebus-blue" onClick={handleRefresh} disabled={isRefreshing}>
+                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </Button>
                   {selectedBus && <TripHistoryDialog busId={selectedBusId} />}
                 </div>
               </div>
               {selectedBus && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-gray-100 mt-2.5">
-                  <div className="bg-safebus-blue/5 rounded-lg p-2 text-center"><p className="text-xs text-gray-500">Autocarros</p><p className="text-lg font-bold text-safebus-blue">{buses.length}</p></div>
-                  <div className="bg-amber-50 rounded-lg p-2 text-center"><p className="text-xs text-gray-500">Próx. Paragem</p><p className="text-lg font-bold text-amber-700">{selectedBus.estimatedTimeToNextStop}</p></div>
-                  <div className="bg-emerald-50 rounded-lg p-2 text-center"><p className="text-xs text-gray-500">Estado</p><p className="text-lg font-bold text-emerald-700">Online</p></div>
-                  <div className="bg-purple-50 rounded-lg p-2 text-center"><p className="text-xs text-gray-500">Ações</p><TripHistoryDialog busId={selectedBusId} /></div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-gray-100 mt-3">
+                  <div className="bg-safebus-blue/5 rounded-lg p-2 text-center">
+                    <p className="text-xs text-gray-500">Autocarros</p>
+                    <p className="text-lg font-bold text-safebus-blue">{activeCount}</p>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-2 text-center">
+                    <p className="text-xs text-gray-500">Próx. Paragem</p>
+                    <p className="text-lg font-bold text-amber-700">{selectedBus.estimatedTimeToNextStop ?? '—'}</p>
+                  </div>
+                  <div className="bg-emerald-50 rounded-lg p-2 text-center">
+                    <p className="text-xs text-gray-500">Estado</p>
+                    <p className="text-lg font-bold text-emerald-700">Online</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-2 text-center flex flex-col items-center justify-center">
+                    <p className="text-xs text-gray-500 mb-1">Histórico</p>
+                    <TripHistoryDialog busId={selectedBusId} />
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Bus List */}
+        {/* ── Bus List ── */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-50">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Autocarros</span>
-            <span className="text-xs text-gray-400">{buses.length} autocarro{buses.length !== 1 ? 's' : ''}</span>
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-50">
+            <div className="flex items-center gap-2">
+              <Bus className="h-4 w-4 text-safebus-blue" />
+              <span className="text-sm font-semibold text-gray-700">Autocarros</span>
+            </div>
+            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{activeCount} autocarro{activeCount !== 1 ? 's' : ''}</span>
           </div>
-
           <div className="p-4">
             {isInitialLoading ? (
-              <div className="space-y-3">{[1, 2].map(i => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+              <div className="space-y-3">
+                {[1, 2].map(i => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}
+              </div>
             ) : error ? (
               <div className="text-center py-8">
-                <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-2" />
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-2">
+                  <span className="text-red-400 text-lg font-bold">!</span>
+                </div>
                 <p className="text-sm text-red-600 mb-3">{error}</p>
-                <Button size="sm" onClick={refreshBuses} variant="destructive"><RefreshCw className="h-3 w-3 mr-1" /> Tentar novamente</Button>
+                <Button size="sm" variant="destructive" onClick={refreshBuses}>
+                  <RefreshCw className="h-3 w-3 mr-1.5" /> Tentar novamente
+                </Button>
               </div>
             ) : (
               <BusList buses={buses} selectedBusId={selectedBusId} onSelectBus={handleSelectBus} />
             )}
           </div>
         </div>
+        <div className="h-16" />
       </div>
 
       <RecentNotificationsDialog open={showNotifications} onOpenChange={setShowNotifications} />
       </ErrorBoundary>
     </Layout>
+    </>
   );
 };
 

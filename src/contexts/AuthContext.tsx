@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setProfile(null);
       const path = window.location.pathname;
-      if (!path.includes('/auth/')) {
+      if (!path.includes('/auth/') && path !== '/' && path !== '/pricing') {
         navigate('/auth/login');
       }
     }
@@ -104,7 +104,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(null);
           setUser(null);
           setProfile(null);
-          navigate('/auth/login');
+          const path = window.location.pathname;
+          if (path !== '/' && path !== '/pricing') {
+            navigate('/auth/login');
+          }
         }
       }
     );

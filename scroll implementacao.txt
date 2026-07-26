@@ -1,0 +1,47 @@
+Build a $5k scroll animation with zero code
+Hey, it's Cindy 🤍 This is how to build a $5k scroll animation (the Apple product-page effect) with zero code, using AI from start to finish.
+You know those scroll animations on Apple's product pages, where you scroll down and the product spins, builds itself, or comes apart frame by frame? Agencies charge thousands to build those, because the usual way involves a 3D artist rendering a long image sequence and a developer wiring it to your scroll. It looks expensive because normally it is.
+
+Here is the shortcut. You generate the start and end of the animation with AI, let AI fill in every frame in between, slice that clip into images, and then hand the whole folder to an AI coding tool that wires it to your scroll for you. Four steps, zero code, and the output is the exact technique Apple uses on the AirPods page. Below is the full walkthrough, the build prompt, and three bonus prompts to push it further.
+
+What you're actually building 🧠
+A scroll-linked image sequence. Instead of a video that plays on its own, you have a stack of still frames painted onto a canvas, and the scroll position decides which frame shows. Scroll down, it steps forward. Scroll up, it steps back. That is why it feels like you are physically controlling the animation, and it is the same trick behind those high-end product pages.
+
+The four steps 🛠
+🎨 Generate two frames in Google Flow. Go to labs.google/flow and generate two images from a text prompt: a start frame (how the animation begins) and an end frame (how it ends). The exact prompts for both are in the next section. Keep the subject, angle, and lighting consistent between them so only the thing you want to animate actually changes. Note: Whisk shut down in April 2026 and merged into Flow, so do everything here.
+🎬 Animate the in-between with Frames to Video. Still in Flow, choose Frames to Video: First + last, upload both images, add a short motion prompt (for example, "slow smooth 360 rotation"), and let Veo generate every frame between your start and end. Download the clip.
+✂️ Slice the clip into frames in EZGIF. Go to ezgif.com/video-to-jpg, use Video to JPG (image sequence), set it to 30fps, convert, then click Download frames as ZIP. Unzip it and you have a numbered folder of images, one per frame.
+💻 Hand the folder to an AI coding tool. Drop the whole frame folder into an AI coding tool (Claude Code, Antigravity, Cursor, whatever you use) and paste the build prompt below. It writes the code that links your scroll to the frames.
+The two image prompts 🖼
+Step 1 lives or dies here, so don't freestyle it. The trick: both prompts are word-for-word identical except the one thing that changes (assembled vs taken apart). That is what keeps the product, camera, and lighting matching across both frames, so the in-between animation stays clean.
+
+Start frame (your product, assembled):
+
+High-end studio product photograph of [YOUR PRODUCT], fully assembled and intact, floating dead center against a seamless matte light-grey studio background. Straight-on view, perfectly level camera, soft even studio lighting, one subtle soft shadow directly beneath the product, photorealistic, ultra sharp, high detail. Keep the product small enough in frame that there is generous empty space on every side. No text, no watermark, no hands, no props, no brand logos. Landscape 16:9.
+End frame (your product, taken apart):
+
+High-end studio product photograph of the same [YOUR PRODUCT] as a clean exploded view: the outer shell or casing lifted apart and every major part and layer separated and floating in an organized, evenly spaced arrangement along one axis, like a technical teardown render. Same straight-on view, same perfectly level camera, same soft even studio lighting, same seamless matte light-grey studio background, one subtle soft shadow beneath. The core body of the product stays in the exact center at the same size, with the parts spreading outward around it. Photorealistic, ultra sharp, high detail. No text, no watermark, no hands, no props, no brand logos. Landscape 16:9.
+Swap the bracket for anything: a smartphone, a mechanical watch, a film camera, an espresso machine, a sneaker. "Exploded view" is the magic phrase, it is the technical name for those pulled-apart product renders, and image models know it well. For the end frame, name the 4 to 6 parts you want visible (for a phone: battery, circuit board, camera module, speaker, tiny screws; for a sneaker: outsole, midsole, insole, upper, laces; for an espresso machine: boiler, portafilter, pump, casing panels) so the model doesn't invent mush.
+
+Three consistency tips: generate the start frame first and only move on once you love it. If Flow lets you reference or reuse that first image when generating the end frame, do that. And if the two frames come out looking like different products, regenerate the end frame rather than fighting it in the video step, a retry here is cheap.
+
+Then your motion prompt in step 2 (for a teardown like this) is:
+
+The product slowly comes apart into an exploded view: the casing separates and the internal parts spread outward smoothly and evenly. Camera locked in place, background unchanged.
+The mega prompt 📋
+Drop your frame folder into your AI coding tool, then paste this underneath.
+
+Using this folder of image frames, build a scroll-linked image sequence on an HTML canvas. Preload all the frames first, then map the scroll position to the frame index so the animation plays frame by frame as the user scrolls, the same technique Apple uses on the AirPods page. Use GSAP and ScrollTrigger. Pin the canvas while the sequence plays, scrub it smoothly to scroll so there's no stutter, keep it sharp and centered on mobile, and add a graceful fallback if the frames are still loading. Give me a single self-contained file I can drop straight into my site.
+3 bonus prompts to run next 🎁
+Once the scroll sequence works, these turn one animation into a full polished section. Same project, same AI coding tool.
+
+🪟 The parallax section. Add a parallax section above my scroll sequence: a background layer, a midground product image, and headline text that all move at slightly different speeds as I scroll, so the section feels like it has depth. Use GSAP and ScrollTrigger, keep the motion subtle and smooth, and make sure it still reads cleanly on mobile.
+📌 The sticky-scroll reveal. Build a sticky-scroll section where the visual on the right stays pinned while three blocks of copy scroll past on the left, and each block fades and highlights as it becomes active, like the feature walkthroughs on a product page. Use GSAP ScrollTrigger, and stack it to a single column on mobile so nothing overlaps.
+🖱️ The hover animation. Add a hover animation to my product cards: on hover the card lifts slightly, a soft shadow grows, the image scales up just a touch inside its frame, and a CTA fades in. Use GSAP for the timing so it feels springy not janky, respect prefers-reduced-motion, and give hover-less touch devices a tap state instead.
+How to get the most out of it 🎓
+🎯 Lock your two frames before you animate. The whole effect lives or dies on the start and end images. Generate them with the same subject, camera angle, and background so only the motion changes. If frame one and frame two look like two different products, the in-between will look like mush.
+🐢 More frames means smoother, but heavier. 30fps on a 2 to 4 second clip is the sweet spot. Longer or higher means a buttery animation but a heavier page, so if it feels slow to load, ask the coding tool to compress the images or drop to every second frame.
+🪜 Brand new? Paste the build prompt exactly as-is. You do not need to understand the code. Drop the folder, paste the prompt, and ask the tool to "run it and show me a preview" so you can see it working before you touch anything.
+🧠 Power user? Feed it your real page. Paste your existing site code or design system first, tell it your section width, fonts, and breakpoints, and have it match your stack (React, Webflow embed, plain HTML) instead of generating a generic file.
+The honest bit ✅
+This is genuinely how the pro version works, but AI-generated frames can drift, a logo warps, a reflection flickers, an edge wobbles. Generate a couple of clips and pick the cleanest, and keep your animation short and simple (a rotation, an assembly, a single reveal) rather than a complex scene. Simple subjects on clean backgrounds give you the crispest result.

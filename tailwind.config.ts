@@ -23,6 +23,19 @@ export default {
 				orbitron: ['Orbitron', 'sans-serif'],
 			},
 			colors: {
+				// Arva Design System
+				'forest-ink': '#07503f',
+				'vivid-lime': '#e8fe85',
+				'bone': '#f1efdf',
+				'pure-white': '#ffffff',
+				'ash-gray': '#efefef',
+				'charcoal': '#212529',
+				'graphite': '#353535',
+				'pewter': '#6d6d6d',
+				'sky-card': '#b2cee7',
+				'peach-card': '#fceace',
+				'sage-card': '#e6ecd5',
+				'moss': '#c3cda7',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -91,6 +104,10 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
+				marquee: {
+					'0%': { transform: 'translateX(0)' },
+					'100%': { transform: 'translateX(-50%)' },
+				},
 				'accordion-down': {
 					from: {
 						height: '0'
@@ -113,6 +130,7 @@ export default {
 				}
 			},
 			animation: {
+				marquee: 'marquee 20s linear infinite',
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-slow': 'pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

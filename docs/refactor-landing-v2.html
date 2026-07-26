@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeBus — Refactor Landing Page v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --blue: #1E3A8A;
+      --blue-dark: #0F2460;
+      --yellow: #FBBF24;
+      --bone: #f1efdf;
+      --charcoal: #212529;
+      --graphite: #353535;
+      --white: #FFFFFF;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+    }
+    body {
+      background: #0a0a0f;
+      color: #fff;
+      font-family: var(--font-sans);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    .slide-deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    @media (min-aspect-ratio: 16/9) {
+      .slide-deck { max-width: calc(100vh * 16 / 9); margin: auto; }
+    }
+    @media (max-aspect-ratio: 16/9) {
+      .slide-deck { max-height: calc(100vw * 9 / 16); margin: auto; }
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: clamp(32px, 5vw, 72px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s;
+      overflow-y: auto;
+      background: #0a0a0f;
+    }
+    .slide.active { opacity: 1; visibility: visible; }
+    .slide-content {
+      width: 100%;
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(16px, 2vw, 32px);
+    }
+
+    /* Typography */
+    h1 { font-family: var(--font-serif); font-size: clamp(48px, 8vw, 112px); font-weight: 700; line-height: 0.85; letter-spacing: -0.02em; }
+    h2 { font-family: var(--font-serif); font-size: clamp(28px, 4vw, 56px); font-weight: 600; line-height: 0.9; letter-spacing: -0.015em; }
+    h3 { font-family: var(--font-sans); font-size: clamp(14px, 1.2vw, 18px); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--yellow); }
+    .label-sm { font-size: clamp(11px, 0.8vw, 13px); font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; }
+    p, li { font-size: clamp(14px, 1.1vw, 18px); line-height: 1.6; color: rgba(255,255,255,0.7); }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(251,191,36,0.1);
+      border: 1px solid rgba(251,191,36,0.2);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--yellow);
+    }
+
+    /* Comparison */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(16px, 2.5vw, 40px);
+      width: 100%;
+    }
+    @media (max-width: 768px) {
+      .comparison-grid { grid-template-columns: 1fr; }
+    }
+    .col { display: flex; flex-direction: column; gap: 12px; }
+    .col-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 6px 14px;
+      border-radius: 6px;
+      display: inline-block;
+      width: fit-content;
+    }
+    .col-header.before { background: rgba(255,80,80,0.15); color: #ff6b6b; }
+    .col-header.after { background: rgba(76,175,80,0.15); color: #4caf50; }
+
+    /* Cards */
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: clamp(14px, 1.5vw, 22px);
+      transition: all 0.3s;
+    }
+    .card-highlight {
+      background: rgba(251,191,36,0.06);
+      border-color: rgba(251,191,36,0.15);
+    }
+
+    /* Mock section preview */
+    .mock-section {
+      background: rgba(30,58,138,0.15);
+      border: 1px solid rgba(30,58,138,0.25);
+      border-radius: 12px;
+      padding: clamp(12px, 1.5vw, 24px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 0.8vw, 14px);
+    }
+    .mock-section.beige {
+      background: rgba(241,239,223,0.08);
+      border-color: rgba(241,239,223,0.15);
+    }
+    .mock-label {
+      font-size: clamp(10px, 0.8vw, 12px);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--yellow);
+    }
+    .mock-label.dark { color: var(--blue); }
+    .mock-hr {
+      height: 1px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+    }
+    .mock-hr.dark { background: rgba(33,37,41,0.2); }
+    .mock-h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(24px, 3vw, 40px);
+      font-weight: 700;
+      line-height: 0.85;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .mock-h2.dark { color: var(--charcoal); }
+    .mock-p {
+      font-size: clamp(12px, 0.9vw, 15px);
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
+    }
+    .mock-p.dark { color: var(--graphite); }
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .mock-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .mock-card {
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mock-card.beige-card { background: rgba(241,239,223,0.06); }
+    .mock-card-icon {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      margin-bottom: 4px;
+    }
+    .mock-card-title {
+      font-size: 11px; font-weight: 600;
+      color: rgba(255,255,255,0.8);
+    }
+    .mock-card-desc {
+      font-size: 9px; color: rgba(255,255,255,0.4);
+    }
+    .mock-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .mock-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .mock-btn {
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: 100px;
+      background: var(--yellow);
+      color: var(--charcoal);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .mock-btn-outline {
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.6);
+      font-size: 11px;
+    }
+    .mock-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* X icon for removed */
+    .x-removed { text-decoration: line-through; text-decoration-color: #ff6b6b; opacity: 0.5; }
+    .check-added { color: #4caf50 !important; }
+
+    /* Technique tags */
+    .tech-tag {
+      display: inline-block;
+      background: rgba(30,58,138,0.2);
+      border: 1px solid rgba(30,58,138,0.3);
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.8);
+    }
+    .tech-tag.gold { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.2); color: var(--yellow); }
+    .tech-tag.green { background: rgba(76,175,80,0.1); border-color: rgba(76,175,80,0.2); color: #4caf50; }
+
+    /* Stats */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: var(--font-serif);
+      font-size: clamp(32px, 3.5vw, 52px);
+      font-weight: 700;
+      color: var(--yellow);
+      line-height: 1;
+    }
+    .stat-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 4px;
+    }
+
+    /* Timeline */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 100%;
+    }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 20px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .timeline-num {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--yellow);
+      line-height: 1;
+    }
+    .timeline-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); }
+    .timeline-desc { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+
+    /* Navigation */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: var(--yellow);
+      transition: width 0.4s ease;
+      z-index: 1000;
+    }
+    .nav-controls {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 1000;
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(12px);
+      padding: 8px 16px;
+      border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-btn {
+      background: rgba(255,255,255,0.06);
+      border: none;
+      color: #fff;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-btn:hover { background: rgba(251,191,36,0.2); color: var(--yellow); }
+    .slide-counter { color: rgba(255,255,255,0.4); font-size: 13px; min-width: 60px; text-align: center; letter-spacing: 0.05em; }
+
+    /* Animations */
+    .animate-up {
+      animation: fadeUp 0.6s ease-out forwards;
+      opacity: 0;
+    }
+    .animate-up-d1 { animation-delay: 0.1s; }
+    .animate-up-d2 { animation-delay: 0.2s; }
+    .animate-up-d3 { animation-delay: 0.3s; }
+    .animate-up-d4 { animation-delay: 0.4s; }
+    .animate-up-d5 { animation-delay: 0.5s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section number */
+    .section-number {
+      font-family: var(--font-serif);
+      font-size: clamp(80px, 12vw, 180px);
+      font-weight: 700;
+      line-height: 0.8;
+      color: rgba(251,191,36,0.04);
+      position: absolute;
+      top: -20px;
+      right: -10px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Arrow hint */
+    .arrow-hint {
+      position: fixed;
+      bottom: 80px;
+      right: 32px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.2);
+      animation: pulse 2s ease-in-out infinite;
+      letter-spacing: 0.05em;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Bullet check */
+    .check-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .check-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.6); }
+    .check-list li::before { content: "✦"; color: var(--yellow); font-size: 10px; margin-top: 4px; }
+    .check-list li.done { color: rgba(255,255,255,0.9); }
+    .check-list li.done::before { content: "✓"; color: #4caf50; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-deck">
+
+  <!-- ===== SLIDE 1: TITLE ===== -->
+  <div class="slide active">
+    <div class="slide-content" style="text-align:center; align-items:center;">
+      <div class="animate-up" style="margin-bottom: 8px;">
+        <span class="badge">SafeBus — Refactor v2</span>
+      </div>
+      <h1 class="animate-up animate-up-d1" style="background: linear-gradient(135deg, #fff 30%, #FBBF24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Landing Page
+      </h1>
+      <h1 class="animate-up animate-up-d2" style="color: var(--yellow); margin-top: -0.3em;">
+        Reloaded
+      </h1>
+      <p class="animate-up animate-up-d3" style="max-width: 600px; margin-top: 8px;">
+        Refactor completo com animações de elite, micro-interacções e identidade visual reforçada.
+      </p>
+      <div class="animate-up animate-up-d4" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 8px;">
+        <span class="tech-tag">framer-motion</span>
+        <span class="tech-tag gold">GSAP ScrollTrigger</span>
+        <span class="tech-tag">Lenis</span>
+        <span class="tech-tag gold">react-countup</span>
+        <span class="tech-tag">AnimatePresence</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 2: PROBLEMS ===== -->
+  <div class="slide">
+    <div class="slide-content">
+      <div class="animate-up"><span class="badge">Diagnóstico</span></div>
+      <h2 class="animate-up animate-up-d1">O Que Está a Doer</h2>
+      <div class="comparison-grid animate-up animate-up-d2" style="margin-top: 8px;">
+        <div class="col">
+          <span class="col-header before">✕ Problema</span>
+          <div class="card">
+            <p style="font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.6);">
+              <strong style="color:#ff6b6b;">Template único</strong> — label, hr, h2, hr, p, hr, content. 5 secções iguais.
+            </p>
+          </div>
+          <div class="card">
+            <p style="font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.6);">
+              <strong style="color:#ff6b6b;">0 animações</strong> — grids estáticos, scroll monótono, zero micro-interacções.
+            </p>
+          </div>
+          <div class="card">
+            <p style="font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.6);">
+              <strong style="color:#ff6b6b;">hr como muleta</strong> — 14 separadores horizontais a quebrar o ritmo visual.
+            </p>
+          </div>
+        </div>
+        <div class="col">
+          <span class="col-header after">✓ Solução</span>
+          <div class="card card-highlight">
+            <p style="font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.7);">
+              <strong style="color:#4caf50;">Identidade própria</strong> — cada secção com estrutura, cor e animação distintas.
+            </p>
+          </div>
+          <div class="card card-highlight">
+            <p style="font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.7);">
+              <strong style="color:#4caf50;">7 técnicas de animação</strong> — stagger, parallax, CountUp, letter-by-letter, magnetic hover, timeline SVG, particle.
+            </p>
+          </div>
+          <div class="card card-highlight">
+            <p style="font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.7);">
+              <strong style="color:#4caf50;">hr eliminados</strong> — substituídos por spacing, badges, e transições suaves.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 3: HERO ===== -->
+  <div class="slide">
+    <div class="slide-content" style="position: relative;">
+      <div class="section-number">01</div>
+      <div class="animate-up"><span class="badge">Hero — Manter + Melhorar</span></div>
+      <h2 class="animate-up animate-up-d1">ScrollExpandMedia</h2>
+      <p class="animate-up animate-up-d2">Já é o ponto alto. Apenas polimento.</p>
+      <div class="comparison-grid animate-up animate-up-d3" style="margin-top: 8px;">
+        <div class="col">
+          <span class="col-header before">Antes</span>
+          <div class="mock-section">
+            <div class="mock-label">Scroll para expandir</div>
+            <div style="background:rgba(30,58,138,0.2); border-radius:8px; height:120px; display:flex; align-items:center; justify-content:center; font-size:32px; font-family:var(--font-serif); color:rgba(255,255,255,0.3);">video</div>
+          </div>
+        </div>
+        <div class="col">
+          <span class="col-header after">Depois</span>
+          <div class="mock-section">
+            <div class="mock-label">Scroll para expandir</div>
+            <div style="position:relative; background:rgba(30,58,138,0.2); border-radius:8px; height:120px; display:flex; align-items:center; justify-content:center; font-size:32px; font-family:var(--font-serif); color:rgba(255,255,255,0.3);">
+              video
+              <div style="position:absolute; inset:0; background:linear-gradient(180deg,transparent 40%,rgba(10,10,15,0.6)); border-radius:8px;"></div>
+            </div>
+            <span class="tech-tag" style="width:fit-content;">overlay gradient</span>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <span class="tech-tag" style="font-size:10px;">overlay escuro no fullscreen</span>
+            <span class="tech-tag gold" style="font-size:10px;">seta bounce "scroll down"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 4: MISSÃO ===== -->
+  <div class="slide">
+    <div class="slide-content" style="position: relative;">
+      <div class="section-number">02</div>
+      <div class="animate-up"><span class="badge">Missão — Refactor Completo</span></div>
+      <h2 class="animate-up animate-up-d1">"Onde Estão Os Seus Filhos?"</h2>
+      <div class="comparison-grid animate-up animate-up-d2" style="margin-top: 8px;">
+        <div class="col">
+          <span class="col-header before">Antes</span>
+          <div class="mock-section">
+            <div class="mock-label">01 — A Nossa Promessa</div>
+            <div class="mock-hr"></div>
+            <div class="mock-h2">Onde Estão<br>Os Seus<br>Filhos?</div>
+            <div class="mock-hr"></div>
+            <div class="mock-p">O SafeBus monitoriza cada trajeto...</div>
+          </div>
+        </div>
+        <div class="col">
+          <span class="col-header after">Depois</span>
+          <div class="mock-section">
+            <span class="badge" style="width:fit-conten; font-size:10px;">✦ 01 — A Nossa Promessa</span>
+            <div class="mock-h2" style="font-size:clamp(28px,3.5vw,48px);">Onde Estão</div>
+            <div class="mock-h2" style="font-size:clamp(28px,3.5vw,48px); color:var(--yellow);">Os Seus</div>
+            <div class="mock-h2" style="font-size:clamp(28px,3.5vw,48px);">Filhos?</div>
+            <div class="mock-p">O SafeBus monitoriza cada trajeto do embarque ao desembarque.</div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <span class="tech-tag" style="font-size:10px;">badge flutuante c/ proximity hover</span>
+            <span class="tech-tag gold" style="font-size:10px;">letter-by-letter fade-up</span>
+            <span class="tech-tag" style="font-size:10px;">parallax no h2 (useScroll)</span>
+            <span class="tech-tag gold" style="font-size:10px;">partículas douradas BG</span>
+          </div>
+        </div>
+      </div>
+      <div class="animate-up animate-up-d3" style="margin-top: 8px;">
+        <span class="tech-tag green" style="font-size:11px;">✕ hr removido</span>
+        <span class="tech-tag green" style="font-size:11px;">✓ badge substitui label</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 5: FEATURES ===== -->
+  <div class="slide">
+    <div class="slide-content" style="position: relative;">
+      <div class="section-number">03</div>
+      <div class="animate-up"><span class="badge">Funcionalidades — Stagger Grid</span></div>
+      <h2 class="animate-up animate-up-d1">"Tudo Que Precisa"</h2>
+      <div class="comparison-grid animate-up animate-up-d2" style="margin-top: 8px;">
+        <div class="col">
+          <span class="col-header before">Antes</span>
+          <div class="mock-section beige">
+            <div class="mock-label dark">02 — Funcionalidades</div>
+            <div class="mock-hr dark"></div>
+            <div class="mock-h2 dark">Tudo<br>Que<br>Precisa</div>
+            <div class="mock-hr dark"></div>
+            <div class="mock-grid">
+              <div class="mock-card beige-card"><div class="mock-card-icon"></div><div class="mock-card-title" style="color:var(--charcoal);">Rastreio</div><div class="mock-card-desc" style="color:var(--graphite);">Localização em tempo real</div></div>
+              <div class="mock-card beige-card"><div class="mock-card-icon"></div><div class="mock-card-title" style="color:var(--charcoal);">Alertas</div><div class="mock-card-desc" style="color:var(--graphite);">Notificações push</div></div>
+              <div class="mock-card beige-card"><div class="mock-card-icon"></div><div class="mock-card-title" style="color:var(--charcoal);">Segurança</div><div class="mock-card-desc" style="color:var(--graphite);">Autenticação</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <span class="col-header after">Depois</span>
+          <div class="mock-section beige">
+            <span class="badge" style="width:fit-content; font-size:10px; background:rgba(30,58,138,0.1); border-color:rgba(30,58,138,0.2); color:var(--blue);">✦ 02 — Funcionalidades</span>
+            <div class="mock-h2 dark" style="font-size:clamp(24px,3vw,42px);">Tudo Que Precisa</div>
+            <div class="mock-grid">
+              <div class="mock-card beige-card" style="transition:all 0.3s;"><div class="mock-card-icon"></div><div class="mock-card-title" style="color:var(--charcoal);">Rastreio</div><div class="mock-card-desc" style="color:var(--graphite);">Localização em tempo real</div></div>
+              <div class="mock-card beige-card" style="transition:all 0.3s;"><div class="mock-card-icon"></div><div class="mock-card-title" style="color:var(--charcoal);">Alertas</div><div class="mock-card-desc" style="color:var(--graphite);">Notificações push</div></div>
+              <div class="mock-card beige-card" style="transition:all 0.3s;"><div class="mock-card-icon"></div><div class="mock-card-title" style="color:var(--charcoal);">Segurança</div><div class="mock-card-desc" style="color:var(--graphite);">Autenticação</div></div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <span class="tech-tag" style="font-size:10px;">stagger reveal (variants)</span>
+            <span class="tech-tag gold" style="font-size:10px;">card hover scale(1.02)</span>
+            <span class="tech-tag" style="font-size:10px;">ícone rotate on hover</span>
+            <span class="tech-tag gold" style="font-size:10px;">bg grid dots pattern</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 6: BENEFITS ===== -->
+  <div class="slide">
+    <div class="slide-content" style="position: relative;">
+      <div class="section-number">04</div>
+      <div class="animate-up"><span class="badge">Benefícios — CountUp + Stats</span></div>
+      <h2 class="animate-up animate-up-d1">"Porquê Nós?"</h2>
+      <div class="comparison-grid animate-up animate-up-d2" style="margin-top: 8px;">
+        <div class="col">
+          <span class="col-header before">Antes</span>
+          <div class="mock-section">
+            <div class="mock-label">03 — Porquê o SafeBus?</div>
+            <div class="mock-hr"></div>
+            <div class="mock-h2">Porquê<br>Nós?</div>
+            <div class="mock-hr"></div>
+            <div class="mock-grid-2">
+              <div class="mock-card"><div class="mock-card-icon"></div><div class="mock-card-title">Dados Seguros</div><div class="mock-card-desc">Criptografia</div></div>
+              <div class="mock-card"><div class="mock-card-icon"></div><div class="mock-card-title">Gestão</div><div class="mock-card-desc">Cadastro único</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <span class="col-header after">Depois</span>
+          <div class="mock-section">
+            <span class="badge" style="width:fit-content; font-size:10px;">✦ 03 — Porquê o SafeBus?</span>
+            <div class="mock-h2" style="font-size:clamp(24px,3vw,42px);">Porquê Nós?</div>
+            <div class="stat-row">
+              <div class="stat-card"><div class="stat-number">284+</div><div class="stat-desc">Escolas</div></div>
+              <div class="stat-card"><div class="stat-number">12k</div><div class="stat-desc">Alunos</div></div>
+              <div class="stat-card"><div class="stat-number">99.9%</div><div class="stat-desc">Uptime</div></div>
+            </div>
+            <div class="mock-grid-2">
+              <div class="mock-card"><div class="mock-card-icon"></div><div class="mock-card-title">Dados Seguros</div><div class="mock-card-desc">Criptografia</div></div>
+              <div class="mock-card"><div class="mock-card-icon"></div><div class="mock-card-title">Gestão</div><div class="mock-card-desc">Cadastro único</div></div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <span class="tech-tag" style="font-size:10px;">CountUp on scroll</span>
+            <span class="tech-tag gold" style="font-size:10px;">ScrollTrigger BG colour shift</span>
+            <span class="tech-tag" style="font-size:10px;">ícones scale-in + rotate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 7: HOW IT WORKS ===== -->
+  <div class="slide">
+    <div class="slide-content" style="position: relative;">
+      <div class="section-number">05</div>
+      <div class="animate-up"><span class="badge">Como Funciona — Timeline SVG</span></div>
+      <h2 class="animate-up animate-up-d1">"Comece Em 3 Passos"</h2>
+      <div class="comparison-grid animate-up animate-up-d2" style="margin-top: 8px;">
+        <div class="col">
+          <span class="col-header before">Antes</span>
+          <div class="mock-section beige">
+            <div class="mock-label dark">04 — Como Funciona</div>
+            <div class="mock-hr dark"></div>
+            <div class="mock-h2 dark">Comece<br>Em 3<br>Passos</div>
+            <div class="mock-hr dark"></div>
+            <div style="display:flex; gap:16px; justify-content:center;">
+              <div class="mock-step"><div class="mock-circle">01</div><div style="font-size:10px;color:var(--charcoal);font-weight:600;">Conta</div></div>
+              <div class="mock-step"><div class="mock-circle">02</div><div style="font-size:10px;color:var(--charcoal);font-weight:600;">Rotas</div></div>
+              <div class="mock-step"><div class="mock-circle">03</div><div style="font-size:10px;color:var(--charcoal);font-weight:600;">Acompanha</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <span class="col-header after">Depois</span>
+          <div class="mock-section beige">
+            <span class="badge" style="width:fit-content; font-size:10px; background:rgba(30,58,138,0.1); border-color:rgba(30,58,138,0.2); color:var(--blue);">✦ 04 — Como Funciona</span>
+            <div class="mock-h2 dark" style="font-size:clamp(24px,3vw,42px);">Comece Em 3 Passos</div>
+            <div style="position:relative; display:flex; gap:16px; justify-content:center; padding:8px 0;">
+              <div style="position:absolute; top:24px; left:15%; right:15%; height:2px; background:rgba(30,58,138,0.15);">
+                <div style="height:100%; width:0%; background:var(--blue); transition:width 0.6s;"></div>
+              </div>
+              <div class="mock-step"><div class="mock-circle" style="background:var(--blue);">01</div><div style="font-size:10px;color:var(--charcoal);font-weight:600;">Conta</div></div>
+              <div class="mock-step"><div class="mock-circle" style="background:var(--blue);">02</div><div style="font-size:10px;color:var(--charcoal);font-weight:600;">Rotas</div></div>
+              <div class="mock-step"><div class="mock-circle" style="background:var(--blue);">03</div><div style="font-size:10px;color:var(--charcoal);font-weight:600;">Acompanha</div></div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <span class="tech-tag" style="font-size:10px;">SVG line stroke-dashoffset</span>
+            <span class="tech-tag gold" style="font-size:10px;">sequential reveal by scroll</span>
+            <span class="tech-tag" style="font-size:10px;">step numbers scale-in</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 8: CTA + FOOTER ===== -->
+  <div class="slide">
+    <div class="slide-content" style="position: relative;">
+      <div class="section-number">06</div>
+      <div class="animate-up"><span class="badge">CTA — Magnetic + CountUp</span></div>
+      <h2 class="animate-up animate-up-d1">"Pronto Para Transformar?"</h2>
+      <div class="comparison-grid animate-up animate-up-d2" style="margin-top: 8px;">
+        <div class="col">
+          <span class="col-header before">Antes</span>
+          <div class="mock-section">
+            <div class="mock-label">✦ 05 — Vamos Começar</div>
+            <div class="mock-hr"></div>
+            <div class="mock-h2">Pronto<br>Para<br>Transformar?</div>
+            <div class="mock-hr"></div>
+            <div class="mock-p" style="font-size:11px;">Junte-se a 284+ escolas que já confiam no SafeBus.</div>
+            <div class="mock-buttons"><div class="mock-btn">Criar Conta</div><div class="mock-btn-outline">Ver Planos</div></div>
+          </div>
+        </div>
+        <div class="col">
+          <span class="col-header after">Depois</span>
+          <div class="mock-section">
+            <span class="badge" style="width:fit-content; font-size:10px;">✦ 05 — Vamos Começar</span>
+            <div class="mock-h2" style="font-size:clamp(24px,3vw,42px);">Pronto Para Transformar?</div>
+            <div class="stat-row" style="grid-template-columns:repeat(3,1fr);">
+              <div class="stat-card" style="padding:10px;"><div class="stat-number" style="font-size:clamp(20px,2.5vw,36px);">284+</div><div class="stat-desc">Escolas</div></div>
+              <div class="stat-card" style="padding:10px;"><div class="stat-number" style="font-size:clamp(20px,2.5vw,36px);">12k</div><div class="stat-desc">Alunos</div></div>
+              <div class="stat-card" style="padding:10px;"><div class="stat-number" style="font-size:clamp(20px,2.5vw,36px);">98%</div><div class="stat-desc">Satisfação</div></div>
+            </div>
+            <div class="mock-buttons" style="justify-content:center;">
+              <div class="mock-btn" style="transition:all 0.3s;">Criar Conta Gratuita →</div>
+              <div class="mock-btn-outline">Ver Planos</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <span class="tech-tag" style="font-size:10px;">magnetic hover on buttons</span>
+            <span class="tech-tag gold" style="font-size:10px;">spring elastic animation</span>
+            <span class="tech-tag" style="font-size:10px;">CountUp stats row</span>
+            <span class="tech-tag gold" style="font-size:10px;">glow orb segue rato</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 9: ANIMATION TECHNIQUES ===== -->
+  <div class="slide">
+    <div class="slide-content">
+      <div class="animate-up"><span class="badge">Técnicas</span></div>
+      <h2 class="animate-up animate-up-d1">7 Camadas de Animação</h2>
+      <div class="animate-up animate-up-d2" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:clamp(8px,1vw,16px); width:100%;">
+        <div class="card">
+          <h3 style="margin-bottom:4px;">01 // Stagger Reveal</h3>
+          <p style="font-size:12px;">Grid cards entram em cascata com <code style="color:var(--yellow);">variants</code> + <code style="color:var(--yellow);">staggerChildren</code></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:4px;">02 // Letter-by-Letter</h3>
+          <p style="font-size:12px;">h2 fade-up por letra com <code style="color:var(--yellow);">whileInView</code> + split spans</p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:4px;">03 // CountUp</h3>
+          <p style="font-size:12px;">Números animam do 0 ao valor final com <code style="color:var(--yellow);">react-countup</code></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:4px;">04 // Magnetic Buttons</h3>
+          <p style="font-size:12px;">Botões seguem o rato com <code style="color:var(--yellow);">useMotionValue</code></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:4px;">05 // Parallax Scroll</h3>
+          <p style="font-size:12px;">h2 responde ao scroll com <code style="color:var(--yellow);">useScroll</code> + <code style="color:var(--yellow);">useTransform</code></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:4px;">06 // SVG Timeline</h3>
+          <p style="font-size:12px;">Linha progressiva entre steps com <code style="color:var(--yellow);">stroke-dashoffset</code></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:4px;">07 // Hover Cards</h3>
+          <p style="font-size:12px;">Cards reagem com <code style="color:var(--yellow);">whileHover</code> scale + rotate + shadow</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 10: EXECUTION ===== -->
+  <div class="slide">
+    <div class="slide-content">
+      <div class="animate-up"><span class="badge">Execução</span></div>
+      <h2 class="animate-up animate-up-d1">Ordem de Implementação</h2>
+      <p class="animate-up animate-up-d2">6 passos, semânticos, testáveis individualmente.</p>
+      <div class="animate-up animate-up-d3" style="width:100%;">
+        <div class="timeline">
+          <div class="timeline-item">
+            <div><div class="timeline-num">01</div><div class="timeline-label">Missão</div></div>
+            <div class="timeline-desc">Badge flutuante, letter-by-letter h2, parallax, partículas, remover hr</div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-num">02</div><div class="timeline-label">Features</div></div>
+            <div class="timeline-desc">Stagger grid, card hover variants, dot pattern BG, remover hr</div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-num">03</div><div class="timeline-label">Benefícios</div></div>
+            <div class="timeline-desc">CountUp stats, ScrollTrigger BG shift, ícones animados, remover hr</div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-num">04</div><div class="timeline-label">Como Funciona</div></div>
+            <div class="timeline-desc">SVG timeline, sequential step reveal, remover hr</div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-num">05</div><div class="timeline-label">CTA</div></div>
+            <div class="timeline-desc">Magnetic buttons, CountUp stats row, spring elastic, glow orb</div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-num">06</div><div class="timeline-label">Build</div></div>
+            <div class="timeline-desc"><code>npm run build</code> + verificar Lenis/ScrollTrigger compat</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.slide-deck -->
+
+<div class="nav-controls">
+  <button class="nav-btn" onclick="prevSlide()">←</button>
+  <span class="slide-counter"><span id="current">1</span> / <span id="total">10</span></span>
+  <button class="nav-btn" onclick="nextSlide()">→</button>
+</div>
+
+<div class="arrow-hint">← ou → para navegar</div>
+
+<script>
+  let current = 1;
+  const total = document.querySelectorAll('.slide').length;
+  document.getElementById('total').textContent = total;
+
+  function showSlide(n) {
+    if (n < 1) n = 1;
+    if (n > total) n = total;
+    current = n;
+    document.querySelectorAll('.slide').forEach((s, i) => {
+      s.classList.toggle('active', i === n - 1);
+    });
+    document.getElementById('current').textContent = n;
+    document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+  }
+
+  function nextSlide() { showSlide(current + 1); }
+  function prevSlide() { showSlide(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.nav-controls')) nextSlide();
+  });
+
+  showSlide(1);
+</script>
+
+</body>
+</html>
